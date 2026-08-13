@@ -8,10 +8,10 @@ QH-CH-KX-03,kangxi-03,QH-P-000001,康熙,康熙四后：生前称号不等于最
 QH-CH-KX-04,kangxi-04,QH-P-000001,康熙,表序、长子、皇四子,《清史稿》卷164按帝系排。第一子不是「长子」的同义词。第四子胤禛不在这一卷，不是康熙没有这个儿子。,emperors/kangxi/04-prince-table.md,,#/princes；#/person/QH-P-000002,40
 QH-CH-YZ-01,yongzheng-01,QH-P-000002,雍正,即位、生母、年隆与军机,遗诏在崩日，即位礼在七日后。生母当时是太后，不是康熙朝的皇后。年羹尧、隆科多、军机处，本纪都有落点；丹药没有。,emperors/yongzheng/01-accession-and-early-reign.md,QH-SU-YZ-QSG-0009A；QH-SU-YZ-QSG-0009D；QH-SU-YZ-QSG-0009I；QH-SU-YZ-QSG-0009N；QH-SU-YZ-QSG-0009M,#/yongzheng；#/site/QH-ST-0022；#/lanes,50
 QH-CH-QL-01,qianlong-01,QH-P-000019,乾隆,十全老人与禅位后的权力,1735 年即位，1796 年禅位给嘉庆，自己做太上皇，实际管事到 1799 年。在位年数和实际掌权年数，要分开写。,emperors/qianlong/01-ten-complete-and-abdication.md,,#/site/QH-ST-0004；#/site/QH-ST-0005；#/site/QH-ST-0010；#/site/QH-ST-0019；#/site/QH-ST-0020,60
-QH-CH-JQ-01,jiaqing-01,QH-P-000054,嘉庆,内禅：前三年太上皇还在,1796 年内禅即位，前三年太上皇还在。嘉庆四年乾隆死后才真正管事，同年处置和珅。,emperors/jiaqing/01-internal-abdication.md,,#/site/QH-ST-0010,70
-QH-CH-DG-01,daoguang-01,QH-P-000055,道光,禁烟、鸦片战争与《南京条约》,1820 年即位，次年改元道光。即位后由绵宁改名旻宁，是避讳，不是两个人。禁烟、第一次鸦片战争、《南京条约》，是这段最常被提起的事。,emperors/daoguang/01-opium-war.md,,#/site/QH-ST-0011；#/site/QH-ST-0012；#/site/QH-ST-0016；#/site/QH-ST-0017,80
-QH-CH-XF-01,xianfeng-01,QH-P-000056,咸丰,太平天国、圆明园与避走热河,在位十一年。太平天国、第二次鸦片战争、圆明园被焚掠、避走热河，是这段的骨架。,emperors/xianfeng/01-rehe-and-yuanmingyuan.md,,#/site/QH-ST-0004；#/site/QH-ST-0005,90
-QH-CH-TZ-01,tongzhi-01,QH-P-000057,同治,垂帘、亲政与死因,六岁即位。两宫垂帘，1873 年亲政。无子女。官方记天花，梅毒说多是晚出。,emperors/tongzhi/01-smallpox-or-syphilis.md,,,100
+QH-CH-JQ-01,jiaqing-01,QH-P-000054,嘉庆,内禅：前三年太上皇还在,1796 年内禅即位，前三年太上皇还在。嘉庆四年乾隆死后才真正管事，同年处置和珅。白莲教、天理教攻宫、阿美士德使团，是这段常见条目。1796—1799 的名义在位与实际权力必须分开。,emperors/jiaqing/01-internal-abdication.md,,#/site/QH-ST-0010,70
+QH-CH-DG-01,daoguang-01,QH-P-000055,道光,禁烟、鸦片战争与《南京条约》,1820 年即位，次年改元道光。原名绵宁，即位后避讳改旻宁。禁烟、第一次鸦片战争、《南京条约》，是这段最常被提起的事。,emperors/daoguang/01-opium-war.md,,#/site/QH-ST-0011；#/site/QH-ST-0012；#/site/QH-ST-0016；#/site/QH-ST-0017,80
+QH-CH-XF-01,xianfeng-01,QH-P-000056,咸丰,太平天国、圆明园与避走热河,在位十一年。太平天国席卷半壁、第二次鸦片战争、圆明园被焚掠、避走热河，是这段的骨架。身后留下赞襄政务安排，两宫与八大臣的权力格局须按当时文件看，不能后来倒推。,emperors/xianfeng/01-rehe-and-yuanmingyuan.md,,#/site/QH-ST-0004；#/site/QH-ST-0005,90
+QH-CH-TZ-01,tongzhi-01,QH-P-000057,同治,垂帘、亲政与死因,六岁即位。两宫垂帘，1873 年亲政。无子女。官方记天花，梅毒说多是晚出。所谓「同治中兴」是后出评价，不能当成已核政绩单。,emperors/tongzhi/01-smallpox-or-syphilis.md,,,100
 QH-CH-GX-01,guangxu-01,QH-P-000058,光绪,过继即位、戊戌变法与死因检测,生父是醇亲王奕譞，礼法上过继给咸丰。1875 年到 1908 年在位。中间有亲政、甲午、戊戌、庚子、新政。,emperors/guangxu/01-hundred-days-and-arsenic.md,,,110
 QH-CH-XT-01,xuantong-01,QH-P-000059,宣统,1908 即位、1909 纪年、1912 退位,1908 年即位，1909 年才是宣统元年，1912 年 2 月 12 日退位。四条日期不是一件事。,emperors/xuantong/01-abdication.md,,,120
 QH-CH-KX-05,kangxi-05,QH-P-000001,康熙,西学与礼仪之争,汤若望、南怀仁、历狱、礼仪之争。传教士在钦天监和外交中的作用，和罗马教廷的冲突。,emperors/kangxi/05-kangxi-scholarship.md,,#/site/QH-ST-0013,45
@@ -19,3 +19,4 @@ QH-CH-KX-06,kangxi-06,QH-P-000001,康熙,三藩之乱,平定吴三桂、尚之�
 QH-CH-KX-07,kangxi-07,QH-P-000001,康熙,平台湾,施琅、姚启圣、郑克塽，1683年。,emperors/kangxi/07-taiwan.md,,#/person/QH-P-000098；#/person/QH-P-000099,47
 QH-CH-YZ-02,yongzheng-02,QH-P-000002,雍正,耗羡归公与密折,雍正朝财政改革：耗羡归公、养廉银、密折制度。,emperors/yongzheng/02-yongzheng-reforms.md,,#/yongzheng；#/lane/QH-L-0028,55
 QH-CH-YZ-03,yongzheng-03,QH-P-000002,雍正,文字狱与《大义觉迷录》,吕留良案、曾静案、《大义觉迷录》的编纂与禁毁。,emperors/yongzheng/03-yongzheng-literary-inquisition.md,,#/lane/QH-L-0009；#/yongzheng,56
+QH-CH-KX-08,kangxi-08,QH-P-000001,康熙,皇女、和硕、固伦,卷166排第一女到第二十女。未封十二，受封八。常宁之女是抚育，不是亲生第二十一女。和硕、固伦会改，追进不是生前进封。,emperors/kangxi/08-princess-table.md,QH-SU-QSG-0166,#/princesses；#/princes；#/person/QH-P-000021,41

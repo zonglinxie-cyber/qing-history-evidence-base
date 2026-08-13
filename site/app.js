@@ -22,6 +22,7 @@ const DATA = {
   lanes: [],
   empressTimeline: [],
   princes: [],
+  princesses: [],
   heirChain: [],
   portraits: [],
   crosswalk: [],
@@ -54,6 +55,7 @@ const VIEW_CHUNKS = {
   succession: ['home', 'kangxi'],
   empresses: ['home', 'kangxi'],
   princes: ['home', 'kangxi'],
+  princesses: ['home', 'kangxi'],
   lanes: ['home', 'kangxi'],
   lane: ['home', 'kangxi'],
   questions: ['home', 'kangxi'],
@@ -141,6 +143,16 @@ async function ensureView(view) {
     adopted_out_to: '过继出',
     father_of_in_table: '世表父系计数',
     table_birth_order: '世表序齿',
+    table_daughter_order: '公主表序齿',
+    invested_as_princess: '封公主',
+    advanced_as_princess: '进封公主',
+    posthumously_advanced_as: '追进封',
+    married_to: '下嫁',
+    born_on: '出生',
+    fostered_not_begotten: '抚育非亲生',
+    father_of_in_princess_table: '公主表父系计数',
+    unsealed_daughter_count: '未封皇女计数',
+    consort_title_stripped: '额驸削号',
     absent_from_volume: '本卷缺号',
     stationed_at: '驻跸',
     stated_not_to_invest: '上谕明示不欲立',
@@ -218,13 +230,6 @@ async function ensureView(view) {
     { role: '御笔书法', title: '御笔书法', hint: '碑是刻出来的。纸上才是手写。' },
     { role: '奏折朱批', title: '奏折与朱批', hint: '红笔是皇帝批的。黑字是臣工写的。' },
   ];
-  const ROLE_CHIP = {
-    '默认朝服像': 'green',
-    '其他真迹': 'indigo',
-    '相关史迹': 'indigo',
-    '御笔书法': 'indigo',
-    '奏折朱批': 'amber',
-  };
 
   function mediaImg(src, alt) {
     return imgTag(src, alt, {
@@ -416,7 +421,7 @@ async function ensureView(view) {
 
   function setNav(path) {
     const current = path.split('/').filter(Boolean)[0] || '';
-    const emperorViews = new Set(['emperors', 'person', 'people', 'images', 'image', 'kangxi', 'yongzheng', 'chapter', 'succession', 'empresses', 'princes', 'questions', 'question']);
+    const emperorViews = new Set(['emperors', 'person', 'people', 'images', 'image', 'kangxi', 'yongzheng', 'chapter', 'succession', 'empresses', 'princes', 'princesses', 'questions', 'question']);
     document.querySelectorAll('.nav a').forEach((link) => {
       const href = (link.getAttribute('href') || '#/').replace(/^#/, '') || '/';
       const key = href.split('/').filter(Boolean)[0] || '';
@@ -538,6 +543,7 @@ async function ensureView(view) {
       '#/succession': '储位链',
       '#/empresses': '四后时间轴',
       '#/princes': '皇子表',
+      '#/princesses': '皇女表',
       '#/lanes': '传闻对照',
       '#/site/QH-ST-0013': '今地：畅春园',
       '#/site/QH-ST-0021': '景陵',
@@ -578,7 +584,7 @@ async function ensureView(view) {
   function chapterReadBlock(personId) {
     const chapters = chaptersForPerson(personId);
     const extras = {
-      'QH-P-000001': [['#/lanes', '野史怎么说，官书怎么写']],
+      'QH-P-000001': [['#/lanes', '野史怎么说，官书怎么写'], ['#/princes', '儿子怎么排'], ['#/princesses', '女儿怎么排']],
       'QH-P-000002': [['#/kangxi', '康熙朝的储位与对照'], ['#/lanes', '改诏、丹药等传闻']],
       'QH-P-000053': [['#/lane/QH-L-0010', '出家说']],
     };
@@ -804,15 +810,15 @@ async function ensureView(view) {
       bound: '出生地、十全武功怎样估价、禅位后谁拍板，都未回原文。继皇后那拉氏无谥、丧仪降格，不能按后来的皇后规格回写。',
     },
     'QH-P-000054': {
-      body: '1796 年内禅即位，前三年太上皇还在。嘉庆四年乾隆死后，才真正管事，同年处置和珅。白莲教、天理教攻宫、阿美士德使团，是这段常见的条目，目前只是索引。',
-      bound: '1796 到 1799 年，名义在位和实际权力不是一回事。永琰后来改名颙琰。猝死病因未核。',
+      body: '1796 年内禅即位，前三年太上皇还在。嘉庆四年乾隆死后，才真正管事，同年处置和珅。白莲教、天理教攻宫、阿美士德使团，是这段常见的条目，目前只是索引。1796 到 1799 年，名义在位和实际权力不是一回事。',
+      bound: '原名永琰，即位后避讳改颙琰。猝死病因未核。反腐叙事需拆制度和个案，不能收成一句「嘉庆反腐」。
     },
     'QH-P-000055': {
-      body: '1820 年即位，次年改元道光。即位后由绵宁改名旻宁，是避讳，不是两个人。禁烟、第一次鸦片战争、《南京条约》，是这段最常被提起的事，目前都未逐条回原文。',
+      body: '1820 年即位，次年改元道光。原名绵宁，即位后避讳改旻宁。禁烟、第一次鸦片战争、《南京条约》，是这段最常被提起的事，目前都未逐条回原文。',
       bound: '节俭故事、立储过程里的竞争传说，多是后来说法。孝静成皇后是后来追尊。',
     },
     'QH-P-000056': {
-      body: '1850 年即位，次年改元咸丰。在位十一年。太平天国、第二次鸦片战争、圆明园被焚掠、避走热河，是这段的骨架。身后留下赞襄政务的安排，两宫和八大臣怎样分权，要按当时文件看，不能后来倒推。',
+      body: '1850 年即位，次年改元咸丰。在位十一年。太平天国、第二次鸦片战争、圆明园被焚掠、避走热河，是这段的骨架。身后留下赞襄政务的安排，两宫和八大臣怎样分权，要按当时文件看，不能后来倒推成慈禧已经掌权。',
       bound: '「北狩」和「逃离北京」是两种说法。不能把后来的慈禧权势，写成咸丰朝已经如此。祺祥只拟用过，后来改成同治。',
     },
     'QH-P-000057': {
@@ -821,7 +827,7 @@ async function ensureView(view) {
     },
     'QH-P-000058': {
       body: '生父是醇亲王奕譞。礼法上过继给咸丰，所以能接同治的帝位。1875 年到 1908 年在位。两宫仍垂帘，中间有亲政、甲午、戊戌、庚子、新政。无子女。',
-      bound: '生辰要以玉牒核对。现代检测支持急性砷中毒，下毒者未知。帝党、后党是后来的叫法，不宜当成当时的机构。',
+      bound: '生辰异文须以玉牒核对。现代检测支持急性砷中毒，下毒者未知。帝党、后党是后来的叫法，不宜当成当时的机构。',
     },
     'QH-P-000059': {
       body: '1908 年即位，1909 年才是宣统元年，1912 年 2 月 12 日退位。四条日期不是一件事。载沣摄政。无清朝正式庙号、谥号。退位后的小朝廷、1917 年复辟、伪满，都不算清朝连续在位。',
@@ -875,6 +881,7 @@ async function ensureView(view) {
       <div class="reading">
         ${person['选择理由'] ? `<p class="lede">${esc(person['选择理由'])}</p>` : ''}
         ${princeCard(id)}
+        ${princessCard(id)}
         ${heirEventsFor(id).length ? `<div class="thread-block">
           <h2>储位</h2>
           ${heirList(heirEventsFor(id))}
@@ -990,7 +997,60 @@ async function ensureView(view) {
           </tbody>
         </table>
       </div>
-      <p class="actions"><a class="link" href="#/empresses">后妃</a> · <a class="link" href="#/succession">储位</a></p>
+      <p class="actions"><a class="link" href="#/empresses">后妃</a> · <a class="link" href="#/princesses">皇女</a> · <a class="link" href="#/succession">储位</a></p>
+    `;
+  }
+
+  function princessById(id) {
+    return (DATA.princesses || []).find((row) => row.person_id === id) || null;
+  }
+
+  function princessCard(id) {
+    const row = princessById(id);
+    if (!row && id !== 'QH-P-000001') return '';
+    if (id === 'QH-P-000001') {
+      return `<h2>皇女</h2>
+        <p class="thread-lead">表序不是玉牒。和硕、固伦会改。常宁之女是抚育，不是亲生第二十一女。</p>
+        <p class="actions"><a class="link" href="#/princesses">读全表</a></p>`;
+    }
+    return `
+      <h2>在皇女表里</h2>
+      <p class="rel">${esc(row['表序标签'])} · ${esc(row['收录状态'])}</p>
+      <p class="quote">「${esc(row['封号摘要'] || row['生薨摘要'])}」</p>
+      <p class="gloss">生母候选：${row['生母人物ID'] ? personLink(row['生母人物ID']) : esc(row['生母候选名'] || '待核')}。${esc(gloss(row['备注'] || ''))}</p>
+      <p class="actions"><a class="link" href="#/princesses">读全表</a></p>`;
+  }
+
+  function princessesPage(query) {
+    const status = query.status || '全部';
+    const groups = ['全部', '入序受封', '未封', '抚育附列'];
+    const rows = (DATA.princesses || []).filter((row) => status === '全部' || row['收录状态'] === status);
+    return `
+      <p class="kicker">皇女</p>
+      <h1>康熙的女儿</h1>
+      <p class="lede">第一女到第二十女。未封十二人，受封八人。常宁之女是抚育，不要算进这二十。</p>
+      <p class="warn">和硕、固伦是当时的封号。追进固伦，人已经薨了。表序不是玉牒。</p>
+      <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a></p>
+      <div class="filters">
+        ${groups.map((item) => `<button type="button" data-princess="${esc(item)}" class="${item === status ? 'on' : ''}" aria-pressed="${item === status}">${esc(item)}</button>`).join('')}
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>表序</th><th>规范名</th><th>收录</th><th>生母候选</th><th>封号</th><th>下嫁</th></tr></thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr data-href="#/person/${esc(row.person_id)}" tabindex="0" role="link" aria-label="查看 ${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}">
+                <td>${esc(row['表序'] || '—')}</td>
+                <td>${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}</td>
+                <td>${esc(row['收录状态'])}</td>
+                <td>${esc(row['生母候选名'] || (row['收录状态'] === '抚育附列' ? '表未记生母' : '待核'))}</td>
+                <td>${esc(row['封号摘要'])}</td>
+                <td>${esc(row['下嫁摘要'] || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <p class="actions"><a class="link" href="#/princes">皇子</a> · <a class="link" href="#/empresses">后妃</a> · <a class="link" href="#/chapter/kangxi-08">怎么读这张表</a></p>
     `;
   }
 
@@ -1456,6 +1516,7 @@ async function ensureView(view) {
     const laneHits = hits.filter((row) => row.type === 'lane').map((row) => (DATA.lanes || []).find((item) => item.lane_id === row.id)).filter(Boolean);
     const empressHits = hits.filter((row) => row.type === 'empress').map((row) => (DATA.empressTimeline || []).find((item) => item.event_id === row.id)).filter(Boolean);
     const princeHits = hits.filter((row) => row.type === 'prince').map((row) => (DATA.princes || []).find((item) => item.person_id === row.id)).filter(Boolean);
+    const princessHits = hits.filter((row) => row.type === 'princess').map((row) => (DATA.princesses || []).find((item) => item.person_id === row.id)).filter(Boolean);
     const heirHits = hits.filter((row) => row.type === 'heir').map((row) => (DATA.heirChain || []).find((item) => item.event_id === row.id)).filter(Boolean);
     const siteHits = hits.filter((row) => row.type === 'site').map((row) => (DATA.sites || []).find((item) => item.site_id === row.id)).filter(Boolean);
     const questionHits = hits.filter((row) => row.type === 'question');
@@ -1471,6 +1532,8 @@ async function ensureView(view) {
       ${empressHits.length ? timelineList(empressHits) : '<p class="empty">没有命中。</p>'}
       <h2>皇子 ${princeHits.length}</h2>
       ${princeHits.length ? `<ul>${princeHits.map((row) => `<li><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : '<p class="empty">没有命中。</p>'}
+      <h2>皇女 ${princessHits.length}</h2>
+      ${princessHits.length ? `<ul>${princessHits.map((row) => `<li><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : '<p class="empty">没有命中。</p>'}
       <h2>储位 ${heirHits.length}</h2>
       ${heirHits.length ? heirList(heirHits) : '<p class="empty">没有命中。</p>'}
       <h2>今地 ${siteHits.length}</h2>
@@ -1526,6 +1589,7 @@ async function ensureView(view) {
     else if (view === 'lane') html = lanePage(parts[1]);
     else if (view === 'empresses') html = empressesPage(query);
     else if (view === 'princes') html = princesPage(query);
+    else if (view === 'princesses') html = princessesPage(query);
     else if (view === 'succession') html = successionPage(query);
     else if (view === 'sources') html = sourcesPage();
     else if (view === 'source') html = sourcePage(parts[1]);
@@ -1690,6 +1754,12 @@ async function ensureView(view) {
     if (princeFilter) {
       const id = princeFilter.getAttribute('data-prince');
       location.hash = id === '全部' ? '#/princes' : `#/princes?status=${encodeURIComponent(id)}`;
+      return;
+    }
+    const princessFilter = event.target.closest('[data-princess]');
+    if (princessFilter) {
+      const id = princessFilter.getAttribute('data-princess');
+      location.hash = id === '全部' ? '#/princesses' : `#/princesses?status=${encodeURIComponent(id)}`;
       return;
     }
     const stageFilter = event.target.closest('[data-stage]');

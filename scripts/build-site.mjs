@@ -153,6 +153,7 @@ function build() {
   const lanes = load('side-lanes.csv');
   const empressTimeline = load('kangxi-empress-timeline.csv');
   const princes = load('kangxi-princes.csv');
+  const princesses = load('kangxi-princesses.csv');
   const heirChain = load('kangxi-heir-chain.csv');
   const historicSites = load('historic-sites.csv');
   const questions = load('golden-questions.csv');
@@ -203,6 +204,7 @@ function build() {
     lanes: lanes.length,
     empressEvents: empressTimeline.length,
     princes: princes.length,
+    princesses: princesses.length,
     heirEvents: heirChain.length,
     sites: historicSites.length,
     questions: questions.length,
@@ -242,6 +244,10 @@ function build() {
       label: row['规范名'].replace(/^爱新觉罗·/, ''),
       extra: row['表序标签'],
     })),
+    ...princesses.map((row) => searchEntry('princess', row.person_id, Object.values(row).join(' '), {
+      label: row['规范名'].replace(/^爱新觉罗氏/, ''),
+      extra: row['表序标签'],
+    })),
     ...heirChain.map((row) => searchEntry('heir', row.event_id, Object.values(row).join(' '))),
     ...historicSites.map((row) => searchEntry('site', row.site_id, Object.values(row).join(' '))),
     ...questions.map((row) => searchEntry('question', row.question_id, Object.values(row).join(' '), {
@@ -265,7 +271,7 @@ function build() {
       suggest,
     }),
     writeJson('people.json', { people, portraits, crosswalk }),
-    writeJson('kangxi.json', { units, claims, lanes, empressTimeline, princes, heirChain, chapters, questions }),
+    writeJson('kangxi.json', { units, claims, lanes, empressTimeline, princes, princesses, heirChain, chapters, questions }),
     writeJson('catalog.json', { sources, sourceIndex, tasks }),
     writeJson('search.json', buildIndex(searchEntries)),
   ];
