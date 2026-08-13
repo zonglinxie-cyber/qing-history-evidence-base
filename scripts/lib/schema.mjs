@@ -21,7 +21,7 @@ export const CSV_FILES = {
   'phase0-people.csv': {
     required: ['person_id', '分组', '规范名', '人物类型'],
     unique: ['person_id'],
-    count: 86,
+    count: 106,
   },
   'source-rights-ledger.csv': {
     required: ['source_id', '机构或资源', '权利颜色', '资源网址'],
@@ -43,12 +43,12 @@ export const CSV_FILES = {
   'kangxi-source-units.csv': {
     required: ['source_unit_id', 'source_entity_id', '史料名', '卷次', '直接记录网址'],
     unique: ['source_unit_id'],
-    count: 17,
+    count: 18,
   },
   'kangxi-source-claims.csv': {
     required: ['Assertion ID', '主体 ID', '谓词/关系', '来源实体 ID', '支持引文', '公历下界', '公历上界', '状态'],
     unique: ['Assertion ID'],
-    count: 92,
+    count: 120,
   },
   'yongzheng-source-units.csv': {
     required: ['source_unit_id', 'source_entity_id', '史料名', '卷次', '直接记录网址'],
@@ -63,12 +63,12 @@ export const CSV_FILES = {
   'golden-questions.csv': {
     required: ['question_id', '类别', '问题', '期望行为', '路由'],
     unique: ['question_id'],
-    count: 60,
+    count: 64,
   },
   'chapters.csv': {
     required: ['chapter_id', 'slug', 'person_id', 'era', 'title', 'file', 'lede'],
     unique: ['chapter_id', 'slug'],
-    count: 20,
+    count: 21,
   },
   'side-lanes.csv': {
     required: ['lane_id', '栏目', '标题', '通行说法', '官书或档案怎么写', '差异或读法', '证据状态', '权利颜色', '使用说明'],
@@ -85,9 +85,9 @@ export const CSV_FILES = {
     count: 35,
   },
   'kangxi-princesses.csv': {
-    required: ['person_id', '表序', '规范名', '生母ID', '收录状态'],
+    required: ['person_id', '表序', '规范名', '收录状态'],
     unique: ['person_id'],
-    count: 8,
+    count: 21,
   },
   'kangxi-heir-chain.csv': {
     required: ['event_id', 'person_id', '阶段', '事件类型', '来源单元', '引文'],

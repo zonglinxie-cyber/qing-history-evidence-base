@@ -25,7 +25,7 @@
 | `docs/05-six-week-execution-plan.md` | 零预算六批次执行计划、依赖与验收 |
 | `docs/06-risk-register.md` | 风险登记、触发条件、责任人和应对方案 |
 | `docs/07-zero-budget-production-method.md` | 免费资料边界、证据状态和持续生产循环 |
-| `data/phase0-people.csv` | 康雍候选权威档；原 50 人样本已补入孝昭与康熙皇子缺口，现 72 人，均为待取证 |
+| `data/phase0-people.csv` | 康雍候选权威档；原 50 人样本已补入孝昭、康熙皇子缺口、大臣索引与皇女表，现 106 人，均为待取证 |
 | `data/qing-emperors.csv` | 十二帝统一骨架与本纪、实录、故宫入口 |
 | `data/qing-emperor-source-index.csv` | 十二帝和通用史料入口索引 |
 | `data/emperor-portraits.csv` | 十二帝明黄朝服默认像，以及点进人物页后的其他真迹、相关史迹、御笔书法、奏折朱批（含释文与权利颜色） |
@@ -33,20 +33,22 @@
 | `data/entity-id-crosswalk.csv` | 十二帝展示 ID 到统一人物 ID 的迁移对照，防止重复实体 |
 | `data/qing-emperor-research-cards.csv` | 十二帝第一版家庭、事件、争议及实录卷数研究卡 |
 | `content/emperors/README.md` | 十二帝第一版可读导航与当前证据边界 |
-| `data/kangxi-source-units.csv` | 康熙卷来源单元：实录即位/崩逝/遗诏、卷234初废条次、卷237复立，加后妃传、本纪六七八九、实录卷48册谥诏、皇子世表、理密亲王传 |
-| `data/kangxi-source-claims.csv` | 即位、崩逝、遗诏、四后称号轴、皇子表与储位链拆出的审核中原子主张 |
+| `data/kangxi-source-units.csv` | 康熙卷来源单元：实录即位/崩逝/遗诏、卷234初废条次、卷237复立，加后妃传、本纪六七八九、实录卷48册谥诏、皇子世表、公主表、理密亲王传 |
+| `data/kangxi-source-claims.csv` | 即位、崩逝、遗诏、四后称号轴、皇子表、皇女表与储位链拆出的审核中原子主张 |
 | `data/yongzheng-source-units.csv` | 雍正卷来源单元：《清史稿》卷9本纪切片与卷295隆科多、年羹尧传 |
 | `data/yongzheng-source-claims.csv` | 即位、生母、密旨、年隆案、军机处、崩逝拆出的审核中原子主张 |
-| `data/golden-questions.csv` | 60 道黄金问题：事实查询、关系路径、版本冲突、无证据拒答 |
-| `data/chapters.csv` | 可读章节目录（十五篇）；正文在 `content/emperors/` |
+| `data/golden-questions.csv` | 64 道黄金问题：事实查询、关系路径、版本冲突、无证据拒答 |
+| `data/chapters.csv` | 可读章节目录（二十一篇）；正文在 `content/emperors/` |
 | `data/kangxi-empress-timeline.csv` | 康熙四后时态称号时间轴；七月/九月册后冲突与孝恭非康熙朝皇后均保留 |
 | `data/kangxi-princes.csv` | 康熙皇子全表：卷164入序23人、本卷缺号第四子、早薨未入序11人；表序与长子分栏 |
+| `data/kangxi-princesses.csv` | 康熙皇女全表：卷166亲生20人、抚育1人；未封12、受封8；和硕/固伦按时态；荣宪沿用 QH-P-000021 |
 | `data/kangxi-heir-chain.csv` | 两废太子事件链：立储、拘执、颁废、复立、再废按日拆分；实录卷234/237已回核乙亥、丁丑、丁酉、辛巳；乙丑/丙寅、四十六/四十七年、九月/十月冲突保留 |
 | `data/side-lanes.csv` | 后宫趣事、野史对照、罕读史料三栏；传闻与官书分列，不升格为已核事实 |
 | `content/emperors/kangxi/01-accession-and-testament.md` | 康熙即位与遗诏的首篇证据型短章 |
 | `content/emperors/kangxi/02-two-depositions.md` | 两废太子：分日记录，不写成九子夺嫡 |
 | `content/emperors/kangxi/03-four-empresses.md` | 康熙四后：生前称号不等于最终谥号 |
 | `content/emperors/kangxi/04-prince-table.md` | 表序、长子、皇四子 |
+| `content/emperors/kangxi/08-princess-table.md` | 皇女、和硕、固伦：卷166二十女加抚育一女 |
 | `content/emperors/yongzheng/01-accession-and-early-reign.md` | 雍正即位、生母、年隆与军机 |
 | `site/` | 本地研究稿工作台。首页只拉 `data/home.json`；人物、康熙、来源、检索按路由再拉对应 JSON。打开前先运行 `npm run build` |
 | `scripts/build-site.mjs` | 把 CSV 编成 `site/data/*.json`（按路由拆分），并直出首页 HTML |

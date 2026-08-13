@@ -57,19 +57,19 @@ for (const [name, rows, expected] of [
   ['qing-emperors.csv', emperors, 12],
   ['qing-emperor-research-cards.csv', cards, 12],
   ['entity-id-crosswalk.csv', crosswalk, 12],
-  ['phase0-people.csv', people, 86],
+  ['phase0-people.csv', people, 106],
   ['source-rights-ledger.csv', sources, 27],
   ['controlled-vocabularies.csv', vocab, 125],
-  ['kangxi-source-units.csv', kangxiUnits, 17],
-  ['kangxi-source-claims.csv', kangxiClaims, 92],
+  ['kangxi-source-units.csv', kangxiUnits, 18],
+  ['kangxi-source-claims.csv', kangxiClaims, 120],
   ['yongzheng-source-units.csv', yongzhengUnits, 13],
   ['yongzheng-source-claims.csv', yongzhengClaims, 38],
-  ['golden-questions.csv', questions, 60],
-  ['chapters.csv', chapters, 20],
+  ['golden-questions.csv', questions, 64],
+  ['chapters.csv', chapters, 21],
   ['kangxi-empress-timeline.csv', empressTimeline, 19],
   ['kangxi-princes.csv', princes, 35],
   ['kangxi-heir-chain.csv', heirChain, 18],
-  ['kangxi-princesses.csv', princesses, 8],
+  ['kangxi-princesses.csv', princesses, 21],
 ]) exactCount(name, rows, expected);
 
 for (const [name, rows, key] of [
@@ -236,7 +236,7 @@ if (refuseCount < 10) errors.push(`无证据拒答黄金问题 ${refuseCount} �
 if (conflictCount < 10) errors.push(`版本冲突黄金问题 ${conflictCount} 道，至少应为 10`);
 
 const chapterEras = new Set(['天命', '天聪', '顺治', '康熙', '雍正', '乾隆', '嘉庆', '道光', '咸丰', '同治', '光绪', '宣统']);
-const knownRoutes = new Set(['#/kangxi', '#/yongzheng', '#/succession', '#/empresses', '#/princes', '#/lanes']);
+const knownRoutes = new Set(['#/kangxi', '#/yongzheng', '#/succession', '#/empresses', '#/princes', '#/princesses', '#/lanes']);
 const siteIds = new Set(historicSites.map((row) => row.site_id));
 const laneIds = new Set(lanes.map((row) => row.lane_id));
 const emperorPersonIds = new Set(crosswalk.map((row) => row.person_id));
@@ -317,9 +317,38 @@ for (const prince of princes) {
     errors.push('第四子不得标为卷164入序正文');
   }
 }
+const princessStatuses = new Set(['入序受封', '未封', '抚育附列']);
+if (princesses.filter((row) => row['收录状态'] === '入序受封').length !== 8) {
+  errors.push('卷166入序受封应为8人');
+}
+if (princesses.filter((row) => row['收录状态'] === '未封').length !== 12) {
+  errors.push('卷166未封应为12人');
+}
+const foster = princesses.filter((row) => row['收录状态'] === '抚育附列');
+if (foster.length !== 1 || foster[0].person_id !== 'QH-P-000123' || foster[0]['父亲ID'] === 'QH-P-000001') {
+  errors.push('抚育附列必须且只能是纯禧 QH-P-000123，父亲不得写成玄烨');
+}
+const thirdDaughter = princesses.find((row) => row['表序'] === '3');
+if (thirdDaughter?.person_id !== 'QH-P-000021') errors.push('表序第三女必须是荣宪 QH-P-000021');
+if (claimById.get('QH-A-KX-0095')?.['客体 ID 或值'] !== '和硕荣宪公主') {
+  errors.push('QH-A-KX-0095 初封必须是和硕荣宪，不得写成固伦');
+}
+if (claimById.get('QH-A-KX-0106')?.['谓词/关系'] !== 'posthumously_advanced_as') {
+  errors.push('QH-A-KX-0106 温宪固伦必须标为追进');
+}
+if (claimById.get('QH-A-KX-0110')?.['谓词/关系'] !== 'posthumously_advanced_as') {
+  errors.push('QH-A-KX-0110 纯悫固伦必须标为追进');
+}
 for (const princess of princesses) {
-  if (!knownPersonIds.has(princess['生母ID'])) errors.push(`${princess.person_id} 生母ID未知: ${princess['生母ID']}`);
+  if (!knownPersonIds.has(princess.person_id)) errors.push(`${princess.person_id} 皇女表人物未入人物档`);
+  if (!princessStatuses.has(princess['收录状态'])) errors.push(`${princess.person_id} 收录状态无效`);
   if (!princess['表序'] || !princess['规范名']) errors.push(`${princess.person_id} 缺少表序或规范名`);
+  if (princess['收录状态'] !== '抚育附列' && princess['父亲ID'] !== 'QH-P-000001') {
+    errors.push(`${princess.person_id} 亲生女父亲必须是玄烨`);
+  }
+  if (princess['生母人物ID'] && !knownPersonIds.has(princess['生母人物ID'])) {
+    errors.push(`${princess.person_id} 生母人物ID未知: ${princess['生母人物ID']}`);
+  }
 }
 if (claimById.get('QH-A-KX-0058')?.['冲突组 ID'] !== 'QH-CF-KX-PRINCE-ORDER'
   || claimById.get('QH-A-KX-0066')?.['冲突组 ID'] !== 'QH-CF-KX-PRINCE-ORDER') {
