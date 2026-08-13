@@ -1,0 +1,126 @@
+scheme_code,scheme_label,term_code,中文标签,英文标签,定义,上位词,逆关系,是否启用,排序
+name_type,名称类型,birth_name,本名,Birth name,出生或早年正式使用的名字,,,true,10
+name_type,名称类型,childhood_name,幼名,Childhood name,幼年使用的称呼或名字,,,true,20
+name_type,名称类型,taboo_form,避讳前写法,Pre-taboo form,因避讳而改变前的历史写法,,,true,30
+name_type,名称类型,post_taboo_form,避讳后写法,Post-taboo form,避讳后形成的写法,,,true,40
+name_type,名称类型,temple_name,庙号,Temple name,皇帝或皇后入庙后的庙号,,,true,50
+name_type,名称类型,posthumous_name,谥号,Posthumous name,死后追加的谥号,,,true,60
+name_type,名称类型,honorific,尊号,Honorific,生前或身后加上的尊号,,,true,70
+name_type,名称类型,title_name,位号或爵号式称呼,Title-style name,由妃嫔位号爵位或身份构成的称呼,,,true,80
+name_type,名称类型,common_name,现代通称,Common name,现代读者常用但未必是同时代正式名称的称呼,,,true,90
+name_type,名称类型,manchu_name,满文名,Manchu name,满文原名或满文形式,,,true,100
+name_type,名称类型,transliteration,转写,Transliteration,按明确方案形成的罗马字或汉字转写,,,true,110
+name_type,名称类型,variant_graph,异体字,Graphic variant,同一名称的异体或俗体字写法,,,true,120
+relationship_type,关系类型,has_biological_father,生父为,Has biological father,主体的生物学父亲是客体,kinship,biological_father_of,true,10
+relationship_type,关系类型,biological_father_of,为生父,Biological father of,主体是客体的生物学父亲,kinship,has_biological_father,true,20
+relationship_type,关系类型,has_biological_mother,生母为,Has biological mother,主体的生物学母亲是客体,kinship,biological_mother_of,true,30
+relationship_type,关系类型,biological_mother_of,为生母,Biological mother of,主体是客体的生物学母亲,kinship,has_biological_mother,true,40
+relationship_type,关系类型,has_legal_father,法定父为,Has legal father,礼法或法律身份上的父亲是客体,kinship,legal_father_of,true,50
+relationship_type,关系类型,legal_father_of,为法定父,Legal father of,主体是客体礼法或法律身份上的父亲,kinship,has_legal_father,true,60
+relationship_type,关系类型,has_legal_mother,嫡母或法定母为,Has legal mother,礼法或法律身份上的母亲是客体,kinship,legal_mother_of,true,70
+relationship_type,关系类型,legal_mother_of,为嫡母或法定母,Legal mother of,主体是客体礼法或法律身份上的母亲,kinship,has_legal_mother,true,80
+relationship_type,关系类型,has_ritual_mother,礼仪母为,Has ritual mother,在特定礼仪或制度语境中被视作母亲,kinship,ritual_mother_of,true,90
+relationship_type,关系类型,ritual_mother_of,为礼仪母,Ritual mother of,主体在特定礼仪或制度语境中为客体之母,kinship,has_ritual_mother,true,100
+relationship_type,关系类型,has_adoptive_parent,养父母为,Has adoptive parent,通过正式收养或过继形成的父母关系,kinship,adoptive_parent_of,true,110
+relationship_type,关系类型,adoptive_parent_of,为养父母,Adoptive parent of,主体通过正式收养或过继成为客体父母,kinship,has_adoptive_parent,true,120
+relationship_type,关系类型,has_foster_parent,抚育者为,Has foster parent,以抚育事实形成但不等于正式收养的关系,kinship,foster_parent_of,true,130
+relationship_type,关系类型,foster_parent_of,为抚育者,Foster parent of,主体承担客体抚育职责但不必然具有法定亲子关系,kinship,has_foster_parent,true,140
+relationship_type,关系类型,spouse_of,配偶为,Spouse of,婚姻关系；对称关系,kinship,spouse_of,true,150
+relationship_type,关系类型,betrothed_to,订婚对象为,Betrothed to,存在订婚但未必最终成婚；对称关系,kinship,betrothed_to,true,160
+relationship_type,关系类型,full_sibling_of,同父同母手足为,Full sibling of,同父且同母的手足关系,kinship,full_sibling_of,true,170
+relationship_type,关系类型,paternal_half_sibling_of,同父异母手足为,Paternal half-sibling of,同父不同母的手足关系,kinship,paternal_half_sibling_of,true,180
+relationship_type,关系类型,maternal_half_sibling_of,同母异父手足为,Maternal half-sibling of,同母不同父的手足关系,kinship,maternal_half_sibling_of,true,190
+relationship_type,关系类型,member_of_lineage,属于宗支或家族,Member of lineage,主体隶属于特定宗支家族或谱系,affiliation,lineage_has_member,true,200
+relationship_type,关系类型,lineage_has_member,宗支或家族成员为,Lineage has member,特定宗支家族包含主体,affiliation,member_of_lineage,true,210
+relationship_type,关系类型,teacher_of,为师,Teacher of,主体是客体明确记载的教师,social,student_of,true,220
+relationship_type,关系类型,student_of,从师于,Student of,主体受教于客体,social,teacher_of,true,230
+relationship_type,关系类型,political_ally_of,政治盟友为,Political ally of,在明确时间与议题下形成政治合作；对称关系,political,political_ally_of,true,240
+relationship_type,关系类型,political_opponent_of,政治对手为,Political opponent of,在明确时间与议题下形成政治对立；对称关系,political,political_opponent_of,true,250
+assertion_status,主张状态,draft,草稿,Draft,尚未进入正式复核的候选主张,,,true,10
+assertion_status,主张状态,in_review,审核中,In review,已提交并正在进行来源与学术复核,,,true,20
+assertion_status,主张状态,accepted,已采纳,Accepted,通过规定审核且可进入正式展示,,,true,30
+assertion_status,主张状态,disputed,有争议,Disputed,存在未解决的相互冲突证据或解释,,,true,40
+assertion_status,主张状态,rejected,已驳回,Rejected,经审核不成立或证据不足,,,true,50
+assertion_status,主张状态,deprecated,已废弃,Deprecated,曾使用但被新版本取代或撤回,,,true,60
+evidence_stance,证据立场,supports,支持,Supports,该证据直接或间接支持主张,,,true,10
+evidence_stance,证据立场,contradicts,反驳,Contradicts,该证据与主张相冲突,,,true,20
+evidence_stance,证据立场,contextualizes,提供语境,Contextualizes,该证据帮助解释但不直接证明主张,,,true,30
+evidence_stance,证据立场,mentions_only,仅提及,Mentions only,材料只提到相关对象而不支持主张,,,true,40
+evidence_directness,证据直接性,explicit,明确记载,Explicit,来源直接陈述该事实,,,true,10
+evidence_directness,证据直接性,inferred,推定,Inferred,由来源内容推论而非直接陈述,,,true,20
+evidence_directness,证据直接性,contextual,语境性,Contextual,仅提供背景语境,,,true,30
+evidence_directness,证据直接性,argument_from_silence,以沉默为据,Argument from silence,以材料未记载某事作为论证的一部分,,,true,40
+evidence_strength,证据强度,primary,一手直接,Primary,与事件或制度形成过程直接相关的一手材料,,,true,10
+evidence_strength,证据强度,strong,强,Strong,与命题高度相关且来源链条清楚,,,true,20
+evidence_strength,证据强度,moderate,中,Moderate,具有支持力但存在间接性或版本局限,,,true,30
+evidence_strength,证据强度,weak,弱,Weak,只能提供有限线索或来源质量较低,,,true,40
+evidence_strength,证据强度,unrated,未评级,Unrated,尚未由审核者给出强度判断,,,true,50
+certainty,确定性,exact,确定,Exact,证据支持精确陈述,,,true,10
+certainty,确定性,approximate,约略,Approximate,时间数量或描述只能给出近似值,,,true,20
+certainty,确定性,uncertain,不确定,Uncertain,有明确不确定性但仍可提出候选,,,true,30
+certainty,确定性,approximate_uncertain,约略且不确定,Approximate and uncertain,同时存在近似与不确定,,,true,40
+certainty,确定性,inferred,推定,Inferred,由编辑根据材料推定而来,,,true,50
+certainty,确定性,unknown,未知,Unknown,目前无法判断,,,true,60
+rights_color,权利颜色,green,绿,Green,已确认公版开放许可或书面授权；仍须遵守对象级条件,,,true,10
+rights_color,权利颜色,yellow,黄,Yellow,仅可查询或权利未完全确认；默认只保存自建元数据并外链,,,true,20
+rights_color,权利颜色,red,红,Red,明确禁止或当前条件不允许计划中的获取展示或商业使用,,,true,30
+source_level,来源等级,A1,原始同时代档案,A1 primary contemporary archive,事件或制度运行中形成的原始档案,,,true,10
+source_level,来源等级,A2,官修汇编与制度文献,A2 official compilation,官修实录会典史馆材料等；仍需注意修纂目的与时间差,,,true,20
+source_level,来源等级,B,权威整理与学术研究,B scholarly or authoritative synthesis,可靠整理本馆藏说明与同行研究,,,true,30
+source_level,来源等级,C,通行数字文本与参考工具,C reference or digital text,便于发现但版本OCR或权利需再核验,,,true,40
+source_level,来源等级,D,未核传闻与大众内容,D unverified popular content,只能做线索不可进入正式事实层,,,true,50
+review_status,审核状态,not_started,未开始,Not started,尚未分派审核,,,true,10
+review_status,审核状态,needs_source,待补来源,Needs source,没有满足要求的具体来源与定位,,,true,20
+review_status,审核状态,first_checked,一校完成,First checked,文字和基础元数据已完成一校,,,true,30
+review_status,审核状态,second_checked,二校完成,Second checked,页行消歧日期与关系已完成二校,,,true,40
+review_status,审核状态,academic_review,学术审核中,Academic review,由学术负责人或授权审核者复核,,,true,50
+review_status,审核状态,rights_review,权利审核中,Rights review,由版权与馆藏负责人复核,,,true,60
+review_status,审核状态,approved,已通过,Approved,已满足当前发布门槛,,,true,70
+review_status,审核状态,blocked,阻塞,Blocked,因缺来源权限专家或其他前置条件无法继续,,,true,80
+priority,优先级,P0,阻断级,P0 blocker,会导致错误历史结论侵权或不可恢复数据问题,,,true,10
+priority,优先级,P1,核心级,P1 critical,阻断核心任务或造成系统性误导,,,true,20
+priority,优先级,P2,重要级,P2 important,影响效率或非核心体验但不阻断验证,,,true,30
+priority,优先级,P3,优化级,P3 polish,外观偏好或未来扩展想法,,,true,40
+depiction_identification,画像人物认定,inscription_explicit,题名明确,Inscription explicit,画面题名或同时代文字明确指认人物,,,true,10
+depiction_identification,画像人物认定,catalog_attribution,馆藏著录认定,Catalog attribution,当前馆藏目录把画面著录为该人物,,,true,20
+depiction_identification,画像人物认定,scholarly_identification,学术研究认定,Scholarly identification,学术研究基于材料提出人物认定,,,true,30
+depiction_identification,画像人物认定,traditional_identification,传统传称,Traditional identification,长期传为某人但证据链有限,,,true,40
+depiction_identification,画像人物认定,probable,很可能,Probable,综合证据较可能但尚非确定,,,true,50
+depiction_identification,画像人物认定,possible,可能,Possible,只能作为可能候选,,,true,60
+depiction_identification,画像人物认定,rejected_identification,已否定认定,Rejected identification,已有充分理由否定旧的人物认定,,,true,70
+image_nature,图像性质,historical_original,历史原件,Historical original,清代形成且与对象同时代或接近同时代的原件,,,true,10
+image_nature,图像性质,later_historical_art,后世历史艺术,Later historical art,晚于对象所处时代的传统或历史题材创作,,,true,20
+image_nature,图像性质,modern_illustration,现代插画,Modern illustration,现代人工创作的说明性或艺术性图像,,,true,30
+image_nature,图像性质,ai_reconstruction,AI 再现,AI reconstruction,由生成式模型制作的假想视觉再现；不得伪装成史料,,,true,40
+image_nature,图像性质,document_scan,文献影像,Document scan,书页档案或文献载体的数字影像,,,true,50
+task_status,任务状态,not_started,未开始,Not started,任务尚未启动,,,true,10
+task_status,任务状态,in_progress,进行中,In progress,任务已启动且正在推进,,,true,20
+task_status,任务状态,blocked,阻塞,Blocked,任务因明确前置条件无法继续,,,true,30
+task_status,任务状态,under_review,待审核,Under review,任务产出已提交等待审核,,,true,40
+task_status,任务状态,complete,已完成,Complete,任务达到退出标准并已验收,,,true,50
+risk_status,风险状态,open,开放,Open,风险已登记但尚未完成处置,,,true,10
+risk_status,风险状态,mitigating,缓解中,Mitigating,已启动预防或缓解动作,,,true,20
+risk_status,风险状态,accepted,已接受,Accepted,决策人知情并接受剩余风险,,,true,30
+risk_status,风险状态,escalated,已升级,Escalated,风险超出当前团队权限或阈值,,,true,40
+risk_status,风险状态,closed,已关闭,Closed,触发条件消失或措施已验证有效,,,true,50
+decision_status,决策状态,proposed,待决定,Proposed,决策方案已提出但未生效,,,true,10
+decision_status,决策状态,decided,已决定,Decided,授权决策人已作出并记录决定,,,true,20
+decision_status,决策状态,superseded,已取代,Superseded,该决定被后续决定正式替代,,,true,30
+decision_status,决策状态,reopened,已重开,Reopened,因触发条件变化而重新讨论,,,true,40
+acquisition_method,获取方式,human_entry,人工录入,Human entry,由编辑直接录入或整理,,,true,10
+acquisition_method,获取方式,structured_import,结构化导入,Structured import,从结构化文件或接口导入候选记录,,,true,20
+acquisition_method,获取方式,rule_extraction,规则抽取,Rule extraction,由确定性规则生成候选,,,true,30
+acquisition_method,获取方式,ocr_extraction,OCR 抽取,OCR extraction,由文字识别生成候选文本或字段,,,true,40
+acquisition_method,获取方式,ner_extraction,实体识别抽取,NER extraction,由实体识别模型生成候选实体或提及,,,true,50
+acquisition_method,获取方式,llm_extraction,大模型抽取,LLM extraction,由大模型生成候选但不得自动发布,,,true,60
+assertion_kind,主张类型,entity_relation,实体关系,Entity relation,机构隶属师生政治联盟作者等通用实体关系,,,true,10
+assertion_kind,主张类型,literal_statement,文字或数值陈述,Literal statement,以文字数值布尔时间或 URI 为值的主张,,,true,20
+assertion_kind,主张类型,person_relationship,人物关系,Person relationship,亲属婚姻抚育承嗣等人物间关系,,,true,30
+assertion_kind,主张类型,title_assignment,称号授予,Title assignment,人物在特定时间拥有称号爵位位号或官职,,,true,40
+assertion_kind,主张类型,event_occurrence,事件发生,Event occurrence,事件的时间地点与层级关系,,,true,50
+assertion_kind,主张类型,event_participation,事件参与,Event participation,实体以明确角色参与事件,,,true,60
+assertion_kind,主张类型,depiction,图像表现认定,Depiction,视觉作品或图像区域表现某人物或对象,,,true,70
+verification_status,证据核验状态,unverified,未核验,Unverified,证据项尚未核对到具体来源,,,true,10
+verification_status,证据核验状态,locator_checked,定位已核,Locator checked,卷页档号或图像区域已核对,,,true,20
+verification_status,证据核验状态,quote_checked,引文已核,Quote checked,引文与原件或可靠影像逐字核对,,,true,30
+verification_status,证据核验状态,fully_verified,完全核验,Fully verified,定位版本引文与主张支持关系均已复核,,,true,40

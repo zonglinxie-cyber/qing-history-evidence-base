@@ -1,0 +1,13 @@
+entity_role,person_id,legacy_emperor_id,canonical_name,status,note
+emperor,QH-P-000051,QH-E-01,爱新觉罗·努尔哈赤,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000052,QH-E-02,爱新觉罗·皇太极,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000053,QH-E-03,爱新觉罗·福临,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000001,QH-E-04,爱新觉罗·玄烨,已存在,与康雍50人表同一人物；不得建立重复实体
+emperor,QH-P-000002,QH-E-05,爱新觉罗·胤禛,已存在,与康雍50人表同一人物；不得建立重复实体
+emperor,QH-P-000019,QH-E-06,爱新觉罗·弘历,已存在,与康雍50人表同一人物；不得建立重复实体
+emperor,QH-P-000054,QH-E-07,爱新觉罗·颙琰,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000055,QH-E-08,爱新觉罗·旻宁,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000056,QH-E-09,爱新觉罗·奕詝,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000057,QH-E-10,爱新觉罗·载淳,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000058,QH-E-11,爱新觉罗·载湉,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P
+emperor,QH-P-000059,QH-E-12,爱新觉罗·溥仪,待迁移,QH-E仅作当前展示兼容ID；权威人物ID统一为QH-P

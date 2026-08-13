@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "phase0-0.1.0",
+  "notice": "结构演示；发布前必须以指定底本逐字、逐卷页复核。confidence 不是历史真相概率。",
+  "assertion": {
+    "publicId": "QH-A-000001",
+    "kind": "person_relationship",
+    "status": "in_review",
+    "editorialRank": "preferred",
+    "certainty": "exact",
+    "confidence": 0.99,
+    "acquisitionMethod": "human_entry",
+    "proposition": {
+      "subject": {
+        "publicId": "QH-P-000002",
+        "preferredLabel": "爱新觉罗·胤禛",
+        "names": [
+          {"text": "胤禛", "type": "birth_name", "language": "zh", "script": "Hant"},
+          {"text": "雍正帝", "type": "common_name", "language": "zh-Hans", "script": "Hans"},
+          {"text": "世宗", "type": "temple_name", "language": "zh", "script": "Hant"}
+        ]
+      },
+      "predicate": {
+        "code": "has_biological_father",
+        "label": "生父",
+        "inverse": "biological_father_of"
+      },
+      "object": {
+        "publicId": "QH-P-000001",
+        "preferredLabel": "爱新觉罗·玄烨",
+        "names": [
+          {"text": "玄烨", "type": "birth_name", "language": "zh-Hans", "script": "Hans"},
+          {"text": "康熙帝", "type": "common_name", "language": "zh-Hans", "script": "Hans"},
+          {"text": "圣祖", "type": "temple_name", "language": "zh-Hans", "script": "Hans"}
+        ]
+      },
+      "validFrom": null,
+      "validTo": null,
+      "qualifiers": {
+        "childOrder": 4,
+        "orderBasis": "source_stated_order",
+        "relationshipNature": "biological"
+      }
+    },
+    "evidence": [
+      {
+        "publicId": "QH-EV-000001",
+        "stance": "supports",
+        "directness": "explicit",
+        "strength": "strong",
+        "source": {
+          "work": {"publicId": "QH-W-000001", "title": "清史稿"},
+          "version": {
+            "publicId": "QH-TV-000001",
+            "versionStatement": "Phase 0 待指定并核验的底本",
+            "sourceFamily": "QH-W-000001",
+            "bibliographicCitation": "《清史稿》卷九，本纪九，世宗本纪"
+          },
+          "textLayer": {
+            "publicId": "QH-TL-000001",
+            "type": "diplomatic",
+            "language": "lzh",
+            "script": "Hant",
+            "version": 1,
+            "contentSha256": "TO_BE_COMPUTED_AFTER_TRANSCRIPTION"
+          },
+          "segment": {
+            "publicId": "QH-TS-000001",
+            "xmlId": "qsg-v009-shizong-opening",
+            "locator": {"volume": "9", "section": "世宗本纪", "paragraph": "opening"}
+          }
+        },
+        "quote": "待对指定底本逐字复核：世宗讳胤禛，圣祖第四子也。",
+        "quoteSha256": "TO_BE_COMPUTED_AFTER_VERIFICATION",
+        "interpretation": "该段若经指定底本核验，可明确支持父子关系；“第四子”仅作为该来源所述排行限定词，不由系统扩写为其他排行口径。",
+        "externalUri": "https://ctext.org/wiki.pl?if=gb&res=98755",
+        "capturedAt": "2026-08-12T00:00:00+08:00",
+        "verificationStatus": "unverified"
+      }
+    ],
+    "counterEvidence": [],
+    "reviews": [],
+    "editorialNote": "此文件展示数据形态，不宣称已经完成史料核验，因此状态保持 in_review。"
+  }
+}
+
