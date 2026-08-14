@@ -1,0 +1,130 @@
+// 端到端渲染冒烟测试：真实构建产物 + stub DOM，验证路由与视图渲染。
+// 运行前置：npm run build。零第三方依赖，node scripts/test-render.mjs 即可。
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const siteDir = process.argv[2] || path.resolve(scriptDir, '../site');
+const html = fs.readFileSync(path.join(siteDir, 'index.html'), 'utf8');
+const configMatch = html.match(/<script type="application\/json" id="dynasty-config">(.*?)<\/script>/);
+if (!configMatch) {
+  console.error('FAIL: index.html 缺少 #dynasty-config，请先运行 npm run build');
+  process.exit(1);
+}
+const config = configMatch[1];
+
+const els = new Map();
+function fakeEl(id) {
+  return {
+    id,
+    dataset: {},
+    style: {},
+    hidden: false,
+    textContent: '',
+    innerHTML: '',
+    value: '',
+    offsetWidth: 0,
+    addEventListener() {},
+    removeEventListener() {},
+    removeAttribute() {},
+    setAttribute() {},
+    getAttribute() { return null; },
+    closest() { return null; },
+    classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+    appendChild() {},
+    querySelector() { return fakeEl('q-' + Math.random()); },
+    querySelectorAll() { return []; },
+    focus() {},
+    blur() {},
+  };
+}
+function el(id) {
+  if (!els.has(id)) els.set(id, fakeEl(id));
+  return els.get(id);
+}
+
+globalThis.document = {
+  getElementById(id) {
+    if (id === 'dynasty-config') return { textContent: config };
+    return el(id);
+  },
+  createElement() { return fakeEl('gen'); },
+  addEventListener() {},
+  removeEventListener() {},
+  querySelector() { return fakeEl('gen'); },
+  querySelectorAll() { return []; },
+  body: fakeEl('body'),
+  head: fakeEl('head'),
+};
+const listeners = {};
+globalThis.window = globalThis;
+globalThis.addEventListener = (name, fn) => { (listeners[name] ||= []).push(fn); };
+globalThis.removeEventListener = () => {};
+globalThis.scrollY = 0;
+globalThis.scrollTo = () => {};
+globalThis.location = { hash: '' };
+globalThis.matchMedia = () => ({ matches: false, addEventListener() {} });
+globalThis.fetch = (url) => {
+  const file = path.join(siteDir, url.replace(/^\//, ''));
+  if (!fs.existsSync(file)) return Promise.resolve({ ok: false, status: 404, json: async () => ({}) });
+  return Promise.resolve({ ok: true, json: async () => JSON.parse(fs.readFileSync(file, 'utf8')) });
+};
+
+await import(path.join(siteDir, 'app.js'));
+
+async function go(hash) {
+  globalThis.location.hash = hash;
+  for (const fn of listeners['hashchange'] || []) fn();
+  await new Promise((r) => setTimeout(r, 120));
+  return el('main').innerHTML;
+}
+
+let failed = 0;
+function check(name, cond) {
+  console.log((cond ? 'PASS' : 'FAIL') + ': ' + name);
+  if (!cond) failed++;
+}
+
+// 年号专题路由：注册表命中 + 未建专题页的年号优雅降级（多朝代泛化验收点）
+const eras = Object.keys(JSON.parse(config).eras);
+const registeredEras = ['kangxi', 'yongzheng'];
+for (const slug of registeredEras) {
+  const out = await go(`#/${slug}`);
+  check(`专题页渲染 #/${slug}`, out.includes('thread'));
+}
+const unregistered = eras.find((slug) => !registeredEras.includes(slug));
+if (unregistered) {
+  const out = await go(`#/${unregistered}`);
+  check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('尚未建立'));
+}
+
+const person = await go('#/person/QH-P-000001');
+check('人物页渲染（含朝代内容模块）', person.includes('分日记录'));
+const chapter = await go('#/chapter/kangxi-02');
+check('章节插图语法渲染为权利受检 figure', chapter.includes('fig-inline') && chapter.includes('<img'));
+const searchCn = await go('#/search?q=胤禛');
+check('检索高亮 mark 生效', searchCn.includes('<mark>'));
+const searchPy = await go('#/search?q=yinzhen');
+check('拼音检索 yinzhen 命中胤禛', searchPy.includes('QH-P-000002'));
+const works = await go('#/works');
+check('文献专栏按帝分组且有专论入口', works.includes('大义觉迷录') && works.includes('读专论') && works.includes('乾隆'));
+const juemilu = await go('#/chapter/yongzheng-04');
+check('大义觉迷录专论章渲染', juemilu.includes('自辩') && juemilu.includes('禁毁'));
+const claimCf = await go('#/claim/QH-A-KX-0070');
+check('主张页同组异说并排区块', claimCf.includes('同组异说') && claimCf.includes('QH-CF-KX-INVEST-DAY'));
+const images = await go('#/images');
+check('画像总览带灯箱属性', images.includes('data-lightbox'));
+const imagePage = await go('#/image/QH-V-E04');
+check('图像详情页主图带灯箱属性', imagePage.includes('data-lightbox'));
+const unknown = await go('#/no-such-page');
+check('未知路由 404', unknown.includes('没有这个页面'));
+
+// 灯箱高清变体：Wikimedia 缩略图应取最大档
+const { largestVariant } = await import(path.join(siteDir, 'templates.js'));
+const thumb = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Example.jpg/960px-Example.jpg';
+check('largestVariant 取最大档', largestVariant(thumb).includes('/1280px-Example.jpg'));
+check('largestVariant 本地图原样', largestVariant('media/QH-V-E04.jpg') === 'media/QH-V-E04.jpg');
+
+console.log(failed ? `渲染测试 ${failed} 项失败` : '渲染测试全部通过');
+process.exit(failed ? 1 : 0);

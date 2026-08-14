@@ -1,0 +1,34 @@
+name: 站点 Bug
+description: 页面打不开、检索异常、显示错乱等技术问题。
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从哪个页面、点了什么、看到了什么
+      placeholder: |
+        1. 打开 #/search?q=胤禛
+        2. 点击第一条结果
+        3. 页面空白
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 设备与浏览器
+      placeholder: 例如 iPhone 15 Safari / Windows Chrome 126
+    validations:
+      required: false
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: 截图（可选）
+      description: 可拖拽图片到此处

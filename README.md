@@ -59,7 +59,13 @@
 | `schema/data-dictionary.md` | 表、字段、约束及标准映射说明 |
 | `data/import/README.md` | CSV 到数据库的身份合并、`ALL` 范围值及失败回滚规则 |
 | `examples/assertion-example.json` | 一条完整的“关系主张—证据—审核”样例 |
-| `scripts/validate-data.mjs` | CSV schema（必填列）、身份、卷次、许可和引用一致性检查 |
+| `scripts/validate-data.mjs` | CSV schema（必填列）、身份、卷次、许可、引用与证据等级门禁检查 |
+| `scripts/test-render.mjs` | 零依赖渲染冒烟测试（`npm test`，build 之后运行） |
+| `site/qing-content.mjs` | 清朝专属内容常量（谓词译名、帝王小传、储位线程等），与通用壳分离 |
+| `LICENSE` / `LICENSE-data` | 代码 MIT；自建数据与文本 CC BY 4.0；第三方材料以权利台账为准 |
+| `CONTRIBUTING.md` / `CODE_OF_CONDUCT.md` | 社区共建的证据规则、PR 流程与行为准则 |
+| `.github/ISSUE_TEMPLATE/` | 内容纠错、图像与权利、站点 Bug 三类报错模板 |
+| `.github/workflows/` | PR 校验（validate+build+渲染测试）与 main 推送自动发布 gh-pages |
 | `outputs/qing-history-phase0/清史证据库_Phase0_工作台.xlsx` | 可直接分工、筛选和更新的工作簿 |
 
 ## 如何打开本地工作台
@@ -68,11 +74,19 @@
 npm install
 npm run validate
 npm run build          # 或 node scripts/build-site.mjs
+npm test               # 渲染冒烟测试（在 build 之后运行）
 npm run watch          # 监视 CSV / 正文变化并重建
 python3 -m http.server 8765 --directory site
 ```
 
 浏览器打开 `http://127.0.0.1:8765/`，或直接用上面的 GitHub Pages 地址。这是研究稿浏览层：主张保持「审核中」，家庭字段保持「索引级候选」，黄色/红色资源只给元数据和外链。绿色画像已缓存到 `site/media/`，页面不热链 Wikimedia。
+
+## 目录关系与部署
+
+- **`site/` 是唯一的前端构建产物源**。`scripts/build-site.mjs` 把 CSV/正文编成 `site/data/*.json`、直出首页 HTML，并注入朝代配置 `#dynasty-config`（前端据此解析数据块与年号专题路由，不硬编码朝代；新增朝代见 `data/dynasties.csv` 说明）。所有前端改动只改 `site/*`（`app.js`/`templates.js`/`search.js`/`styles.css`；清朝专属内容常量在 `site/qing-content.mjs`，新朝代建自己的 `<dynasty>-content.mjs`）。
+- **发布由 GitHub Actions 自动完成**：推送 `main` 后，`.github/workflows/deploy.yml` 运行校验、构建与渲染测试，把 `site/` 发布到 `gh-pages` 分支（GitHub Pages 从该分支服务）。无需再手工同步；`npm run deploy` 的根目录镜像方式已废弃。
+- 前置条件：仓库 Settings → Actions → General → Workflow permissions 需选 **Read and write**（GITHUB_TOKEN 要推送 gh-pages）。
+- 本地开发**不要**起在仓库根（缺静态站点文件），直接 `python3 -m http.server --directory site`。
 
 ## 推荐阅读顺序
 

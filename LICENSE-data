@@ -1,0 +1,28 @@
+本仓库的自建数据与文本内容采用
+Creative Commons Attribution 4.0 International (CC BY 4.0)。
+
+许可全文：https://creativecommons.org/licenses/by/4.0/legalcode.zh-hans
+
+## 覆盖范围
+
+- data/ 下由本项目自建的结构化记录（人物档、主张、来源单元、词表、台账元数据等）；
+- content/ 下的证据型文章正文；
+- schema/、docs/ 中的模型与规范文本；
+- site/data/ 下由上述内容构建生成的 JSON。
+
+## 不覆盖
+
+- 馆藏图像、档案影像及其扫描/摄影件：权利逐件登记于
+  data/source-rights-ledger.csv 与 data/emperor-portraits.csv，
+  以登记许可为准（CC0、CC BY、仅外链或禁用）；
+- 引用的史料原文：短引文依合理引用原则保留，原文权利归原藏馆/出版方；
+- 外部数据库内容（CBDB、中研院、一史馆等）：本项目仅保存自建元数据与外链。
+
+## 署名要求
+
+再利用本项目数据时，请注明：
+
+  清史证据库（https://zonglinxie-cyber.github.io/qing-history-evidence-base/）
+  及所引用的具体记录 ID（如 QH-P-000001、QH-A-KX-0001）与访问日期。
+
+引用单条主张时，应保留其来源定位（版本、卷页、档号），不得只转述结论。

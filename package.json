@@ -6,9 +6,12 @@
     "build": "node scripts/build-site.mjs",
     "watch": "node scripts/build-site.mjs --watch",
     "validate": "node scripts/validate-data.mjs",
-    "cache-media": "node scripts/cache-media.mjs"
+    "test": "node scripts/test-render.mjs",
+    "cache-media": "node scripts/cache-media.mjs",
+    "deploy": "node scripts/deploy-sync.mjs"
   },
   "dependencies": {
-    "csv-parse": "^5.6.0"
+    "csv-parse": "^5.6.0",
+    "pinyin-pro": "^3.29.1"
   }
 }

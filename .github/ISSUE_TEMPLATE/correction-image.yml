@@ -1,0 +1,40 @@
+name: 图像与权利问题
+description: 画像人物认定错误、权利状态有误、图片无法加载或许可标注不当。
+title: "[图像] "
+labels: ["image-rights"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        图像问题分两类：**认定问题**（这张画像是谁、是否摹本/后世创作）和**权利问题**（许可颜色标错、不应嵌入的图被嵌入）。
+        图像 ID 形如 `QH-V-E03`，可在图像详情页看到。
+  - type: input
+    id: image-id
+    attributes:
+      label: 图像 ID 或页面链接
+      placeholder: 例如 QH-V-E03
+    validations:
+      required: true
+  - type: dropdown
+    id: problem-type
+    attributes:
+      label: 问题类型
+      options:
+        - 人物认定错误（画像不是这个人 / 定名有争议）
+        - 作品性质标错（摹本、后世画、AI 图被当成原作）
+        - 权利状态有误（许可颜色、署名、外链问题）
+        - 图片无法加载或显示异常
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 具体说明哪里不对；认定问题请给出依据（题跋、馆藏目录、研究文献）。
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: 参考链接（可选）
+      description: 馆藏页面、图录或研究文献链接
