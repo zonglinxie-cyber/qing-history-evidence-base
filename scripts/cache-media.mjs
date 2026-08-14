@@ -13,14 +13,16 @@ const mediaDir = path.join(root, 'site', 'media');
 const UA = 'QingHistoryPhase0/1.0 (local research; cache-media.mjs; https://127.0.0.1:8765/)';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function thumbUrl(url) {
+function thumbUrl(url, width = 960) {
   const src = String(url || '').trim();
   if (!src) return '';
-  if (/\/commons\/thumb\//.test(src)) return src;
+  if (/\/commons\/thumb\//.test(src)) {
+    return width === 960 ? src : src.replace(/\/\d+px-/, `/${width}px-`);
+  }
   const original = src.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/commons)\/([0-9a-f])\/([0-9a-f]{2})\/([^/]+)$/i);
   if (!original) return src;
   const [, host, a, ab, file] = original;
-  return `${host}/thumb/${a}/${ab}/${file}/960px-${file}`;
+  return `${host}/thumb/${a}/${ab}/${file}/${width}px-${file}`;
 }
 
 async function download(url, dest) {
@@ -73,28 +75,30 @@ function jobs() {
 async function main() {
   fs.mkdirSync(mediaDir, { recursive: true });
   const force = process.argv.includes('--force');
+  const hires = process.argv.includes('--hires');
   const items = jobs();
   let ok = 0;
   let skip = 0;
   let fail = 0;
   for (const item of items) {
-    const dest = path.join(mediaDir, `${item.id}.jpg`);
+    const dest = path.join(mediaDir, hires ? `${item.id}@2x.jpg` : `${item.id}.jpg`);
+    const url = hires ? thumbUrl(item.url, 1280) : item.url;
     if (!force && fs.existsSync(dest) && fs.statSync(dest).size > 1024) {
       skip += 1;
       continue;
     }
     try {
-      const bytes = await download(item.url, dest);
+      const bytes = await download(url, dest);
       ok += 1;
-      console.log(`OK ${item.id} ${bytes}B`);
+      console.log(`OK ${path.basename(dest)} ${bytes}B`);
       await sleep(1500);
     } catch (err) {
       fail += 1;
-      console.error(`FAIL ${item.id} ${item.url}\n  ${err.message}`);
+      console.error(`FAIL ${item.id} ${url}\n  ${err.message}`);
       await sleep(4000);
     }
   }
-  console.log(`cached ${ok}, skipped ${skip}, failed ${fail}, total ${items.length}`);
+  console.log(`cached ${ok}, skipped ${skip}, failed ${fail}, total ${items.length}${hires ? ' (hires 1280px)' : ''}`);
   if (fail) process.exitCode = 1;
 }
 
