@@ -1,0 +1,50 @@
+name: 内容纠错（事实/主张）
+description: 人物、关系、时间、事件等事实性错误。请提供证据，无来源的修正不会被采纳。
+title: "[纠错] "
+labels: ["content-correction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢纠错。请先打开页面对应的「依据」抽屉或主张页，复制相关 ID（如 `QH-A-KX-0001`、`QH-P-000025`）。
+        本项目只接受带来源定位的修正：版本、卷页、档号或图像区域，至少一项。
+  - type: input
+    id: location
+    attributes:
+      label: 出错位置
+      description: 主张 ID / 人物 ID / 页面链接（至少填一个）
+      placeholder: 例如 QH-A-KX-0037，或 https://zonglinxie-cyber.github.io/qing-history-evidence-base/#/person/QH-P-000025
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: 当前表述
+      description: 站点现在怎么写的（可引用原文）
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: 你的修正
+      description: 正确的表述应该是什么
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 证据来源
+      description: 史料名 + 具体版本 + 卷页/档号；如有在线链接请附上。百科和影视不能作为终审证据。
+      placeholder: 例如 《圣祖仁皇帝实录》卷234，康熙四十七年九月初四日条（sillok.history.go.kr 链接）
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: 你与该材料的熟悉程度
+      options:
+        - 我核对过原文
+        - 我读过相关研究，未核对原文
+        - 仅提出线索，请维护者核查
+    validations:
+      required: true

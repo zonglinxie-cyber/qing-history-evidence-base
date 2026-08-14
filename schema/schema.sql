@@ -24,6 +24,9 @@ CREATE TYPE core.precision_code AS ENUM ('day','month','year','reign','decade','
 CREATE TYPE core.certainty_code AS ENUM ('exact','approximate','uncertain','approximate_uncertain','inferred','unknown');
 CREATE TYPE source.layer_type AS ENUM ('ocr_raw','diplomatic','punctuated','normalized','simplified','translation','scholarly_edition');
 CREATE TYPE source.layer_status AS ENUM ('draft','reviewed','published','deprecated');
+-- 史料证据分级（docs/03 §2）：A1 原始档案 / A2 官修骨架 / B 同时代旁证 / C 后出综述 / D 仅作线索。
+-- object_dependent = 博物馆聚合来源「视对象而定」，逐件在 digital_asset/rights 层定级。
+CREATE TYPE source.source_rank AS ENUM ('A1','A2','B','C','D','object_dependent');
 CREATE TYPE source.mention_review_status AS ENUM ('machine_candidate','editor_confirmed','rejected');
 CREATE TYPE claim.assertion_kind AS ENUM ('entity_relation','literal_statement','person_relationship','title_assignment','event_occurrence','event_participation','depiction');
 CREATE TYPE claim.assertion_status AS ENUM ('draft','in_review','accepted','disputed','rejected','deprecated');
@@ -200,7 +203,8 @@ CREATE TABLE source.text_work (
   canonical_title text NOT NULL,
   primary_language text,
   composition_time_id uuid REFERENCES core.time_expression(id),
-  catalog_note text
+  catalog_note text,
+  source_rank source.source_rank NOT NULL
 );
 
 CREATE TABLE source.text_version (
@@ -229,6 +233,7 @@ CREATE TABLE source.archive_unit (
   extent_text text,
   language_tags text[],
   rights_statement_id uuid REFERENCES media.rights_statement(id),
+  source_rank source.source_rank NOT NULL DEFAULT 'A1',
   UNIQUE (repository_org_id, reference_code),
   CHECK (parent_unit_id IS NULL OR parent_unit_id <> entity_id)
 );

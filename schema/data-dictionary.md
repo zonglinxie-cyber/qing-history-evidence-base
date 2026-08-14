@@ -36,9 +36,9 @@ ops        人员、加工运行、审计与变更集
 | `history.person` | 人物的低争议骨架 | 父母、生卒等不直接写入此表 |
 | `history.title` | 后妃位号、爵位、尊号、职官实体 | 任命和有效期由断言表达 |
 | `history.event` | 事件身份 | 时间、地点、参与者均由断言表达 |
-| `source.text_work` | 抽象作品，如《清史稿》 | 与具体版本分离 |
+| `source.text_work` | 抽象作品，如《清史稿》 | 与具体版本分离；`source_rank` 按 docs/03 §2 定级 |
 | `source.text_version` | 刻本、点校本、数字本 | 保存底本与衍生关系，避免伪独立来源 |
-| `source.archive_unit` | 全宗—系列—卷—册—件—页 | 馆藏机构＋档号唯一 |
+| `source.archive_unit` | 全宗—系列—卷—册—件—页 | 馆藏机构＋档号唯一；`source_rank` 默认 A1 |
 | `source.text_layer` | OCR、忠实录文、标点、规范化、译释 | 每层独立版本和哈希 |
 | `source.text_segment` | 卷、条、页、栏、行、段 | 精确定位和图像区域对齐 |
 | `claim.assertion` | 断言身份、状态、版本 | 命题哈希去重；发布后不可原改 |
@@ -320,5 +320,6 @@ transcription, translation, download, publication
 9. 冲突断言不会被搜索接口隐藏；
 10. 任一已采纳断言可导出完整“命题—证据—反证—审核”JSON；
 11. 随机抽查 100 条断言，卷页定位成功率 100%；
-12. 黄金问题不出现无证据人物关系或画像认定。
+12. 黄金问题不出现无证据人物关系或画像认定；
+13. 已采纳断言不存在仅由 C/D 级来源支持的情况；生父母、继承、精确生卒、画像认定等高风险断言至少有两个独立来源家族（Phase 0 CSV 层由 `validate-data.mjs` 证据等级门禁执行）。
 
