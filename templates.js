@@ -150,14 +150,14 @@ export function homeHtml(emperors, sites, opts = {}) {
   return `      <div class="reading">
         <p class="kicker">清朝</p>
         <h1>十二帝</h1>
-        <p class="lede">从太祖努尔哈赤到宣统溥仪。帝号是当时的称号，人还是同一个人。点进去看生卒、在位和留下的像。</p>
+        <p class="lede">从赫图阿拉到紫禁城，从十三副遗甲到退位诏书。十二位皇帝，十二段人生，写尽一个王朝的起落。</p>
       </div>
       <div class="grid cards">${emperors.map((row) => emperorCard(row, opts)).join('')}</div>
       <section class="sites-home">
         <div class="page-head story">
           <h2>这些事，今天在哪儿</h2>
         </div>
-        <p class="lede">古战场可能已经在水下。园子可能只剩两座门。行宫也可能还开着。</p>
+        <p class="lede">古战场可能已经沉入水下。御园可能只剩两座山门。行宫也可能还开着大门。</p>
         <div class="grid cards site-cards">${featured.map((row) => siteCard(row, opts)).join('')}</div>
         <p class="actions">
           ${rest > 0 ? `<a class="link" href="#/sites">其余 ${rest} 处今地</a> · ` : ''}
