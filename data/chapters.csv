@@ -14,9 +14,20 @@ QH-CH-XF-01,xianfeng-01,QH-P-000056,咸丰,太平天国、圆明园与避走热�
 QH-CH-TZ-01,tongzhi-01,QH-P-000057,同治,垂帘、亲政与死因,六岁即位。两宫垂帘，1873 年亲政。无子女。官方记天花，梅毒说多是晚出。所谓「同治中兴」是后出评价，不能当成已核政绩单。,emperors/tongzhi/01-smallpox-or-syphilis.md,,,100
 QH-CH-GX-01,guangxu-01,QH-P-000058,光绪,过继即位、戊戌变法与死因检测,生父是醇亲王奕譞，礼法上过继给咸丰。1875 年到 1908 年在位。中间有亲政、甲午、戊戌、庚子、新政。,emperors/guangxu/01-hundred-days-and-arsenic.md,,,110
 QH-CH-XT-01,xuantong-01,QH-P-000059,宣统,1908 即位、1909 纪年、1912 退位,1908 年即位，1909 年才是宣统元年，1912 年 2 月 12 日退位。四条日期不是一件事。,emperors/xuantong/01-abdication.md,,,120
-QH-CH-KX-05,kangxi-05,QH-P-000001,康熙,西学与礼仪之争,汤若望、南怀仁、历狱、礼仪之争。传教士在钦天监和外交中的作用，和罗马教廷的冲突。,emperors/kangxi/05-kangxi-scholarship.md,,#/site/QH-ST-0013,45
+QH-CH-NH-02,nurhaci-02,QH-P-000051,天命,满文创制与文献遗产,1599年创制满文，额尔德尼与噶盖以蒙古文为基础改制。太祖实录经崇德、顺治、康熙三朝重修。满洲实录三体合璧有图。七大恨文本版本不一。,emperors/nurhaci/02-nurhaci-scholarship.md,,#/works；#/chapter/nurhaci-01；#/site/QH-ST-0001；#/site/QH-ST-0002,5
+QH-CH-HT-02,huangtaiji-02,QH-P-000052,天聪,文治与制度文献,1632年改进满文加圈点；1635年改女真为满洲；1636年改国号大清，建内三院。太宗实录65卷，天聪汗位与崇德帝位分开。,emperors/huangtaiji/02-huangtaiji-scholarship.md,,#/works；#/chapter/huangtaiji-01；#/site/QH-ST-0006,6
+QH-CH-SZ-02,shunzhi-02,QH-P-000053,顺治,御制与文治,顺治亲撰《资政要览》《劝善要言》《人臣儆心录》。世祖实录144卷，多尔衮叙述反映后世修订。顺治汉学修养与「渐习汉俗」的自责形成对照。,emperors/shunzhi/02-shunzhi-scholarship.md,,#/works；#/chapter/shunzhi-01；#/lane/QH-L-0010,7
+QH-CH-KX-05,kangxi-05,QH-P-000001,康熙,西学、文治与御制：从汤若望到康熙字典,汤若望、南怀仁、历狱、礼仪之争。康熙字典、古今图书集成、庭训格言、御制文集。传教士在钦天监的作用，和康熙朝大规模编纂出版的文化工程。,emperors/kangxi/05-kangxi-scholarship.md,,#/works；#/site/QH-ST-0013,45
 QH-CH-KX-06,kangxi-06,QH-P-000001,康熙,三藩之乱,平定吴三桂、尚之信、耿精忠，八年的战争。,emperors/kangxi/06-three-feudatories.md,,#/kangxi,46
 QH-CH-KX-07,kangxi-07,QH-P-000001,康熙,平台湾,施琅、姚启圣、郑克塽，1683年。,emperors/kangxi/07-taiwan.md,,#/person/QH-P-000098；#/person/QH-P-000099,47
 QH-CH-YZ-02,yongzheng-02,QH-P-000002,雍正,耗羡归公与密折,雍正朝财政改革：耗羡归公、养廉银、密折制度。,emperors/yongzheng/02-yongzheng-reforms.md,,#/yongzheng；#/lane/QH-L-0028,55
-QH-CH-YZ-03,yongzheng-03,QH-P-000002,雍正,文字狱与《大义觉迷录》,吕留良案、曾静案、《大义觉迷录》的编纂与禁毁。,emperors/yongzheng/03-yongzheng-literary-inquisition.md,,#/lane/QH-L-0009；#/yongzheng,56
+QH-CH-YZ-03,yongzheng-03,QH-P-000002,雍正,文字狱、《大义觉迷录》与御制文献,吕留良案、曾静案、《大义觉迷录》的编纂与禁毁。朱批谕旨、圣谕广训、御制文集。雍正以文为政的独特风格。,emperors/yongzheng/03-yongzheng-literary-inquisition.md,,#/works；#/lane/QH-L-0009；#/lane/QH-L-0007；#/yongzheng,56
+QH-CH-QL-02,qianlong-02,QH-P-000019,乾隆,御制与四库：文治的两面,四库全书79337卷，编纂与禁毁是同一件事的两面。御制诗454卷约42000首，数量冠绝古今。四库总目提要200卷。高宗实录1500卷为清代实录之最。,emperors/qianlong/02-qianlong-scholarship.md,,#/works；#/chapter/qianlong-01；#/site/QH-ST-0004；#/site/QH-ST-0010,65
+QH-CH-JQ-02,jiaqing-02,QH-P-000054,嘉庆,实录与御制诗文,仁宗实录374卷，1796—1799太上皇训政期记录需单独看。御制文集50卷、诗集180卷，数量仅次于乾隆。,emperors/jiaqing/02-jiaqing-scholarship.md,,#/works；#/chapter/jiaqing-01；#/site/QH-ST-0010,75
+QH-CH-DG-02,daoguang-02,QH-P-000055,道光,实录与御制诗文,宣宗实录476卷。御制文集26卷、诗集58卷。避讳改名绵宁→旻宁是制度程序。节俭故事需核档。,emperors/daoguang/02-daoguang-scholarship.md,,#/works；#/chapter/daoguang-01；#/lane/QH-L-0030,85
+QH-CH-XF-02,xianfeng-02,QH-P-000056,咸丰,实录与御制诗文,文宗实录356卷。御制文集10卷、诗集22卷，战乱中个人著述最少。圆明园被焚掠的叙述立场需注意。,emperors/xianfeng/02-xianfeng-scholarship.md,,#/works；#/chapter/xianfeng-01；#/site/QH-ST-0004,95
+QH-CH-TZ-02,tongzhi-02,QH-P-000057,同治,实录与「同治中兴」,穆宗实录374卷。祺祥是拟用年号。「同治中兴」是后出评价。御制文集16卷、诗集12卷，六岁即位亲政短暂。,emperors/tongzhi/02-tongzhi-scholarship.md,,#/works；#/chapter/tongzhi-01；#/lane/QH-L-0025,105
+QH-CH-GX-02,guangxu-02,QH-P-000058,光绪,实录与清末新政文献,德宗实录597卷，成书于民国。清末新政、戊戌变法、预备立宪文献。砷中毒检测属现代科学层，不能据此倒推凶手已证。,emperors/guangxu/02-guangxu-scholarship.md,,#/works；#/chapter/guangxu-01；#/lane/QH-L-0024,115
+QH-CH-XT-02,xuantong-02,QH-P-000059,宣统,宣统政纪与退位文献,宣统政纪70卷，不是宣统帝实录。溥仪无清朝庙号谥号。退位诏书与清室优待条件。1908/1909/1911/1912四种口径必须分开。,emperors/xuantong/02-xuantong-scholarship.md,,#/works；#/chapter/xuantong-01,125
 QH-CH-KX-08,kangxi-08,QH-P-000001,康熙,皇女、和硕、固伦,卷166排第一女到第二十女。未封十二，受封八。常宁之女是抚育，不是亲生第二十一女。和硕、固伦会改，追进不是生前进封。,emperors/kangxi/08-princess-table.md,QH-SU-QSG-0166,#/princesses；#/princes；#/person/QH-P-000021,41
+QH-CH-YZ-04,yongzheng-04,QH-P-000002,雍正,大义觉迷录：自辩与禁毁,皇帝亲自下场回应谣言的书。雍正七年刊行天下，乾隆即位旋即禁毁。自辩记为宣传文本，不作继位终审。,emperors/yongzheng/04-dayi-juemilu.md,,#/chapter/yongzheng-03；#/works；#/lanes,57
