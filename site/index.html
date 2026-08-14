@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>清史读本</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
+  <script type="application/json" id="dynasty-config">{"code":"qing","label":"清","chunk":"d-qing","eras":{"tianming":"天命","tiancong":"天聪","shunzhi":"顺治","kangxi":"康熙","yongzheng":"雍正","qianlong":"乾隆","jiaqing":"嘉庆","daoguang":"道光","xianfeng":"咸丰","tongzhi":"同治","guangxu":"光绪","xuantong":"宣统"}}</script>
 </head>
 <body>
   <a class="skip" href="#main">跳到正文</a>
@@ -13,6 +14,7 @@
     <nav class="nav" aria-label="主导航">
       <a href="#/">十二帝</a>
       <a href="#/sites">今地</a>
+      <a href="#/works">文献</a>
       <a href="#/lanes">对照</a>
     </nav>
     <form class="search" id="search-form" role="search">
@@ -32,111 +34,123 @@
       </div>
       <div class="grid cards">
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E01" aria-label="清太祖天命皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000051" aria-label="清太祖天命皇帝朝服像">
           <img src="media/QH-V-E01.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清太祖天命皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000051">
           <div class="era">天命</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·努尔哈赤</p><p>太祖 · 塔克世长子</p><p>1559年–1626年 · 68岁</p><p>在位 11年 · 1616–1626</p><p class="card-shihao">谥号 承天广运圣德神功肇纪立极仁孝睿武端毅钦安弘文定业高皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E02" aria-label="清太宗崇德皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000052" aria-label="清太宗崇德皇帝朝服像">
           <img src="media/QH-V-E02.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清太宗崇德皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000052">
           <div class="era">天聪</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·皇太极</p><p>太宗 · 努尔哈赤第八子</p><p>1592年–1643年 · 52岁</p><p>在位 17年 · 1626–1643</p><p class="card-shihao">谥号 应天兴国弘德彰武宽温仁圣睿孝敬敏昭定隆道显功文皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E03" aria-label="清世祖顺治皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000053" aria-label="清世祖顺治皇帝朝服像">
           <img src="media/QH-V-E03.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清世祖顺治皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000053">
           <div class="era">顺治</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·福临</p><p>世祖 · 皇太极第九子</p><p>1638年–1661年 · 24岁</p><p>在位 18年 · 1643–1661</p><p class="card-shihao">谥号 体天隆运定统建极英睿钦文显武大德弘功至仁纯孝章皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E04" aria-label="清圣祖康熙皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000001" aria-label="清圣祖康熙皇帝朝服像">
           <img src="media/QH-V-E04.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清圣祖康熙皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000001">
           <div class="era">康熙</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·玄烨</p><p>圣祖 · 顺治第三子</p><p>1654年–1722年 · 69岁</p><p>在位 61年 · 1661–1722</p><p class="card-shihao">谥号 合天弘运文武睿哲恭俭宽裕孝敬诚信功德大成仁皇帝</p></div>
+          <span class="cred-badge cred-strong">证据 47 · 审核中 · 强</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E05" aria-label="清世宗雍正皇帝朝服像轴">
+        <a class="card-pic" href="#/person/QH-P-000002" aria-label="清世宗雍正皇帝朝服像轴">
           <img src="media/QH-V-E05.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清世宗雍正皇帝朝服像轴" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000002">
           <div class="era">雍正</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·胤禛</p><p>世宗 · 康熙第四子</p><p>1678年–1735年 · 58岁</p><p>在位 13年 · 1722–1735</p><p class="card-shihao">谥号 敬天昌运建中表正文武英明宽仁信毅睿圣大孝至诚宪皇帝</p></div>
+          <span class="cred-badge cred-strong">证据 14 · 审核中 · 强</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E06" aria-label="清高宗乾隆帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000019" aria-label="清高宗乾隆帝朝服像">
           <img src="media/QH-V-E06.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清高宗乾隆帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000019">
           <div class="era">乾隆</div>
-          <div class="card-vita"><p class="card-name">爱新觉罗·弘历</p><p>高宗 · 雍正第四子</p><p>1711年–1799年 · 89岁</p><p>在位 61年 · 1735–1796</p><p class="card-nick">十全老人</p><p class="card-shihao">谥号 法天隆运至诚先觉体元立极敷文奋武钦明孝慈神圣纯皇帝</p></div>
+          <div class="card-vita"><p class="card-name">爱新觉罗·弘历</p><p>高宗 · 雍正第四子</p><p>1711年–1799年 · 89岁</p><p>在位 60年 · 1735–1796</p><p class="card-nick">十全老人</p><p class="card-shihao">谥号 法天隆运至诚先觉体元立极敷文奋武钦明孝慈神圣纯皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E07" aria-label="清仁宗嘉庆皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000054" aria-label="清仁宗嘉庆皇帝朝服像">
           <img src="media/QH-V-E07.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清仁宗嘉庆皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000054">
           <div class="era">嘉庆</div>
-          <div class="card-vita"><p class="card-name">爱新觉罗·颙琰</p><p>仁宗 · 乾隆第十五子</p><p>1760年–1820年 · 61岁</p><p>在位 24年 · 1796–1820</p><p class="card-shihao">谥号 受天兴运敷化绥猷崇文经武孝恭勤俭端敏英哲睿皇帝</p></div>
+          <div class="card-vita"><p class="card-name">爱新觉罗·颙琰</p><p>仁宗 · 乾隆第十五子</p><p>1760年–1820年 · 61岁</p><p>在位 25年 · 1796–1820</p><p class="card-shihao">谥号 受天兴运敷化绥猷崇文经武孝恭勤俭端敏英哲睿皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E08" aria-label="清宣宗道光皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000055" aria-label="清宣宗道光皇帝朝服像">
           <img src="media/QH-V-E08.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清宣宗道光皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000055">
           <div class="era">道光</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·旻宁</p><p>宣宗 · 嘉庆第二子</p><p>1782年–1850年 · 69岁</p><p>在位 30年 · 1820–1850</p><p class="card-shihao">谥号 效天符运立中体正至文圣武智勇仁慈俭勤孝敏宽定成皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E09" aria-label="清文宗咸丰皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000056" aria-label="清文宗咸丰皇帝朝服像">
           <img src="media/QH-V-E09.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清文宗咸丰皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000056">
           <div class="era">咸丰</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·奕詝</p><p>文宗 · 道光第四子</p><p>1831年–1861年 · 31岁</p><p>在位 11年 · 1850–1861</p><p class="card-shihao">谥号 协天翊运执中垂谟懋德振武圣孝渊恭端仁宽敏显皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E10" aria-label="清穆宗同治皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000057" aria-label="清穆宗同治皇帝朝服像">
           <img src="media/QH-V-E10.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清穆宗同治皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000057">
           <div class="era">同治</div>
-          <div class="card-vita"><p class="card-name">爱新觉罗·载淳</p><p>穆宗 · 咸丰长子</p><p>1856年–1875年 · 20岁</p><p>在位 14年 · 1861–1875</p><p class="card-shihao">谥号 继天开运受中居正保大定功圣智诚孝信敏恭宽毅皇帝</p></div>
+          <div class="card-vita"><p class="card-name">爱新觉罗·载淳</p><p>穆宗 · 咸丰长子</p><p>1856年–1875年 · 20岁</p><p>在位 13年 · 1861–1875</p><p class="card-shihao">谥号 继天开运受中居正保大定功圣智诚孝信敏恭宽毅皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E11" aria-label="清德宗光绪皇帝朝服像">
+        <a class="card-pic" href="#/person/QH-P-000058" aria-label="清德宗光绪皇帝朝服像">
           <img src="media/QH-V-E11.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="清德宗光绪皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000058">
           <div class="era">光绪</div>
-          <div class="card-vita"><p class="card-name">爱新觉罗·载湉</p><p>德宗 · 醇亲王奕譞第二子</p><p>1871年–1908年 · 38岁</p><p>在位 33年 · 1875–1908</p><p class="card-shihao">谥号 同天崇运大中至正经文纬武仁孝睿智端俭宽勤景皇帝</p></div>
+          <div class="card-vita"><p class="card-name">爱新觉罗·载湉</p><p>德宗 · 醇亲王奕譞第二子</p><p>1871年–1908年 · 38岁</p><p>在位 34年 · 1875–1908</p><p class="card-shihao">谥号 同天崇运大中至正经文纬武仁孝睿智端俭宽勤景皇帝</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article>
       <article class="card emperor-card">
-        <a class="card-pic" href="#/image/QH-V-E12" aria-label="宣统帝朝服照片">
+        <a class="card-pic" href="#/person/QH-P-000059" aria-label="宣统帝朝服照片">
           <img src="media/QH-V-E12.jpg" sizes="(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px" alt="宣统帝朝服照片" width="600" height="800" loading="lazy" decoding="async">
         </a>
         <a class="meta" href="#/person/QH-P-000059">
           <div class="era">宣统</div>
-          <div class="card-vita"><p class="card-name">爱新觉罗·溥仪</p><p>醇亲王载沣长子</p><p>1906年–1967年 · 62岁</p><p>在位 4年 · 1908–1912</p></div>
+          <div class="card-vita"><p class="card-name">爱新觉罗·溥仪</p><p>醇亲王载沣长子</p><p>1906年–1967年 · 62岁</p><p>在位 3年 · 1908–1912</p></div>
+          <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article></div>
       <section class="sites-home">
@@ -154,6 +168,7 @@
           <div class="era">萨尔浒之战</div>
           <div class="sub">辽宁省抚顺市大伙房水库</div>
           <p class="card-hook">古战场多半已经在水下。岸上还剩两座城，隔水相望。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -165,6 +180,7 @@
           <div class="era">宁远之战</div>
           <div class="sub">辽宁省葫芦岛市兴城市区</div>
           <p class="card-hook">当年的宁远卫城，今天还能沿着城墙走一圈。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -176,6 +192,7 @@
           <div class="era">山海关之战</div>
           <div class="sub">河北省秦皇岛市山海关区</div>
           <p class="card-hook">入关那一仗的关城，门还在。海边那一段不是主战场。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -187,6 +204,7 @@
           <div class="era">畅春园</div>
           <div class="sub">北京市海淀区，北京大学西门外一带</div>
           <p class="card-hook">康熙死在这儿。园子没了，路边还剩两座门。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -198,6 +216,7 @@
           <div class="era">圆明园被焚掠</div>
           <div class="sub">北京市海淀区圆明园遗址公园</div>
           <p class="card-hook">万园之园，今天能看见的是残石。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -209,6 +228,7 @@
           <div class="era">热河行宫</div>
           <div class="sub">河北省承德市避暑山庄</div>
           <p class="card-hook">康熙修来避暑，乾隆接着扩建，咸丰后来在这里逃难。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -220,6 +240,7 @@
           <div class="era">昭陵</div>
           <div class="sub">辽宁省沈阳市皇姑区北陵公园</div>
           <p class="card-hook">关外三陵中最大的一座，如今包在沈阳的公园里。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -231,6 +252,7 @@
           <div class="era">木兰围场</div>
           <div class="sub">河北省承德市围场满族蒙古族自治县</div>
           <p class="card-hook">皇家猎场早已废弛。今天这一带是林场和草原。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -242,6 +264,7 @@
           <div class="era">雅克萨之战</div>
           <div class="sub">俄罗斯阿穆尔州斯科沃罗季诺区阿尔巴津诺村</div>
           <p class="card-hook">清军在此两度攻城。木城早已拆毁，遗址在对岸的俄国村子里。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
       <article class="card emperor-card site-card">
@@ -253,6 +276,7 @@
           <div class="era">割让香港岛</div>
           <div class="sub">香港岛</div>
           <p class="card-hook">1842年割出去的是一座岛。今天从对岸看，已是另一座城市。</p>
+          <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article></div>
         <p class="actions">
@@ -263,9 +287,15 @@
   </main>
   <aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-label="依据" hidden></aside>
   <div id="scrim" class="scrim" hidden></div>
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="图像预览" hidden>
+    <button id="lightbox-close" class="lightbox-close" type="button" aria-label="关闭预览">✕</button>
+    <img id="lightbox-img" alt="">
+    <p id="lightbox-cap" class="lightbox-cap"></p>
+  </div>
   <button id="to-top" class="to-top" type="button" aria-label="回到顶部" title="回到顶部">顶</button>
   <footer class="foot">
-    <p class="foot-links"><a href="#/kangxi">康熙</a> · <a href="#/yongzheng">雍正</a> · <a href="#/princesses">皇女</a> · <a href="#/questions">问题</a> · <a href="#/people">人物</a> · <a href="#/images">画像</a> · <a href="#/claims">依据</a> · <a href="#/sources">来源</a></p>
+    <p class="foot-links"><a href="#/kangxi">康熙</a> · <a href="#/yongzheng">雍正</a> · <a href="#/princesses">皇女</a> · <a href="#/questions">问题</a> · <a href="#/people">人物</a> · <a href="#/images">画像</a> · <a href="#/claims">依据</a> · <a href="#/sources">来源</a> · <a href="#/works">文献</a></p>
+    <p class="foot-links"><a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base/issues/new/choose" target="_blank" rel="noopener">报错纠错</a> · <a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base" target="_blank" rel="noopener">开源共建</a></p>
   </footer>
   <script>
     (function () {

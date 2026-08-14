@@ -2,9 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
-import { CSV_FILES } from './lib/schema.mjs';
+import { CSV_FILES, DATA_MANIFEST, activeDynasties } from './lib/schema.mjs';
 import { buildIndex } from '../site/search.js';
 import { homeHtml } from '../site/templates.js';
+import { pinyin } from 'pinyin-pro';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(scriptDir, '..');
@@ -13,18 +14,47 @@ const siteDir = path.join(root, 'site');
 const dataOutDir = path.join(siteDir, 'data');
 const contentDir = path.join(root, 'content');
 
-function load(name) {
-  return loadCsv(path.join(dataDir, name), {
-    name,
-    required: CSV_FILES[name]?.required,
+// manifest kind → 局部变量名（按朝装载数据时合并同名 kind）
+const KIND_TO_FIELD = {
+  emperors: 'emperors',
+  research_cards: 'cards',
+  portraits: 'portraits',
+  crosswalk: 'crosswalk',
+  people: 'people',
+  sources: 'sources',
+  source_index: 'sourceIndex',
+  tasks: 'tasks',
+  vocab: 'vocab',
+  source_units: 'units',
+  source_claims: 'claims',
+  questions: 'questions',
+  chapters: 'chapters',
+  lanes: 'lanes',
+  empress_timeline: 'empressTimeline',
+  princes: 'princes',
+  princesses: 'princesses',
+  heir_chain: 'heirChain',
+  sites: 'historicSites',
+  image_regions: 'imageRegions',
+  iiif_manifests: 'iiifManifests',
+  works: 'works',
+};
+
+function load(file) {
+  return loadCsv(path.join(dataDir, file), {
+    name: file,
+    required: CSV_FILES[file]?.required,
   });
 }
 
 function localPreview(id, remoteUrl) {
   const remote = String(remoteUrl || '').trim();
-  if (!id || !remote) return remote;
-  const localRel = `media/${id}.jpg`;
-  return fs.existsSync(path.join(siteDir, localRel)) ? localRel : remote;
+  // 优先使用本地缓存，即使 remote URL 为空也能用本地文件
+  if (id) {
+    const localRel = `media/${id}.jpg`;
+    if (fs.existsSync(path.join(siteDir, localRel))) return localRel;
+  }
+  return remote;
 }
 
 function slimPortrait(portrait) {
@@ -42,6 +72,24 @@ function slimPortrait(portrait) {
 
 function searchEntry(type, id, hay, extra = {}) {
   return { type, id, hay, ...extra };
+}
+
+// 拼音（无声调、去空格）并入检索 hay，支持 yinzhen → 胤禛 这类查询
+function py(text) {
+  try {
+    return pinyin(String(text || ''), { toneType: 'none', nonZh: 'none' }).replace(/\s+/g, '');
+  } catch {
+    return '';
+  }
+}
+
+function countBy(rows, field) {
+  const out = {};
+  for (const row of rows) {
+    const val = row[field] || '';
+    out[val] = (out[val] || 0) + 1;
+  }
+  return out;
 }
 
 function writeJson(name, payload) {
@@ -72,7 +120,7 @@ function inlineMd(text) {
   return out;
 }
 
-function mdToHtml(src) {
+function mdToHtml(src, fig) {
   const text = String(src || '').replace(/\r\n/g, '\n').replace(/^# .+\n+/, '');
   const lines = text.split('\n');
   const html = [];
@@ -80,6 +128,13 @@ function mdToHtml(src) {
   while (i < lines.length) {
     const line = lines[i];
     if (!line.trim()) {
+      i += 1;
+      continue;
+    }
+    // 插图语法：整行 {{fig:QH-V-E01}} 或 {{fig:QH-V-E01|自定义图注}}，权利检查在构建期完成
+    const figMatch = line.trim().match(/^\{\{fig:([A-Za-z0-9-]+)(?:\|([^}]*))?\}\}$/);
+    if (figMatch) {
+      html.push(fig ? fig(figMatch[1], (figMatch[2] || '').trim()) : '');
       i += 1;
       continue;
     }
@@ -126,7 +181,7 @@ function mdToHtml(src) {
     }
     const para = [line];
     i += 1;
-    while (i < lines.length && lines[i].trim() && !/^(#{1,3} |\- |\d+\. |\|)/.test(lines[i])) {
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3} |\- |\d+\. |\||\{\{fig:)/.test(lines[i])) {
       para.push(lines[i]);
       i += 1;
     }
@@ -135,29 +190,41 @@ function mdToHtml(src) {
   return html.join('\n');
 }
 
-function build() {
-  const emperors = load('qing-emperors.csv');
-  const cards = load('qing-emperor-research-cards.csv');
-  const portraits = load('emperor-portraits.csv');
-  const crosswalk = load('entity-id-crosswalk.csv');
-  const people = load('phase0-people.csv');
-  const sources = load('source-rights-ledger.csv');
-  const sourceIndex = load('qing-emperor-source-index.csv');
-  const tasks = load('task-queue.csv');
-  const kangxiUnits = load('kangxi-source-units.csv');
-  const kangxiClaims = load('kangxi-source-claims.csv');
-  const yongzhengUnits = load('yongzheng-source-units.csv');
-  const yongzhengClaims = load('yongzheng-source-claims.csv');
-  const units = [...kangxiUnits, ...yongzhengUnits];
-  const claims = [...kangxiClaims, ...yongzhengClaims];
-  const lanes = load('side-lanes.csv');
-  const empressTimeline = load('kangxi-empress-timeline.csv');
-  const princes = load('kangxi-princes.csv');
-  const princesses = load('kangxi-princesses.csv');
-  const heirChain = load('kangxi-heir-chain.csv');
-  const historicSites = load('historic-sites.csv');
-  const questions = load('golden-questions.csv');
-  const chapterRows = load('chapters.csv');
+// 装载本朝文件（含 shared 共享文件），按 kind 合并；返回 { dynasty, data: {field: rows} }。
+function loadDynasty(dynasty) {
+  const byKind = new Map();
+  for (const entry of DATA_MANIFEST) {
+    if (entry.dynasty !== dynasty.code && entry.dynasty !== 'shared') continue;
+    const rows = load(entry.file);
+    const list = byKind.get(entry.kind) || [];
+    byKind.set(entry.kind, list.concat(rows));
+  }
+  const data = {};
+  for (const [kind, field] of Object.entries(KIND_TO_FIELD)) {
+    data[field] = byKind.get(kind) || [];
+  }
+  return { dynasty, data };
+}
+
+function slimDynasty(dynasty) {
+  return {
+    code: dynasty.code,
+    label: dynasty.label,
+    kicker: dynasty.kicker,
+    headline: dynasty.headline,
+    lede: dynasty.lede,
+    // slug → 年号标签；前端据此解析朝代专题路由与数据块
+    eras: Object.fromEntries(dynasty.reignEras.map((era) => [era.slug, era.label])),
+  };
+}
+
+function buildDynasty({ dynasty, data }) {
+  const {
+    emperors, cards, portraits, crosswalk, people, sources, sourceIndex, tasks,
+    units, claims, questions, chapters: chapterRows, lanes, empressTimeline,
+    princes, princesses, heirChain, historicSites, imageRegions, iiifManifests,
+    works,
+  } = data;
 
   for (const row of portraits) {
     row['预览文件'] = localPreview(row.visual_id, row['预览文件']);
@@ -178,20 +245,63 @@ function build() {
   }
   const crosswalkByLegacy = new Map(crosswalk.map((row) => [row.legacy_emperor_id, row]));
 
+  // B1: 按 person_id 归集 claims，算状态计数 + 最高证据层级
+  const STRENGTH_RANK = { '强': 2, '中': 1 };
+  const credibilityByPerson = new Map();
+  for (const claim of claims) {
+    const pid = claim['主体 ID'];
+    if (!pid) continue;
+    let c = credibilityByPerson.get(pid);
+    if (!c) {
+      c = { claims: 0, byStatus: {}, byStance: {}, byDirectness: {}, topStrength: '' };
+      credibilityByPerson.set(pid, c);
+    }
+    c.claims += 1;
+    for (const [field, bucket] of [['状态', 'byStatus'], ['证据立场', 'byStance'], ['证据直接性', 'byDirectness']]) {
+      const val = claim[field] || '';
+      c[bucket][val] = (c[bucket][val] || 0) + 1;
+    }
+    const strength = claim['证据强度'] || '';
+    if ((STRENGTH_RANK[strength] || 0) > (STRENGTH_RANK[c.topStrength] || 0)) c.topStrength = strength;
+  }
+  const emptyCredibility = () => ({ claims: 0, byStatus: {}, byStance: {}, byDirectness: {}, topStrength: '' });
+
   const emperorRecords = emperors.map((emperor) => {
     const map = crosswalkByLegacy.get(emperor.emperor_id);
+    const personId = map?.person_id || '';
     return {
       ...emperor,
-      person_id: map?.person_id || '',
+      person_id: personId,
       id_status: map?.status || '',
       portrait: slimPortrait(primaryPortrait(emperor.emperor_id)),
+      credibility: credibilityByPerson.get(personId) || emptyCredibility(),
     };
   });
+
+  // 章节插图：构建期权利检查。绿色且可公开展示才嵌图；黄色/红色只给说明与外链。
+  const portraitsByVisual = new Map(portraits.map((p) => [p.visual_id, p]));
+  function chapterFig(id, overrideCaption) {
+    const portrait = portraitsByVisual.get(id);
+    if (!portrait) {
+      console.warn(`WARN: 章节插图未知 ${id}`);
+      return `<figure class="fig-inline"><div class="img-fallback">图像未找到：${escHtml(id)}</div></figure>`;
+    }
+    const title = portrait['对象标题'] || id;
+    const caption = overrideCaption || title;
+    const license = portrait['文件页标示许可'] || '';
+    const fileUrl = /^https:\/\//.test(portrait['文件页'] || '') ? portrait['文件页'] : '';
+    const embeddable = portrait['权利颜色'] === '绿' && portrait['可公开展示'] === '是' && portrait['预览文件'];
+    if (!embeddable) {
+      return `<figure class="fig-inline fig-restricted"><div class="img-fallback">${escHtml(title)} · 权利受限，不嵌入</div><figcaption>${escHtml(caption)}${fileUrl ? ` · <a href="${escHtml(fileUrl)}" target="_blank" rel="noopener">看文件页</a>` : ''}</figcaption></figure>`;
+    }
+    const src = localPreview(portrait.visual_id, portrait['预览文件']);
+    return `<figure class="fig-inline"><a href="#/image/${escHtml(id)}"><img src="${escHtml(src)}" alt="${escHtml(title)}" loading="lazy" decoding="async"></a><figcaption><strong>${escHtml(caption)}</strong>${license ? ` · ${escHtml(license)}` : ''}${fileUrl ? ` · <a href="${escHtml(fileUrl)}" target="_blank" rel="noopener">文件页</a>` : ''}</figcaption></figure>`;
+  }
 
   const chapters = chapterRows.map((row) => {
     const file = path.join(contentDir, row.file);
     const markdown = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-    return { ...row, markdown, bodyHtml: mdToHtml(markdown) };
+    return { ...row, markdown, bodyHtml: mdToHtml(markdown, chapterFig) };
   });
 
   const coverage = {
@@ -221,7 +331,7 @@ function build() {
       id: emperor.person_id,
       label: emperor['年号或通称'].split('；')[0],
       extra: emperor['规范名'],
-      hay: [emperor.person_id, emperor.emperor_id, emperor['规范名'], emperor['年号或通称'], emperor['庙号'], emperor['父亲'], emperor['母亲']].join(' '),
+      hay: [emperor.person_id, emperor.emperor_id, emperor['规范名'], emperor['年号或通称'], emperor['庙号'], emperor['父亲'], emperor['母亲'], py([emperor['规范名'], emperor['年号或通称'], emperor['庙号']].join(''))].join(' '),
     });
   }
   for (const person of people) {
@@ -230,7 +340,7 @@ function build() {
       id: person.person_id,
       label: person['规范名'].replace(/^爱新觉罗·/, ''),
       extra: person['常用名或异名'],
-      hay: [person.person_id, person['规范名'], person['常用名或异名'], person['人物类型']].join(' '),
+      hay: [person.person_id, person['规范名'], person['常用名或异名'], person['人物类型'], py([person['规范名'], person['常用名或异名']].join(''))].join(' '),
     });
   }
 
@@ -239,16 +349,20 @@ function build() {
     ...claims.map((row) => searchEntry('claim', row['Assertion ID'], Object.values(row).join(' '))),
     ...sources.map((row) => searchEntry('source', row.source_id, Object.values(row).join(' '))),
     ...lanes.map((row) => searchEntry('lane', row.lane_id, Object.values(row).join(' '))),
-    ...empressTimeline.map((row) => searchEntry('empress', row.event_id, Object.values(row).join(' '))),
-    ...princes.map((row) => searchEntry('prince', row.person_id, Object.values(row).join(' '), {
+    ...empressTimeline.map((row) => searchEntry('empress', row.event_id, [Object.values(row).join(' '), py(row['当时称号'])].join(' '))),
+    ...princes.map((row) => searchEntry('prince', row.person_id, [Object.values(row).join(' '), py(row['规范名'])].join(' '), {
       label: row['规范名'].replace(/^爱新觉罗·/, ''),
       extra: row['表序标签'],
     })),
-    ...princesses.map((row) => searchEntry('princess', row.person_id, Object.values(row).join(' '), {
+    ...princesses.map((row) => searchEntry('princess', row.person_id, [Object.values(row).join(' '), py(row['规范名'])].join(' '), {
       label: row['规范名'].replace(/^爱新觉罗氏/, ''),
       extra: row['表序标签'],
     })),
     ...heirChain.map((row) => searchEntry('heir', row.event_id, Object.values(row).join(' '))),
+    ...works.map((row) => searchEntry('work', row.work_id, [row['文献名称'], row['文献类型'], row['内容概述'], row['成书年代']].join(' '), {
+      label: row['文献名称'],
+      extra: row['文献类型'],
+    })),
     ...historicSites.map((row) => searchEntry('site', row.site_id, Object.values(row).join(' '))),
     ...questions.map((row) => searchEntry('question', row.question_id, Object.values(row).join(' '), {
       label: row['问题'],
@@ -260,39 +374,85 @@ function build() {
     })),
   ];
 
-  fs.mkdirSync(dataOutDir, { recursive: true });
+  const slim = slimDynasty(dynasty);
   const written = [
+    writeJson(`d-${dynasty.code}.json`, {
+      units, claims, lanes, empressTimeline, princes, princesses, heirChain, chapters, questions, works,
+    }),
     writeJson('home.json', {
       generatedAt: new Date().toISOString(),
       notice: '引文可回原文。家谱尚未用玉牒核对。',
+      dynasty: slim,
       emperors: emperorRecords,
       sites: historicSites,
       coverage,
+      credibility: {
+        totalClaims: claims.length,
+        byStatus: countBy(claims, '状态'),
+        byStrength: countBy(claims, '证据强度'),
+        byDirectness: countBy(claims, '证据直接性'),
+        emperorsWithClaims: emperorRecords.filter((e) => (e.credibility?.claims || 0) > 0).length,
+      },
       suggest,
     }),
-    writeJson('people.json', { people, portraits, crosswalk }),
-    writeJson('kangxi.json', { units, claims, lanes, empressTimeline, princes, princesses, heirChain, chapters, questions }),
+    writeJson('people.json', { people, portraits, crosswalk, regions: imageRegions, iiif: iiifManifests }),
     writeJson('catalog.json', { sources, sourceIndex, tasks }),
-    writeJson('search.json', buildIndex(searchEntries)),
   ];
 
-  const legacy = path.join(siteDir, 'data.js');
-  if (fs.existsSync(legacy)) fs.unlinkSync(legacy);
-
+  // 首页直出：kicker/h1/lede 取自 dynasty 对象
   const indexPath = path.join(siteDir, 'index.html');
   let indexHtml = fs.readFileSync(indexPath, 'utf8');
   const homeRe = /<main id="main"[^>]*>[\s\S]*?<\/main>/;
   if (homeRe.test(indexHtml)) {
-    const home = homeHtml(emperorRecords, historicSites, { onerror: false });
+    const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false });
     indexHtml = indexHtml.replace(homeRe, `<main id="main" data-ssr="home">\n${home}\n  </main>`);
-    fs.writeFileSync(indexPath, indexHtml);
   } else {
     console.warn('WARN: index.html 未找到 <main id="main">，跳过直出。');
   }
+  // 注入朝代配置：app.js 启动时同步读取 #dynasty-config，决定数据块与专题路由
+  const dynastyConfig = {
+    code: dynasty.code,
+    label: dynasty.label,
+    chunk: `d-${dynasty.code}`,
+    eras: slim.eras,
+  };
+  const configTag = `  <script type="application/json" id="dynasty-config">${JSON.stringify(dynastyConfig)}</script>\n`;
+  const configRe = /[ \t]*<script type="application\/json" id="dynasty-config">[\s\S]*?<\/script>\n?/;
+  indexHtml = configRe.test(indexHtml)
+    ? indexHtml.replace(configRe, configTag)
+    : indexHtml.replace('</head>', `${configTag}</head>`);
+  fs.writeFileSync(indexPath, indexHtml);
 
-  const summary = written.map((item) => `${item.name} ${item.bytes}B`).join(', ');
-  console.log(`Wrote site/data/{${written.map((item) => item.name).join(', ')}} (${summary})`);
-  console.log(`Home emperors ${emperorRecords.length}, sites ${historicSites.length}, search entries ${searchEntries.length}`);
+  return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length };
+}
+
+function build() {
+  fs.mkdirSync(dataOutDir, { recursive: true });
+
+  const allSearchEntries = [];
+  const reports = [];
+  for (const dynasty of activeDynasties()) {
+    const loaded = loadDynasty(dynasty);
+    const report = buildDynasty(loaded);
+    allSearchEntries.push(...report.searchEntries);
+    reports.push(report);
+  }
+
+  const searchWritten = writeJson('search.json', buildIndex(allSearchEntries));
+  reports.push({ dynasty: 'search', written: [searchWritten] });
+
+  // 清理已被 d-${code}.json 取代的旧产物
+  const legacyDataJs = path.join(siteDir, 'data.js');
+  if (fs.existsSync(legacyDataJs)) fs.unlinkSync(legacyDataJs);
+  const legacyKangxi = path.join(dataOutDir, 'kangxi.json');
+  if (fs.existsSync(legacyKangxi)) fs.unlinkSync(legacyKangxi);
+
+  const summary = reports
+    .flatMap((r) => r.written.map((item) => `${item.name} ${item.bytes}B`))
+    .join(', ');
+  console.log(`Wrote site/data/{${reports.flatMap((r) => r.written.map((item) => item.name)).join(', ')}} (${summary})`);
+  const home = reports.find((r) => r.dynasty !== 'search');
+  if (home) console.log(`Home emperors ${home.emperorCount}, sites ${home.siteCount}, search entries ${allSearchEntries.length}`);
 }
 
 build();

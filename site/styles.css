@@ -23,6 +23,7 @@
 html, body { margin: 0; padding: 0; }
 html { hanging-punctuation: first last; color-scheme: light; }
 ::selection { background: #ead9c6; color: var(--ink); }
+mark { background: #ead9c6; color: inherit; padding: 0 1px; }
 body {
   background: var(--paper);
   color: var(--ink);
@@ -491,6 +492,79 @@ tr[data-href] { cursor: pointer; }
 .chip.amber { color: var(--amber); }
 .chip.red { color: var(--red); }
 .chip.indigo { color: var(--indigo); }
+
+.cred-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 1px 7px;
+  font-size: 12px;
+  line-height: 1.6;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--panel);
+}
+.cred-badge.cred-strong { color: var(--green); border-color: var(--green); }
+.cred-badge.cred-medium { color: var(--amber); border-color: var(--amber); }
+.cred-badge.cred-none { color: var(--muted); }
+.cred-badge.cred-site { color: var(--indigo); border-color: var(--indigo); }
+.cred-badge.cred-conflict { color: var(--red); border-color: var(--red); }
+
+.callout {
+  margin: 16px 0;
+  padding: 12px 16px;
+  background: var(--panel);
+  border-left: 3px solid var(--amber);
+  border-radius: 2px;
+}
+.callout h2 { font-size: 15px; margin: 0 0 4px; color: var(--amber); }
+.callout p { margin: 0; font-size: 14px; line-height: 1.7; color: var(--quote); }
+
+.image-regions { position: relative; }
+.image-regions > img { display: block; }
+.osd-viewer { position: relative; height: 560px; background: #1a1a1a; border-radius: 4px; overflow: hidden; }
+.osd-viewer > noscript img { display: block; max-width: 100%; }
+.region-overlay {
+  position: absolute;
+  border: 2px solid var(--vermilion);
+  background: rgba(141, 58, 44, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.region-overlay:hover { background: rgba(141, 58, 44, 0.20); }
+.region-overlay.region-static {
+  cursor: default;
+  border-style: dashed;
+  background: rgba(42, 36, 28, 0.06);
+}
+.region-overlay.region-static .region-label { background: var(--ink); }
+.region-label {
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 1px 5px;
+  background: var(--vermilion);
+  color: var(--paper);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.region-links { margin: 12px 0; }
+.region-links h2 { font-size: 15px; margin: 0 0 4px; color: var(--vermilion); }
+.region-links p { margin: 4px 0; font-size: 14px; }
+.region-backlinks { margin: 16px 0; padding: 12px 16px; background: var(--panel); border-left: 3px solid var(--indigo); border-radius: 2px; }
+.region-backlinks h2 { font-size: 15px; margin: 0 0 4px; color: var(--indigo); }
+.region-backlinks p { margin: 4px 0; font-size: 14px; }
+.x-banner {
+  margin: 16px 0;
+  padding: 12px 16px;
+  background: var(--panel);
+  border-left: 3px solid var(--red);
+  border-radius: 2px;
+}
+.x-banner-head { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--red); }
+.x-banner p { margin: 0; font-size: 14px; line-height: 1.7; color: var(--quote); }
 
 .table-wrap { overflow: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 15px; }
@@ -1007,3 +1081,130 @@ a.img-fallback.yellow,
 }
 .to-top.show { opacity: 1; pointer-events: auto; }
 .to-top:hover { color: var(--vermilion); }
+
+/* 灯箱：图片点击放大预览 */
+img[data-lightbox] { cursor: zoom-in; }
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem 1.5rem;
+  background: rgba(24, 20, 15, 0.9);
+  cursor: zoom-out;
+}
+.lightbox[hidden] { display: none; }
+.lightbox img {
+  max-width: 94vw;
+  max-height: 82vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  background: var(--paper);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+.lightbox-cap {
+  margin: 0;
+  max-width: 46rem;
+  text-align: center;
+  color: #efe7d7;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.lightbox-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 1;
+  border: 1px solid rgba(239, 231, 215, 0.5);
+  background: transparent;
+  color: #efe7d7;
+  font-size: 1.1rem;
+  line-height: 1;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.lightbox-close:hover, .lightbox-close:focus-visible {
+  border-color: var(--vermilion);
+  color: #fff;
+  outline: none;
+}
+
+/* 章节正文插图（{{fig:ID}} 构建期生成） */
+.fig-inline {
+  margin: 1.5rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  background: #faf6ec;
+}
+.fig-inline img {
+  display: block;
+  max-width: 100%;
+  max-height: 26rem;
+  width: auto;
+  margin: 0 auto;
+}
+.fig-inline figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.fig-inline.fig-restricted .img-fallback { min-height: 6rem; }
+
+/* 暗色模式：跟随系统偏好 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #191512;
+    --ink: #e6ddcc;
+    --muted: #9a9184;
+    --line: #3b342b;
+    --photo: #241f1a;
+    --mat: #201b16;
+    --vermilion: #c96f5a;
+    --indigo: #7fa0b8;
+    --amber: #c9a254;
+    --red: #d0685c;
+    --green: #6fae8f;
+    --panel: #211c17;
+    --quote: #cbbfae;
+  }
+  html { color-scheme: dark; }
+  .fig-inline { background: var(--panel); }
+  mark { color: #2a241c; }
+}
+
+/* 打印：教学模式讲义导出 */
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .masthead, .search, .suggest, .to-top, .drawer, .scrim, .lightbox,
+  .actions, .skip, #search-status { display: none !important; }
+  main { max-width: 100%; }
+  .reading, .dossier { max-width: 100%; }
+  a { color: #000; text-decoration: none; }
+  /* 主张页：本主张与同组异说并排，便于纸面对照 */
+  .claim-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+  .claim-compare .claim-card, .conflict-siblings .claim-card { break-inside: avoid; }
+  /* 出处链接打印时展开 URL，便于纸面回查 */
+  .kv a[href^="https"]::after, .foot a[href^="https"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    word-break: break-all;
+  }
+  .card, .thumb, figure.portrait, .doc-card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  blockquote, .thread { break-inside: avoid; }
+  img { max-height: 60vh; }
+  .grid { display: block; }
+  .grid > * { margin-bottom: 1rem; }
+}
