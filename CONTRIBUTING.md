@@ -6,7 +6,7 @@
 
 | 路径 | 适合 | 入口 |
 |---|---|---|
-| 报错/纠错 | 发现事实错误、链接失效、图像认定或权利问题 | [Issues](https://github.com/zonglinxie-cyber/qing-history-evidence-base/issues/new/choose)，请按模板填写 |
+| 报错/纠错 | 发现事实错误、链接失效、图像认定或权利问题 | [Issues](https://github.com/zonglinxie-cyber/qing-history-evidence-base/issues/new/choose) 填表单后机器人自动开 PR，全程不碰命令行 |
 | 提交修正 | 你能提供来源的修正、补全缺失字段、新增来源单元 | Pull Request（流程见下） |
 | 认领任务 | 长期参与 | 见 `data/task-queue.csv`，先在 Issue 里认领 |
 

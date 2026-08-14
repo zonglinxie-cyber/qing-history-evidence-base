@@ -102,7 +102,9 @@ export function check(ctx) {
     if (!sourceUnitIds.has(claim['来源实体 ID'])) errors.push(`${claim['Assertion ID']} 引用了未知来源单元 ${claim['来源实体 ID']}`);
     if (!claim['卷页/档号/图像定位'] || !claim['支持引文']) errors.push(`${claim['Assertion ID']} 缺少定位或支持引文`);
     if (!claim['公历下界'] || !claim['公历上界']) errors.push(`${claim['Assertion ID']} 缺少公历对照`);
-    if (claim['状态'] === '已采纳') errors.push(`${claim['Assertion ID']} 未经 H1 抽查却标为已采纳`);
+    if (claim['状态'] === '已采纳' && !String(claim['复核人'] || '').trim()) {
+      errors.push(`${claim['Assertion ID']} 标为已采纳但复核人为空；H1 抽查必须由具名复核人完成`);
+    }
     if (claim['Assertion ID'] === 'QH-A-KX-0037' && /畅春园|清溪书屋/.test(`${claim['客体 ID 或值']}${claim['支持引文']}`)) {
       errors.push('QH-A-KX-0037 不得把寝宫改写成畅春园或清溪书屋');
     }
@@ -125,9 +127,10 @@ export function check(ctx) {
   for (const claim of claims) {
     if (claim['状态'] !== '已采纳' || !highRiskPredicates.has(claim['谓词/关系'])) continue;
     const key = `${claim['主体 ID']}|${claim['谓词/关系']}|${claim['客体 ID 或值']}`;
-    const size = familiesByProposition.get(key)?.size || 0;
-    if (size < 2) {
-      errors.push(`${claim['Assertion ID']} 高风险命题采纳时只有 ${size} 个来源家族；生母、承嗣、即位、死因等原则上需两个独立来源家族`);
+    const fams = [...(familiesByProposition.get(key) || [])];
+    const independentPair = fams.some((a, i) => fams.some((b, j) => j > i && ctx.independentFamilies(a, b)));
+    if (!independentPair) {
+      errors.push(`${claim['Assertion ID']} 高风险命题采纳时缺两个独立来源家族（独立性按 source-families.csv 派生树判定；清史稿与实录同祖不算独立）`);
     }
   }
   for (const id of ['QH-A-KX-0039', 'QH-A-KX-0040']) {
@@ -149,8 +152,8 @@ export function check(ctx) {
   if (/丹药|圆明园|清溪书屋/.test(`${claimById.get('QH-A-YZ-0032')?.['客体 ID 或值'] || ''}${claimById.get('QH-A-YZ-0032')?.['支持引文'] || ''}`)) {
     errors.push('QH-A-YZ-0032 不得把丹药或圆明园写进本纪崩条');
   }
-  if (claimById.get('QH-A-YZ-0030')?.['冲突组 ID'] !== 'QH-CF-YZ-JUNJI') {
-    errors.push('QH-A-YZ-0030 必须保留军机处冲突组 QH-CF-YZ-JUNJI');
+  if (String(claimById.get('QH-A-YZ-0030')?.['冲突组 ID'] || '').trim()) {
+    errors.push('QH-A-YZ-0030 军机组第二面待补，单面主张不得挂冲突组（见 conflict-sets.csv QH-CF-YZ-JUNJI）');
   }
   if (claimById.get('QH-A-YZ-0026')?.['冲突组 ID'] !== 'QH-CF-YZ-NIAN-DEATH'
     || claimById.get('QH-A-YZ-0038')?.['冲突组 ID'] !== 'QH-CF-YZ-NIAN-DEATH') {
