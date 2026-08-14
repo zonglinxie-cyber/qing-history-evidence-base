@@ -1,0 +1,2 @@
+dynasty_code,label,kicker,headline,lede,id_prefix,reign_eras,canonical_history_work,rules_module,active
+qing,清,清朝,十二帝,"从赫图阿拉到紫禁城，从十三副遗甲到退位诏书。十二位皇帝，十二段人生，写尽一个王朝的起落。",QH,天命:tianming;天聪:tiancong;顺治:shunzhi;康熙:kangxi;雍正:yongzheng;乾隆:qianlong;嘉庆:jiaqing;道光:daoguang;咸丰:xianfeng;同治:tongzhi;光绪:guangxu;宣统:xuantong,清史稿,rules/qing.mjs,是
