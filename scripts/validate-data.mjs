@@ -8,9 +8,12 @@ import { loadCsv } from './lib/csv.mjs';
 import {
   CSV_FILES,
   DATA_MANIFEST,
+  KIND_TO_FIELD,
   activeDynasties,
   reignEraLabels,
 } from './lib/schema.mjs';
+import { checkSkeletonProse } from './rules/common/prose.mjs';
+import { check as checkCommon } from './rules/common/structure.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(scriptDir, '..'); // phase-0/
@@ -45,34 +48,6 @@ function checkUnique(file, rows) {
     }
   }
 }
-
-// manifest kind → ctx 字段名（与各朝 rules 模块的解构一致）
-const KIND_TO_FIELD = {
-  emperors: 'emperors',
-  research_cards: 'cards',
-  portraits: 'portraits',
-  crosswalk: 'crosswalk',
-  people: 'people',
-  sources: 'sources',
-  source_index: 'sourceIndex',
-  tasks: 'tasks',
-  vocab: 'vocab',
-  source_units: 'units',
-  source_claims: 'claims',
-  questions: 'questions',
-  chapters: 'chapters',
-  lanes: 'lanes',
-  empress_timeline: 'empressTimeline',
-  princes: 'princes',
-  princesses: 'princesses',
-  heir_chain: 'heirChain',
-  sites: 'historicSites',
-  image_regions: 'imageRegions',
-  iiif_manifests: 'iiifManifests',
-  works: 'works',
-  families: 'families',
-  conflict_sets: 'conflictSets',
-};
 
 async function main() {
   const summary = [];
@@ -155,6 +130,12 @@ async function main() {
         if (!famById.has(p)) errors.push(`${f.family_id} 的 derives_from 指向未登记家族 ${p}`);
       }
     }
+    for (const claim of byKind.get('source_claims') || []) {
+      const fid = String(claim['来源家族 ID'] || '').trim();
+      if (fid && !famById.has(fid)) {
+        errors.push(`${claim['Assertion ID']} 来源家族 ID ${fid} 未登记`);
+      }
+    }
 
     // 冲突组一等公民：登记 + ≥2 条主张 + 客体或时间互斥；有现行判断必须写保留意见
     const conflictSets = byKind.get('conflict_sets') || [];
@@ -189,10 +170,17 @@ async function main() {
       ctx[field] = byKind.get(kind) || [];
     }
 
+    checkCommon(ctx);
     if (dynasty.rulesModule) {
       const mod = await import(path.resolve(scriptDir, dynasty.rulesModule));
       if (mod.check) mod.check(ctx);
     }
+
+    checkSkeletonProse({
+      chapters: ctx.chapters,
+      contentDir,
+      warnings,
+    });
 
     summary.push({
       dynasty: dynasty.code,

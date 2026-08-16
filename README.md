@@ -83,7 +83,8 @@ python3 -m http.server 8765 --directory site
 
 ## 目录关系与部署
 
-- **`site/` 是唯一的前端构建产物源**。`scripts/build-site.mjs` 把 CSV/正文编成 `site/data/*.json`、直出首页 HTML，并注入朝代配置 `#dynasty-config`（前端据此解析数据块与年号专题路由，不硬编码朝代；新增朝代见 `data/dynasties.csv` 说明）。所有前端改动只改 `site/*`（`app.js`/`templates.js`/`search.js`/`styles.css`；清朝专属内容常量在 `site/qing-content.mjs`，新朝代建自己的 `<dynasty>-content.mjs`）。
+- **`site/` 是唯一的前端构建产物源**。`scripts/build-site.mjs` 把 CSV/正文编成 `site/data/*.json`、直出首页 HTML，并注入朝代配置 `#dynasty-config`（前端据此解析数据块与年号专题路由，不硬编码朝代；朝代接入见 `data/dynasties.csv` 说明）。所有前端改动只改 `site/*`（`app.js`/`templates.js`/`search.js`/`styles.css`；清朝专属内容常量在 `site/qing-content.mjs`，新朝代建自己的 `<dynasty>-content.mjs`）。
+  - **站点是单朝代运行时**：`#dynasty-config`、首页直出与 `home/people/catalog.json` 一次只承载一个朝代。切换当前朝代 = 在 `dynasties.csv` 只保留一个 `active=是` 并备齐该朝内容模块与数据。同时启用多个朝代时 `build` 会报错拦截（并非并存）——多朝代并存需要先把数据块前缀化为 `d-<code>`、给前端加朝代切换器，属后续改造而非纯 CSV 操作。
 - **发布由 GitHub Actions 自动完成**：推送 `main` 后，`.github/workflows/deploy.yml` 运行校验、构建与渲染测试，把 `site/` 发布到 `gh-pages` 分支（GitHub Pages 从该分支服务）。无需再手工同步；`npm run deploy` 的根目录镜像方式已废弃。
 - 前置条件：仓库 Settings → Actions → General → Workflow permissions 需选 **Read and write**（GITHUB_TOKEN 要推送 gh-pages）。
 - 本地开发**不要**起在仓库根（缺静态站点文件），直接 `python3 -m http.server --directory site`。

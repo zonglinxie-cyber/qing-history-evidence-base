@@ -4,7 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>清史读本</title>
-  <link rel="stylesheet" href="styles.css?v=3">
+  <meta name="description" content="清朝十二帝，以官书原文为底本逐条整理。1616年建号天命，1912年退位宣统。">
+  <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#191512" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+  <link rel="stylesheet" href="styles.css?v=8">
   <script type="application/json" id="dynasty-config">{"code":"qing","label":"清","chunk":"d-qing","eras":{"tianming":"天命","tiancong":"天聪","shunzhi":"顺治","kangxi":"康熙","yongzheng":"雍正","qianlong":"乾隆","jiaqing":"嘉庆","daoguang":"道光","xianfeng":"咸丰","tongzhi":"同治","guangxu":"光绪","xuantong":"宣统"}}</script>
 </head>
 <body>
@@ -12,10 +16,10 @@
   <header class="masthead">
     <a class="brand" href="#/">清史读本</a>
     <nav class="nav" aria-label="主导航">
+      <a href="#/path">读路</a>
       <a href="#/">十二帝</a>
       <a href="#/sites">今地</a>
       <a href="#/works">文献</a>
-      <a href="#/lanes">对照</a>
     </nav>
     <form class="search" id="search-form" role="search">
       <label class="sr" for="q">检索</label>
@@ -25,12 +29,13 @@
       <div id="suggest" class="suggest" role="listbox" hidden></div>
     </form>
     <div id="search-status" class="sr" aria-live="polite" aria-atomic="true"></div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换明暗模式">自动</button>
   </header>
   <main id="main" data-ssr="home">
       <div class="reading">
         <p class="kicker">清朝</p>
         <h1>十二帝</h1>
-        <p class="lede">从赫图阿拉到紫禁城，从十三副遗甲到退位诏书。十二位皇帝，十二段人生，写尽一个王朝的起落。</p>
+        <p class="lede">1616年建号天命，1912年退位宣统。十二位皇帝，以官书原文为底本，逐条<span class="nobr">整理。</span></p>
       </div>
       <div class="grid cards">
       <article class="card emperor-card">
@@ -70,7 +75,7 @@
         <a class="meta" href="#/person/QH-P-000001">
           <div class="era">康熙</div>
           <div class="card-vita"><p class="card-name">爱新觉罗·玄烨</p><p>圣祖 · 顺治第三子</p><p>1654年–1722年 · 69岁</p><p>在位 61年 · 1661–1722</p><p class="card-shihao">谥号 合天弘运文武睿哲恭俭宽裕孝敬诚信功德大成仁皇帝</p></div>
-          <span class="cred-badge cred-strong">证据 47 · 审核中 46 · 已采纳 1 · 强</span>
+          <span class="cred-badge cred-strong">证据 48 · 审核中 47 · 已采纳 1 · 强</span>
         </a>
       </article>
       <article class="card emperor-card">
@@ -153,11 +158,90 @@
           <span class="cred-badge cred-none">尚无结构化证据</span>
         </a>
       </article></div>
+      <section class="now-read">
+        <div class="page-head story">
+          <h2>先看这几处转轴</h2>
+        </div>
+        <p class="lede">称汗、称帝、入关、密储、内禅、条约、热河、退位。走完这一页，再点皇帝。</p>
+        <p class="actions"><a class="link" href="#/path">276年转轴</a> · <a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/overview/periods">全朝脉络</a></p>
+      </section>
+      <section class="now-read">
+        <div class="page-head story">
+          <h2>由浅入深读全朝</h2>
+        </div>
+        <p class="lede">先看脉络，再逐帝读评传、争议与白话解读，最后追到原文。</p>
+        <ol class="threads now-read-list">
+          <li>
+            <a class="thread" href="#/overview/periods">
+              <span class="thread-year">六期</span>
+              <h2>六期脉络</h2>
+              <p>创业立国到新政终结，296 年一条主线。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/overview/timeline">
+              <span class="thread-year">十二帝</span>
+              <h2>大事记</h2>
+              <p>每帝关键年份与事件，骨架年份已回查。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/overview/appraisals">
+              <span class="thread-year">十帝</span>
+              <h2>评传</h2>
+              <p>性格、施政、功过，事实与评价分栏。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/overview/disputes">
+              <span class="thread-year">十帝</span>
+              <h2>争议</h2>
+              <p>学术、野史、影视三分级，标证据状态。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/overview/reading">
+              <span class="thread-year">原文</span>
+              <h2>白话解读</h2>
+              <p>十帝关键文献原文对照，译评分栏。</p>
+            </a>
+          </li>
+        </ol>
+      </section>
+      <section class="now-read">
+        <div class="page-head story">
+          <h2>康熙这一段</h2>
+        </div>
+        <p class="lede">太子废了两次。即位和驾崩，官书都写到了日子。</p>
+        <ol class="threads now-read-list">
+          <li>
+            <a class="thread" href="#/chapter/kangxi-02">
+              <span class="thread-year">1675–1712</span>
+              <h2>两废太子</h2>
+              <p>立过，废过，又立，再废。日子对得上的留下，对不上的也留下。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/chapter/kangxi-01">
+              <span class="thread-year">1661 · 1722</span>
+              <h2>即位、崩逝与遗诏</h2>
+              <p>那年即位，次年才改元。口谕是口谕，遗诏是遗诏。实录写的是寝宫。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/kangxi">
+              <span class="thread-year">康熙朝</span>
+              <h2>储位、四后、儿女</h2>
+              <p>胤礽怎样一天一天被废。皇后当时叫什么。儿子怎么排。</p>
+            </a>
+          </li>
+        </ol>
+      </section>
       <section class="sites-home">
         <div class="page-head story">
           <h2>这些事，今天在哪儿</h2>
         </div>
-        <p class="lede">古战场可能已经沉入水下。御园可能只剩两座山门。行宫也可能还开着大门。</p>
+        <p class="lede">战场、陵寝、园子、关城——这些地方今天什么样，能不能去，和当时差多远。</p>
         <div class="grid cards site-cards">
       <article class="card emperor-card site-card">
         <a class="card-pic" href="#/site/QH-ST-0001" aria-label="萨尔浒之战">
@@ -215,7 +299,7 @@
           <div class="card-kind">今地</div>
           <div class="era">圆明园被焚掠</div>
           <div class="sub">北京市海淀区圆明园遗址公园</div>
-          <p class="card-hook">万园之园，今天能看见的是残石。</p>
+          <p class="card-hook">园子烧了，今天能看见的是残石。</p>
           <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
@@ -227,7 +311,7 @@
           <div class="card-kind">今地</div>
           <div class="era">热河行宫</div>
           <div class="sub">河北省承德市避暑山庄</div>
-          <p class="card-hook">康熙修来避暑，乾隆接着扩建，咸丰后来在这里逃难。</p>
+          <p class="card-hook">康熙修来避暑，乾隆接着扩建，咸丰后来避走到这里。</p>
           <span class="cred-badge cred-medium">二手索引</span>
         </a>
       </article>
@@ -294,7 +378,7 @@
   </div>
   <button id="to-top" class="to-top" type="button" aria-label="回到顶部" title="回到顶部">顶</button>
   <footer class="foot">
-    <p class="foot-links"><a href="#/kangxi">康熙</a> · <a href="#/yongzheng">雍正</a> · <a href="#/princesses">皇女</a> · <a href="#/questions">问题</a> · <a href="#/people">人物</a> · <a href="#/images">画像</a> · <a href="#/claims">依据</a> · <a href="#/sources">来源</a> · <a href="#/works">文献</a></p>
+    <p class="foot-links"><a href="#/how">怎么读</a> · <a href="#/kangxi">康熙</a> · <a href="#/yongzheng">雍正</a> · <a href="#/lanes">对照</a> · <a href="#/questions">问题</a> · <a href="#/people">人物</a> · <a href="#/images">画像</a> · <a href="#/claims">依据</a> · <a href="#/sources">来源</a> · <a href="#/works">文献</a> · <a href="#/tasks">进度</a></p>
     <p class="foot-links"><a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base/issues/new/choose" target="_blank" rel="noopener">报错纠错</a> · <a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base" target="_blank" rel="noopener">开源共建</a></p>
   </footer>
   <script>

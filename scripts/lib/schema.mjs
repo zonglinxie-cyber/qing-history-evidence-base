@@ -3,8 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { loadCsv } from './csv.mjs';
 
 // 本文件从 data/dynasties.csv 与 data/data-manifest.csv 派生清单与朝代元数据。
-// 新增朝代 = 在 dynasties.csv 加一行 + 在 data-manifest.csv 加该朝的文件行 + 放入数据 CSV，
-// 无需改本文件或任何脚本。count 语义为「最低（≥）」，契合章程「最低数量」哲学。
+// 站点为「单朝代运行时」：一次只启用一个 active 朝代。切换当前朝代 = 在 dynasties.csv 只保留一行 active=是，
+// 该朝配套 = 文件行(data-manifest.csv) + 数据 CSV + site/<dynasty>-content.mjs。
+// 同时启用多个 active 朝代会在 build 期被拦下（首页/dynasty-config/home·people·catalog 为单槽位，非并存）。
+// count 语义为「最低（≥）」，契合章程「最低数量」哲学。
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.resolve(scriptDir, '../../data');
@@ -76,3 +78,34 @@ export function reignEraLabels(code) {
   const d = dynastyByCode(code);
   return new Set(d ? d.reignEras.map((e) => e.label) : []);
 }
+
+// manifest kind → ctx / 构建局部字段名。validate 与 build 共用；加 kind 只改这里。
+export const KIND_TO_FIELD = {
+  emperors: 'emperors',
+  research_cards: 'cards',
+  portraits: 'portraits',
+  crosswalk: 'crosswalk',
+  people: 'people',
+  sources: 'sources',
+  source_index: 'sourceIndex',
+  tasks: 'tasks',
+  vocab: 'vocab',
+  source_units: 'units',
+  source_claims: 'claims',
+  questions: 'questions',
+  chapters: 'chapters',
+  lanes: 'lanes',
+  empress_timeline: 'empressTimeline',
+  princes: 'princes',
+  princesses: 'princesses',
+  heir_chain: 'heirChain',
+  sites: 'historicSites',
+  image_regions: 'imageRegions',
+  iiif_manifests: 'iiifManifests',
+  works: 'works',
+  chronicle: 'chronicle',
+  families: 'families',
+  conflict_sets: 'conflictSets',
+  community_corrections: 'communityCorrections',
+  overview: 'overviews',
+};
