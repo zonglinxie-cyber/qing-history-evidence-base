@@ -45,6 +45,7 @@ function el(id) {
 }
 
 globalThis.document = {
+  documentElement: fakeEl('html'),
   getElementById(id) {
     if (id === 'dynasty-config') return { textContent: config };
     return el(id);
@@ -59,6 +60,12 @@ globalThis.document = {
 };
 const listeners = {};
 globalThis.window = globalThis;
+const memoryStore = {};
+globalThis.localStorage = {
+  getItem: (key) => (Object.hasOwn(memoryStore, key) ? memoryStore[key] : null),
+  setItem: (key, value) => { memoryStore[key] = String(value); },
+  removeItem: (key) => { delete memoryStore[key]; },
+};
 globalThis.addEventListener = (name, fn) => { (listeners[name] ||= []).push(fn); };
 globalThis.removeEventListener = () => {};
 globalThis.scrollY = 0;
@@ -86,7 +93,7 @@ function check(name, cond) {
   if (!cond) failed++;
 }
 
-// 年号专题路由：注册表命中 + 未建专题页的年号优雅降级（多朝代泛化验收点）
+// 年号专题路由：注册表命中（康熙/雍正）+ 未建专题页的年号优雅降级（年号路由泛化验收点）
 const eras = Object.keys(JSON.parse(config).eras);
 const registeredEras = ['kangxi', 'yongzheng'];
 for (const slug of registeredEras) {
@@ -99,16 +106,54 @@ if (unregistered) {
   check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('尚未建立'));
 }
 
+const homeHtmlOut = await go('#/');
+check('首页现有可读入口', homeHtmlOut.includes('康熙这一段') && homeHtmlOut.includes('两废太子'));
+check('首页转轴入口', homeHtmlOut.includes('先看这几处转轴') && homeHtmlOut.includes('#/path'));
+const pathPage = await go('#/path');
+check('转轴年页', pathPage.includes('这几处转过轴') && pathPage.includes('1912') && pathPage.includes('密储落地'));
+const spine = await go('#/spine/power');
+check('继承主轴', spine.includes('谁坐龙椅') && spine.includes('明立太子'));
+const chronicle = await go('#/chronicle/kangxi');
+check('康熙大事记', chronicle.includes('日子对得上的十六件') && chronicle.includes('两说并存') && chronicle.includes('咸安宫'));
+const how = await go('#/how');
+check('怎么读页', how.includes('日子对得上') && how.includes('咸安宫'));
+const yinreng = await go('#/person/QH-P-000004');
+check('胤礽页先讲解后收依据', yinreng.includes('两岁立为太子') && yinreng.includes('依据'));
 const person = await go('#/person/QH-P-000001');
-check('人物页渲染（含朝代内容模块）', person.includes('分日记录'));
+check('人物页渲染（含朝代内容模块）', person.includes('两废太子') || person.includes('分日'));
+check('康熙帝页拆栏', person.includes('见诸文书的习惯') && person.includes('当时要解决什么') && person.includes('本朝未开') === false && person.includes('未开'));
 const chapter = await go('#/chapter/kangxi-02');
 check('章节插图语法渲染为权利受检 figure', chapter.includes('fig-inline') && chapter.includes('<img'));
+check('样板章原文块', chapter.includes('source-quote') && chapter.includes('選擇吉期具奏'));
+check('样板章行内主张', /data-claim="QH-A-KX-0\d+"/.test(chapter));
+check('样板章目录与上下篇', chapter.includes('chapter-toc') && chapter.includes('chapter-nav') && chapter.includes('上一篇'));
+check('样板章冲突并排', chapter.includes('claim-compare') && chapter.includes('QH-CF-KX-INVEST-DAY'));
+check('样板章原文块', chapter.includes('source-quote'));
+check('样板章行内主张', chapter.includes('data-claim="QH-A-KX-0124"') || chapter.includes('data-claim="QH-A-KX-0086"'));
+check('样板章目录', chapter.includes('chapter-toc') && chapter.includes('data-scroll'));
+check('样板章上下篇', chapter.includes('chapter-nav') && chapter.includes('上一篇') && chapter.includes('下一篇'));
+check('样板章依据摘要不倾倒主张卡', chapter.includes('本章打开过的卷') && !chapter.includes('thread-block'));
+check('两废章读这一句', chapter.includes('read-line') && chapter.includes('不能写成对质全文'));
+const kx01 = await go('#/chapter/kangxi-01');
+check('即位章原文块', kx01.includes('source-quote') && kx01.includes('上即皇帝位') && kx01.includes('崩於寢宮'));
+check('即位章行内主张', kx01.includes('data-claim="QH-A-KX-0001"') && kx01.includes('data-claim="QH-A-KX-0033"'));
+check('即位章目录与怎么读', kx01.includes('chapter-toc') && kx01.includes('data-scroll') && kx01.includes('怎么读这件事'));
+check('即位章冲突并排', kx01.includes('claim-compare') && kx01.includes('QH-CF-KX-SUCCESSION'));
+check('即位章上下篇', kx01.includes('chapter-nav') && kx01.includes('下一篇'));
+check('即位章读这一句', kx01.includes('read-line') && kx01.includes('不能把「深肖朕躬」写成'));
+const yz01 = await go('#/chapter/yongzheng-01');
+check('雍正即位章原文块', yz01.includes('source-quote') && yz01.includes('即皇帝位') && yz01.includes('子刻'));
+check('雍正即位章行内主张', yz01.includes('data-claim="QH-A-YZ-0039"') && yz01.includes('data-claim="QH-A-YZ-0041"'));
+check('雍正即位章目录与怎么读', yz01.includes('chapter-toc') && yz01.includes('怎么读这件事'));
+check('雍正即位章冲突并排', yz01.includes('claim-compare') && yz01.includes('QH-CF-YZ-NIAN-DEATH') && yz01.includes('QH-CF-YZ-DEATH'));
 const searchCn = await go('#/search?q=胤禛');
 check('检索高亮 mark 生效', searchCn.includes('<mark>'));
 const searchPy = await go('#/search?q=yinzhen');
 check('拼音检索 yinzhen 命中胤禛', searchPy.includes('QH-P-000002'));
 const works = await go('#/works');
 check('文献专栏按帝分组且有专论入口', works.includes('大义觉迷录') && works.includes('读专论') && works.includes('乾隆'));
+check('文献打开状态徽章', works.includes('条次已钉') || works.includes('主张已拆'));
+check('起居注不假装可读原文', works.includes('入口已登记') && works.includes('馆藏／咨询入口'));
 const juemilu = await go('#/chapter/yongzheng-04');
 check('大义觉迷录专论章渲染', juemilu.includes('自辩') && juemilu.includes('禁毁'));
 const claimCf = await go('#/claim/QH-A-KX-0070');
@@ -121,10 +166,13 @@ const unknown = await go('#/no-such-page');
 check('未知路由 404', unknown.includes('没有这个页面'));
 
 // 灯箱高清变体：Wikimedia 缩略图应取最大档
-const { largestVariant } = await import(path.join(siteDir, 'templates.js'));
+const { largestVariant, noOrphan } = await import(path.join(siteDir, 'templates.js'));
 const thumb = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Example.jpg/960px-Example.jpg';
 check('largestVariant 取最大档', largestVariant(thumb).includes('/1280px-Example.jpg'));
 check('largestVariant 本地图原样', largestVariant('media/QH-V-E04.jpg') === 'media/QH-V-E04.jpg');
+check('句末不孤字', noOrphan('以官书原文为底本，逐条整理。').includes('class="nobr">整理。'));
+const homeOut = await go('#/');
+check('首页导语句末不孤字', homeOut.includes('class="nobr"') && homeOut.includes('整理。'));
 
 console.log(failed ? `渲染测试 ${failed} 项失败` : '渲染测试全部通过');
 process.exit(failed ? 1 : 0);

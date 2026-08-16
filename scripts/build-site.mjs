@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
-import { CSV_FILES, DATA_MANIFEST, activeDynasties } from './lib/schema.mjs';
+import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
 import { buildIndex } from '../site/search.js';
 import { homeHtml } from '../site/templates.js';
 import { pinyin } from 'pinyin-pro';
@@ -13,32 +13,6 @@ const dataDir = path.join(root, 'data');
 const siteDir = path.join(root, 'site');
 const dataOutDir = path.join(siteDir, 'data');
 const contentDir = path.join(root, 'content');
-
-// manifest kind → 局部变量名（按朝装载数据时合并同名 kind）
-const KIND_TO_FIELD = {
-  emperors: 'emperors',
-  research_cards: 'cards',
-  portraits: 'portraits',
-  crosswalk: 'crosswalk',
-  people: 'people',
-  sources: 'sources',
-  source_index: 'sourceIndex',
-  tasks: 'tasks',
-  vocab: 'vocab',
-  source_units: 'units',
-  source_claims: 'claims',
-  questions: 'questions',
-  chapters: 'chapters',
-  lanes: 'lanes',
-  empress_timeline: 'empressTimeline',
-  princes: 'princes',
-  princesses: 'princesses',
-  heir_chain: 'heirChain',
-  sites: 'historicSites',
-  image_regions: 'imageRegions',
-  iiif_manifests: 'iiifManifests',
-  works: 'works',
-};
 
 function load(file) {
   return loadCsv(path.join(dataDir, file), {
@@ -108,6 +82,17 @@ function escHtml(value) {
   }[ch]));
 }
 
+function headingSlug(raw, used) {
+  const plain = String(raw).replace(/<[^>]+>/g, '').trim();
+  let base = plain.replace(/[：:]/g, '-').replace(/\s+/g, '-').replace(/[「」『』《》]/g, '');
+  if (!base) base = 'section';
+  let id = base;
+  let n = 2;
+  while (used.has(id)) id = `${base}-${n++}`;
+  used.add(id);
+  return id;
+}
+
 function inlineMd(text) {
   let out = escHtml(text);
   out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -117,18 +102,34 @@ function inlineMd(text) {
     return `<a class="link" href="${escHtml(safe)}"${extra}>${label}</a>`;
   });
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/\{\{claim:([A-Za-z0-9-]+)\}\}/g, (_, id) => (
+    `<button type="button" class="link claim-ref" data-claim="${escHtml(id)}">看依据</button>`
+  ));
   return out;
 }
+
+const MD_BLOCK = /^(#{1,3} |\- |\d+\. |\||>|\{\{fig:|\{\{conflict:)/;
 
 function mdToHtml(src, fig) {
   const text = String(src || '').replace(/\r\n/g, '\n').replace(/^# .+\n+/, '');
   const lines = text.split('\n');
   const html = [];
+  const usedIds = new Set();
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
     if (!line.trim()) {
       i += 1;
+      continue;
+    }
+    // 内部复核信息不进阅读正文：状态行与「待用户抽查」清单只在研究稿与 CSV 里保留
+    if (/^状态：/.test(line.trim())) {
+      i += 1;
+      continue;
+    }
+    if (/^## 待用户抽查/.test(line.trim())) {
+      i += 1;
+      while (i < lines.length && !/^## /.test(lines[i])) i += 1;
       continue;
     }
     // 插图语法：整行 {{fig:QH-V-E01}} 或 {{fig:QH-V-E01|自定义图注}}，权利检查在构建期完成
@@ -138,14 +139,47 @@ function mdToHtml(src, fig) {
       i += 1;
       continue;
     }
+    const conflictMatch = line.trim().match(/^\{\{conflict:([A-Za-z0-9-]+)(?:\|([^}]*))?\}\}$/);
+    if (conflictMatch) {
+      const id = conflictMatch[1];
+      const label = (conflictMatch[2] || '').trim();
+      html.push(`<div class="claim-compare conflict-embed" data-conflict="${escHtml(id)}"${label ? ` data-label="${escHtml(label)}"` : ''}></div>`);
+      i += 1;
+      continue;
+    }
+    if (line.startsWith('>')) {
+      const quotes = [];
+      while (i < lines.length && lines[i].startsWith('>')) {
+        quotes.push(lines[i].replace(/^>\s?/, ''));
+        i += 1;
+      }
+      html.push(`<blockquote class="quote source-quote"><p>${inlineMd(quotes.join(' '))}</p></blockquote>`);
+      continue;
+    }
     if (line.startsWith('## ')) {
-      html.push(`<h2>${inlineMd(line.slice(3))}</h2>`);
+      const title = line.slice(3);
+      const id = headingSlug(title, usedIds);
+      html.push(`<h2 id="${escHtml(id)}">${inlineMd(title)}</h2>`);
       i += 1;
       continue;
     }
     if (line.startsWith('### ')) {
-      html.push(`<h3>${inlineMd(line.slice(4))}</h3>`);
+      const title = line.slice(4);
+      const id = headingSlug(title, usedIds);
+      html.push(`<h3 id="${escHtml(id)}">${inlineMd(title)}</h3>`);
       i += 1;
+      continue;
+    }
+    if (line.startsWith('#### ')) {
+      const title = line.slice(5);
+      const id = headingSlug(title, usedIds);
+      const body = [];
+      i += 1;
+      while (i < lines.length && lines[i].trim() && !/^#{1,4} /.test(lines[i]) && !lines[i].startsWith('>') && !lines[i].startsWith('{{')) {
+        body.push(`<p>${inlineMd(lines[i])}</p>`);
+        i += 1;
+      }
+      html.push(`<aside class="read-line" id="${escHtml(id)}"><h4>${inlineMd(title)}</h4>${body.join('')}</aside>`);
       continue;
     }
     if (line.startsWith('- ')) {
@@ -181,21 +215,46 @@ function mdToHtml(src, fig) {
     }
     const para = [line];
     i += 1;
-    while (i < lines.length && lines[i].trim() && !/^(#{1,3} |\- |\d+\. |\||\{\{fig:)/.test(lines[i])) {
+    while (i < lines.length && lines[i].trim() && !MD_BLOCK.test(lines[i])) {
       para.push(lines[i]);
       i += 1;
     }
-    html.push(`<p>${inlineMd(para.join(' '))}</p>`);
+    const paraText = para.join(' ');
+    const paraHtml = `<p>${inlineMd(paraText)}</p>`;
+    html.push(paraText.startsWith('范围：')
+      ? `<details class="evidence-drawer scope"><summary>本章范围</summary>${paraHtml}</details>`
+      : paraHtml);
   }
-  return html.join('\n');
+  return wrapDrawers(html.join('\n'));
+}
+
+// 研究元信息折叠进证据抽屉：正文只留结论、怎么读与分日/骨架
+function wrapDrawers(html) {
+  const labels = { '边界': '本章边界', '尚未解决': '尚未解决' };
+  let out = html;
+  for (const [title, label] of Object.entries(labels)) {
+    const re = new RegExp(`<h2 id="[^"]+">${title}</h2>([\\s\\S]*?)(?=<h2|$)`, 'g');
+    out = out.replace(re, `<details class="evidence-drawer"><summary>${label}</summary>$1</details>`);
+  }
+  return wrapTeach(out);
+}
+
+function wrapTeach(html) {
+  return html.replace(
+    /(<h2 id="[^"]+">怎么读这件事<\/h2>)([\s\S]*?)(?=<h2|<!--|$)/,
+    '$1<div class="teach">$2</div>',
+  );
 }
 
 // 装载本朝文件（含 shared 共享文件），按 kind 合并；返回 { dynasty, data: {field: rows} }。
+// 主张行保留 manifest.reign，供覆盖度按朝分组；不从 Assertion ID 正则推朝次。
 function loadDynasty(dynasty) {
   const byKind = new Map();
   for (const entry of DATA_MANIFEST) {
     if (entry.dynasty !== dynasty.code && entry.dynasty !== 'shared') continue;
-    const rows = load(entry.file);
+    const rows = load(entry.file).map((r) => (
+      entry.kind === 'source_claims' ? { ...r, _reign: entry.reign } : r
+    ));
     const list = byKind.get(entry.kind) || [];
     byKind.set(entry.kind, list.concat(rows));
   }
@@ -223,7 +282,7 @@ function buildDynasty({ dynasty, data }) {
     emperors, cards, portraits, crosswalk, people, sources, sourceIndex, tasks,
     units, claims, questions, chapters: chapterRows, lanes, empressTimeline,
     princes, princesses, heirChain, historicSites, imageRegions, iiifManifests,
-    works,
+    works, vocab, conflictSets, chronicle, overviews: overviewRows,
   } = data;
 
   for (const row of portraits) {
@@ -301,14 +360,30 @@ function buildDynasty({ dynasty, data }) {
   const chapters = chapterRows.map((row) => {
     const file = path.join(contentDir, row.file);
     const markdown = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+    const status = (markdown.match(/^状态：\s*(.+)$/m)?.[1] || '').replace(/`/g, '').trim();
+    return { ...row, markdown, bodyHtml: mdToHtml(markdown, chapterFig), status };
+  });
+
+  const overviews = (overviewRows || []).map((row) => {
+    const file = path.join(contentDir, row.file);
+    const markdown = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
     return { ...row, markdown, bodyHtml: mdToHtml(markdown, chapterFig) };
   });
 
+  // 按朝归集主张总量：朝次来自 manifest.reign（经 loadDynasty 写入 _reign），不是 ID 前缀
+  const eraBySlug = Object.fromEntries(dynasty.reignEras.map((e) => [e.slug, e.label]));
+  const claimsByReign = {};
+  for (const row of claims) {
+    const reign = eraBySlug[row._reign] || '其他';
+    claimsByReign[reign] = (claimsByReign[reign] || 0) + 1;
+    delete row._reign;
+  }
   const coverage = {
     emperors: emperors.length,
     people: people.length,
     sources: sources.length,
     claims: claims.length,
+    claimsByReign,
     verifiedClaims: claims.filter((row) => row['复核人']).length,
     portraits: portraits.length,
     lanes: lanes.length,
@@ -378,6 +453,14 @@ function buildDynasty({ dynasty, data }) {
   const written = [
     writeJson(`d-${dynasty.code}.json`, {
       units, claims, lanes, empressTimeline, princes, princesses, heirChain, chapters, questions, works,
+      conflictSets: conflictSets || [],
+      chronicle: chronicle || [],
+      overviews,
+      predicates: Object.fromEntries(
+        (vocab || [])
+          .filter((row) => row.scheme_code === 'assertion_predicate')
+          .map((row) => [row.term_code, row['中文标签']]),
+      ),
     }),
     writeJson('home.json', {
       generatedAt: new Date().toISOString(),
@@ -429,9 +512,23 @@ function buildDynasty({ dynasty, data }) {
 function build() {
   fs.mkdirSync(dataOutDir, { recursive: true });
 
+  const activeList = activeDynasties();
+  if (activeList.length === 0) {
+    console.error('ERROR: dynasties.csv 没有 active=是 的朝代，无法构建。请指定一个 active 朝代。');
+    process.exit(1);
+  }
+  if (activeList.length > 1) {
+    console.error(
+      `ERROR: 检测到多个 active 朝代（${activeList.map((d) => d.code).join(', ')}），但本站是单朝代运行时：`,
+      '#dynasty-config、首页直出与 home/people/catalog.json 一次只能承载一个朝代，同时构建会互相覆盖（后写者胜）而非并存。',
+      '请把 dynasties.csv 里除目标外的朝代设为 active=否；真正的多朝代并存需先把数据块前缀化为 d-<code> 并给前端加朝代切换器。',
+    );
+    process.exit(1);
+  }
+
   const allSearchEntries = [];
   const reports = [];
-  for (const dynasty of activeDynasties()) {
+  for (const dynasty of activeList) {
     const loaded = loadDynasty(dynasty);
     const report = buildDynasty(loaded);
     allSearchEntries.push(...report.searchEntries);

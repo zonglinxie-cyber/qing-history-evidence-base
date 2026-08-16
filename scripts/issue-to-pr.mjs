@@ -4,8 +4,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseCsv } from './lib/csv.mjs';
 
+const MAX_CELL = 2000;
+
 function toCsv(rows) {
-  const esc = (v) => /[",\n]/.test(v) ? '"' + v.replaceAll('"', '""') + '"' : v;
+  const esc = (v) => {
+    let s = String(v ?? '');
+    if (s.length > MAX_CELL) s = s.slice(0, MAX_CELL);
+    // Excel/Sheets 会把 =+-@ 及制表/回车开头的单元格当公式；本库会导出 xlsx
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",\n\r]/.test(s) ? '"' + s.replaceAll('"', '""') + '"' : s;
+  };
   return rows.map((r) => r.map(esc).join(',')).join('\n') + '\n';
 }
 
@@ -45,9 +53,14 @@ if (fs.existsSync(file)) {
 } else {
   rows = [HEADER];
 }
+const correctionId = `CR-${String(issueNumber).padStart(5, '0')}`;
+if (rows.slice(1).some((r) => r[0] === correctionId)) {
+  console.log(`纠错行 ${correctionId} 已存在，跳过。`);
+  process.exit(0);
+}
 const idMatch = String(form.location).match(/QH-[A-Z]+-[A-Z0-9]+(?:-\d+[A-Z]?)?/);
 rows.push([
-  `CR-${String(issueNumber).padStart(5, '0')}`,
+  correctionId,
   issueNumber,
   idMatch ? idMatch[0] : form.location,
   form.current,

@@ -50,7 +50,7 @@
 - 主张的列规范与示例行：`data/kangxi-source-claims.csv` 表头 + `examples/assertion-example.json`
 - 史料分级 A1/A2/B/C/D：`docs/03-source-and-rights-policy.md`
 - 编辑规范全文：`docs/04-editorial-and-review-manual.md`
-- 多朝代扩展：新朝代在 `data/dynasties.csv` 加一行 + 在 `data-manifest.csv` 登记文件，不改脚本
+- 换当前朝代（单朝代运行时）：在 `data/dynasties.csv` 把目标朝代设为 `active=是`、其余设为 `否`，并补齐该朝 `<dynasty>-content.mjs` 与数据 CSV。同时启用多个 active 朝代会被 `build` 拦截（多朝代并存属后续前端改造，不是纯数据操作）
 
 ## 贡献许可
 
