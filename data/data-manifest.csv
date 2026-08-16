@@ -28,3 +28,4 @@ source-families.csv,qing,,families,"family_id;名称;derives_from;独立性说�
 conflict-sets.csv,qing,,conflict_sets,"conflict_set_id;议题;冲突维度;现行编辑判断;判断依据主张;保留意见",conflict_set_id,
 community-corrections.csv,qing,,community_corrections,"correction_id;位置ID;纠错内容;状态",correction_id,
 overviews.csv,qing,,overview,"overview_id;slug;title;file;lede",overview_id,5
+emperor-timeline.csv,qing,,emperor_timeline,"timeline_id;emperor_id;year;reign_year;event;status",timeline_id,92

@@ -282,7 +282,7 @@ function buildDynasty({ dynasty, data }) {
     emperors, cards, portraits, crosswalk, people, sources, sourceIndex, tasks,
     units, claims, questions, chapters: chapterRows, lanes, empressTimeline,
     princes, princesses, heirChain, historicSites, imageRegions, iiifManifests,
-    works, vocab, conflictSets, chronicle, overviews: overviewRows,
+    works, vocab, conflictSets, chronicle, overviews: overviewRows, emperorTimeline,
   } = data;
 
   for (const row of portraits) {
@@ -456,6 +456,7 @@ function buildDynasty({ dynasty, data }) {
       conflictSets: conflictSets || [],
       chronicle: chronicle || [],
       overviews,
+      emperorTimeline: emperorTimeline || [],
       predicates: Object.fromEntries(
         (vocab || [])
           .filter((row) => row.scheme_code === 'assertion_predicate')

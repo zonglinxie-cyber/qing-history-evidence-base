@@ -108,4 +108,5 @@ export const KIND_TO_FIELD = {
   conflict_sets: 'conflictSets',
   community_corrections: 'communityCorrections',
   overview: 'overviews',
+  emperor_timeline: 'emperorTimeline',
 };
