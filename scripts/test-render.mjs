@@ -114,7 +114,7 @@ check('转轴年页', pathPage.includes('这几处转过轴') && pathPage.includ
 const spine = await go('#/spine/power');
 check('继承主轴', spine.includes('谁坐龙椅') && spine.includes('明立太子'));
 const chronicle = await go('#/chronicle/kangxi');
-check('康熙大事记', chronicle.includes('日子对得上的十六件') && chronicle.includes('两说并存') && chronicle.includes('咸安宫'));
+check('康熙大事记', chronicle.includes('日子对得上的') && chronicle.includes('两说并存') && chronicle.includes('咸安宫'));
 const how = await go('#/how');
 check('怎么读页', how.includes('日子对得上') && how.includes('咸安宫'));
 const yinreng = await go('#/person/QH-P-000004');
@@ -122,6 +122,12 @@ check('胤礽页先讲解后收依据', yinreng.includes('两岁立为太子') &
 const person = await go('#/person/QH-P-000001');
 check('人物页渲染（含朝代内容模块）', person.includes('两废太子') || person.includes('分日'));
 check('康熙帝页拆栏', person.includes('见诸文书的习惯') && person.includes('当时要解决什么') && person.includes('本朝未开') === false && person.includes('未开'));
+const nurhaci = await go('#/person/QH-P-000051');
+check('努尔哈赤帝页有结构且非康熙腔', nurhaci.includes('当时要解决什么') && nurhaci.includes('吞并女真各部') && !nurhaci.includes('择吉不是册立'));
+const xuantong = await go('#/person/QH-P-000059');
+check('宣统帝页有结构', xuantong.includes('三岁不能算决策') && xuantong.includes('宣统政纪'));
+const qlChron = await go('#/chronicle/qianlong');
+check('无条次朝大事记不编年表', qlChron.includes('还没有逐日的官书条'));
 const chapter = await go('#/chapter/kangxi-02');
 check('章节插图语法渲染为权利受检 figure', chapter.includes('fig-inline') && chapter.includes('<img'));
 check('样板章原文块', chapter.includes('source-quote') && chapter.includes('選擇吉期具奏'));

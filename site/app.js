@@ -719,7 +719,13 @@ function eraPage(slug) {
         ${read.bound ? `<p class="bound">${esc(read.bound)}</p>` : ''}`;
     }
     const eraSlug = String(emperor['年号或通称'] || '').split('；')[0];
-    const chronicleHref = eraSlug === '康熙' ? '#/chronicle/kangxi' : '';
+    const dirMap = {
+      天命: 'nurhaci', 天聪: 'huangtaiji', 崇德: 'huangtaiji',
+      顺治: 'shunzhi', 康熙: 'kangxi', 雍正: 'yongzheng', 乾隆: 'qianlong',
+      嘉庆: 'jiaqing', 道光: 'daoguang', 咸丰: 'xianfeng', 同治: 'tongzhi',
+      光绪: 'guangxu', 宣统: 'xuantong',
+    };
+    const chronicleHref = dirMap[eraSlug] ? `#/chronicle/${dirMap[eraSlug]}` : '';
     return `
       <div class="emperor-bio">${(read.body || '').split('\n\n').map((p) => `<p>${esc(p)}</p>`).join('')}</div>
       ${read.bound ? `<p class="bound">${esc(read.bound)}</p>` : ''}
@@ -850,14 +856,30 @@ function eraPage(slug) {
   }
 
   function chroniclePage(slug) {
+    const dirMap = {
+      nurhaci: '天命', huangtaiji: '天聪', shunzhi: '顺治', kangxi: '康熙',
+      yongzheng: '雍正', qianlong: '乾隆', jiaqing: '嘉庆', daoguang: '道光',
+      xianfeng: '咸丰', tongzhi: '同治', guangxu: '光绪', xuantong: '宣统',
+    };
+    const eraLabel = dirMap[slug] || (slug ? '' : '康熙');
     const emperor = (DATA.emperors || []).find((row) => {
       const era = String(row['年号或通称'] || '').split('；')[0];
-      return era === '康熙' && (!slug || slug === 'kangxi');
+      return era === eraLabel || (eraLabel === '天聪' && era === '天聪');
     });
-    if (!emperor || (slug && slug !== 'kangxi')) {
-      return `<h1>还没有这份大事记</h1><p class="actions"><a class="link" href="#/kangxi">回康熙朝</a></p>`;
+    if (!emperor) {
+      return `<h1>还没有这份大事记</h1><p class="actions"><a class="link" href="#/">回十二帝</a></p>`;
     }
     const rows = chronicleRows(emperor.emperor_id);
+    const era = String(emperor['年号或通称'] || '').split('；')[0];
+    if (!rows.length) {
+      return `
+        <div class="reading">
+          <p class="kicker">${esc(era)}大事记</p>
+          <h1>还没有逐日的官书条</h1>
+          <p class="lede">这一朝只登记了文献入口。日子对不回去，就不编年表。</p>
+          <p class="crumb"><a class="link" href="#/${esc(slug || '')}">回${esc(era)}朝</a></p>
+        </div>`;
+    }
     const byYear = new Map();
     for (const row of rows) {
       const year = String(row['公历下界'] || '').slice(0, 4) || '未系年';
@@ -867,10 +889,10 @@ function eraPage(slug) {
     }
     return `
       <div class="reading">
-        <p class="kicker">康熙大事记</p>
-        <h1>日子对得上的十六件</h1>
-        <p class="lede">只收已经打开的官书条。三藩、台湾、雅克萨不在这里。冲突年写成两说，不择一。</p>
-        <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a></p>
+        <p class="kicker">${esc(era)}大事记</p>
+        <h1>日子对得上的 ${rows.length} 件</h1>
+        <p class="lede">只收已经打开的官书条。冲突年写成两说，不择一。</p>
+        <p class="crumb"><a class="link" href="#/${esc(slug || 'kangxi')}">${esc(era)}朝</a></p>
       </div>
       ${[...byYear.entries()].map(([year, list]) => `
         <section class="chronicle-year">
