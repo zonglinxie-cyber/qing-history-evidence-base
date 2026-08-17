@@ -26,7 +26,7 @@
 | `docs/05-six-week-execution-plan.md` | 零预算六批次执行计划、依赖与验收 |
 | `docs/06-risk-register.md` | 风险登记、触发条件、责任人和应对方案 |
 | `docs/07-zero-budget-production-method.md` | 免费资料边界、证据状态和持续生产循环 |
-| `data/phase0-people.csv` | 康雍候选权威档；原 50 人样本已补入孝昭、康熙皇子缺口、大臣索引与皇女表，现 106 人，均为待取证 |
+| `data/phase0-people.csv` | 人物候选权威档；从康雍样本扩至皇子女、大臣与跨朝人物，实时数量见 `STATUS.md` |
 | `data/qing-emperors.csv` | 十二帝统一骨架与本纪、实录、故宫入口 |
 | `data/qing-emperor-source-index.csv` | 十二帝和通用史料入口索引 |
 | `data/emperor-portraits.csv` | 十二帝明黄朝服默认像，以及点进人物页后的其他真迹、相关史迹、御笔书法、奏折朱批（含释文与权利颜色） |
@@ -38,7 +38,9 @@
 | `data/kangxi-source-claims.csv` | 即位、崩逝、遗诏、四后称号轴、皇子表、皇女表与储位链拆出的审核中原子主张 |
 | `data/yongzheng-source-units.csv` | 雍正卷来源单元：《清史稿》卷9本纪切片与卷295隆科多、年羹尧传 |
 | `data/yongzheng-source-claims.csv` | 即位、生母、密旨、年隆案、军机处、崩逝拆出的审核中原子主张 |
-| `data/golden-questions.csv` | 64 道黄金问题：事实查询、关系路径、版本冲突、无证据拒答 |
+| `data/qianlong-source-{units,claims}.csv` | 卷15授受大典、太上皇训政表述与高宗崩逝 |
+| `data/jiaqing-source-{units,claims}.csv` | 卷16、卷319中的内禅、始亲政、和珅下狱/赐死及二十大罪文本 |
+| `data/golden-questions.csv` | 事实查询、关系路径、版本冲突、无证据拒答验收集；实时数量见 `STATUS.md` |
 | `data/chapters.csv` | 可读章节目录；正文在 `content/emperors/`，实时数量见 `STATUS.md` |
 | `data/kangxi-empress-timeline.csv` | 康熙四后时态称号时间轴；七月/九月册后冲突与孝恭非康熙朝皇后均保留 |
 | `data/kangxi-princes.csv` | 康熙皇子全表：卷164入序23人、本卷缺号第四子、早薨未入序11人；表序与长子分栏 |

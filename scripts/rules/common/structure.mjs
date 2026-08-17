@@ -127,6 +127,10 @@ export function check(ctx) {
   );
   for (const claim of claims) {
     if (!sourceUnitIds.has(claim['来源实体 ID'])) errors.push(`${claim['Assertion ID']} 引用了未知来源单元 ${claim['来源实体 ID']}`);
+    if (!knownPersonIds.has(claim['主体 ID'])) errors.push(`${claim['Assertion ID']} 引用了未知主体 ${claim['主体 ID']}`);
+    for (const personId of String(claim['客体 ID 或值'] || '').match(/QH-P-\d{6}/g) || []) {
+      if (!knownPersonIds.has(personId)) errors.push(`${claim['Assertion ID']} 引用了未知客体人物 ${personId}`);
+    }
     if (!claim['卷页/档号/图像定位'] || !claim['支持引文']) errors.push(`${claim['Assertion ID']} 缺少定位或支持引文`);
     if (!claim['公历下界'] || !claim['公历上界']) errors.push(`${claim['Assertion ID']} 缺少公历对照`);
     const reviewer = String(claim['复核人'] || '').trim();

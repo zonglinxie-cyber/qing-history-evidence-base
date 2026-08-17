@@ -168,6 +168,17 @@ check('康雍七日链专题形成证据闭环', sevenDays.includes('七日链')
   && sevenDays.includes('继承记录为什么不能合成一条')
   && sevenDays.includes('本章打开过的卷'));
 check('路由更新页面标题', document.title === '从十三日崩逝到二十日即位 · 清史读本');
+const heshenChapter = await go('#/chapter/jiaqing-04');
+check('嘉庆和珅案形成分日证据闭环', heshenChapter.includes('五日下狱')
+  && heshenChapter.includes('十五日后赐死')
+  && heshenChapter.includes('data-claim="QH-A-JQ-0008"')
+  && heshenChapter.includes('claim-compare')
+  && heshenChapter.includes('本章打开过的卷'));
+const heshenPerson = await go('#/person/QH-P-000124');
+check('和珅人物页接入主张', heshenPerson.includes('钮祜禄·和珅')
+  && heshenPerson.includes('QH-A-JQ-0006'));
+const searchHeshen = await go('#/search?q=和珅');
+check('全站检索命中和珅', searchHeshen.includes('QH-P-000124') && searchHeshen.includes('<mark>'));
 const searchCn = await go('#/search?q=胤禛');
 check('检索高亮 mark 生效', searchCn.includes('<mark>'));
 const searchPy = await go('#/search?q=yinzhen');
