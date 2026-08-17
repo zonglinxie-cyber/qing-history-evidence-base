@@ -467,6 +467,13 @@ export const SPINE_POWER = [
 ];
 
 export const ERA_PINNED = {
+  tianming: [
+    { href: '#/chapter/nurhaci-01', year: '1616', title: '定国号曰金', text: '本纪写金，不是大清。当时是汗。' },
+    { href: '#/hands', year: '真迹', title: '纸上的字', text: '这一朝还没有打开他的亲笔。先看后金文书层。' },
+  ],
+  tiancong: [
+    { href: '#/chapter/huangtaiji-01', year: '1626–36', title: '汗位与帝位', text: '沈阳即位是继汗。大清两个字，要到崇德元年。' },
+  ],
   qianlong: [
     { href: '#/chapter/jiaqing-04', year: '1796–99', title: '内禅之后：太上皇崩与和珅案', text: '禅了位，太上皇还批折子。第五天下狱，不是第五天处死。' },
     { href: '#/lane/QH-L-0033', year: '继后', title: '继皇后那拉氏', text: '官书有断发叙述。没有写成抗旨宫斗。姓氏两说，不择一。' },
@@ -476,6 +483,29 @@ export const ERA_PINNED = {
     { href: '#/chapter/jiaqing-04', year: '1799', title: '内禅之后：太上皇崩与和珅案', text: '壬戌崩，丁卯下狱，丁丑赐死。二十条是上谕列罪。' },
     { href: '#/lane/QH-L-0032', year: '对照', title: '和珅：第五天下狱', text: '通行说法常写成五日即死。官书把下狱和赐死分开写。' },
     { href: '#/question/QH-GQ-0068', year: '答不了', title: '抄家是八亿两吗？', text: '已打开的列传没有这个总数。' },
+  ],
+  shunzhi: [
+    { href: '#/chapter/shunzhi-01', year: '1643–44', title: '盛京即位，入关，定鼎', text: '三步不是一天。入关那一句写的是多尔衮军。' },
+    { href: '#/image/QH-V-E03C', year: '令旨', title: '多尔衮令旨', text: '幼帝时期的军政文书。不是福临朱批。' },
+  ],
+  daoguang: [
+    { href: '#/chapter/daoguang-01', year: '1842', title: '议款定约', text: '本纪写到钤御宝。条款须回原件。' },
+    { href: '#/image/QH-V-E08C', year: '朱批', title: '道光朝朱批奏折', text: '红笔是他每天留下的字。' },
+  ],
+  xianfeng: [
+    { href: '#/chapter/xianfeng-01', year: '1860', title: '幸木兰', text: '本纪写启銮、驻跸。不用北狩这两个字。' },
+    { href: '#/image/QH-V-E09C', year: '朱批', title: '咸丰朝朱批奏折', text: '朝服里没有圆明园。' },
+  ],
+  tongzhi: [
+    { href: '#/chapter/tongzhi-01', year: '1861', title: '祺祥不是纪年', text: '七月拟年号。十月才改明年为同治。' },
+    { href: '#/image/QH-V-E10C', year: '诏书', title: '载湉入承大统诏', text: '他没有儿子。这份诏让堂弟来继。' },
+  ],
+  guangxu: [
+    { href: '#/chapter/guangxu-01', year: '1875', title: '继文宗为子', text: '礼法上过继给咸丰。不是过继给同治。' },
+    { href: '#/image/QH-V-E11C', year: '朱批', title: '光绪朝朱批奏折', text: '亲政前后的批笔须另核。' },
+  ],
+  xuantong: [
+    { href: '#/chapter/xuantong-01', year: '1912', title: '统治权公诸全国', text: '懿旨。全权组织临时共和政府是诏书用语。' },
   ],
 };
 
