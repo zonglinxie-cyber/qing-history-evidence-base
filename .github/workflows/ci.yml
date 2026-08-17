@@ -1,0 +1,43 @@
+# 数据校验 + 站点构建。PR 与 main 推送都会运行；构建产物以 artifact 形式可下载预览。
+# 校验规则由 data/data-manifest.csv 与 scripts/rules/<dynasty>.mjs 驱动，新增朝代无需改本文件。
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 结构与史料规则校验
+        run: npm run validate
+
+      - name: 构建站点
+        run: npm run build
+
+      - name: 构建产物可重复
+        run: git diff --exit-code -- STATUS.md site/
+
+      - name: 渲染冒烟测试
+        run: npm test
+
+      - name: 上传站点预览
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-preview
+          path: site/
+          retention-days: 14
