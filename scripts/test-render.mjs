@@ -116,8 +116,9 @@ if (unregistered) {
 const homeHtmlOut = await go('#/');
 check('首页现有可读入口', homeHtmlOut.includes('康熙这一段') && homeHtmlOut.includes('两废太子'));
 check('首页已打开对照入口', homeHtmlOut.includes('已经对上日子的几处') && homeHtmlOut.includes('#/chapter/jiaqing-04') && homeHtmlOut.includes('#/lane/QH-L-0033'));
+check('首页真迹入口', homeHtmlOut.includes('纸上的字') && homeHtmlOut.includes('#/hands'));
 check('首页不叠六期评传入口', !homeHtmlOut.includes('由浅入深读全朝') && !homeHtmlOut.includes('#/overview/periods'));
-check('首页空朝不写结构化证据', !homeHtmlOut.includes('尚无结构化证据') && homeHtmlOut.includes('还没有逐日的官书条'));
+check('首页不写结构化证据仪表', !homeHtmlOut.includes('尚无结构化证据'));
 check('首页醒目标明个人研究稿', homeHtmlOut.includes('AI 辅助个人研究库') && homeHtmlOut.includes('并非专家审定本'));
 const descriptionTags = html.match(/<meta\s+name="description"\s+content="[^"]*">/g) || [];
 check('首页只有一条研究稿 description', descriptionTags.length === 1
@@ -161,6 +162,12 @@ check('和珅对照栏', heshen.includes('第五天下狱') && heshen.includes('
 check('和珅对照栏挂上拒答', heshen.includes('#/question/QH-GQ-0068') || heshen.includes('八亿两吗'));
 const nala = await go('#/lane/QH-L-0033');
 check('继皇后对照栏', nala.includes('那拉氏') && nala.includes('不择一'));
+const hands = await go('#/hands');
+check('真迹手稿页', hands.includes('纸上的字，才是这一笔') && hands.includes('雍正朱批') && hands.includes('入承大统诏') && !hands.includes('黄金问题'));
+const szChapter = await go('#/chapter/shunzhi-01');
+check('顺治章拆出本纪入关句', szChapter.includes('大軍入關') && szChapter.includes('data-claim="QH-A-SZ-0002"') && /<aside class="read-line"[\s\S]*不能写成皇帝亲征[\s\S]*<\/aside>/.test(szChapter));
+const xtChapter = await go('#/chapter/xuantong-01');
+check('宣统章拆出逊位句', xtChapter.includes('將統治權公諸全國') && xtChapter.includes('data-claim="QH-A-XT-0001"'));
 const refuse = await go('#/question/QH-GQ-0072');
 check('阿鲁特拒答', refuse.includes('拒绝作答') || refuse.includes('不可证') || refuse.includes('正史含糊'));
 const chapter = await go('#/chapter/kangxi-02');
