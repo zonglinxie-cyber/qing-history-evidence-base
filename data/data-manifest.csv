@@ -12,8 +12,8 @@ task-queue.csv,qing,,tasks,"task_id;emperor_id;任务;状态;优先级",task_id,
 controlled-vocabularies.csv,shared,,vocab,"scheme_code;term_code;中文标签",,125
 kangxi-source-units.csv,qing,kangxi,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,18
 kangxi-source-claims.csv,qing,kangxi,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,120
-yongzheng-source-units.csv,qing,yongzheng,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,13
-yongzheng-source-claims.csv,qing,yongzheng,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,38
+yongzheng-source-units.csv,qing,yongzheng,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,19
+yongzheng-source-claims.csv,qing,yongzheng,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,44
 golden-questions.csv,qing,,questions,"question_id;类别;问题;期望行为;路由",question_id,64
 chapters.csv,qing,,chapters,"chapter_id;slug;person_id;era;title;file;lede","chapter_id;slug",31
 side-lanes.csv,qing,,lanes,"lane_id;栏目;标题;通行说法;官书或档案怎么写;差异或读法;证据状态;权利颜色;使用说明",lane_id,

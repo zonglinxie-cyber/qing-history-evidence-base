@@ -105,8 +105,20 @@ export function check(ctx) {
     errors.push('必须保留年羹尧赐死/自裁冲突组 QH-CF-YZ-NIAN-DEATH');
   }
   if (claimById.get('QH-A-YZ-0029')?.['冲突组 ID'] !== 'QH-CF-YZ-LONGKEDUO-COUNTS'
-    || claimById.get('QH-A-YZ-0036')?.['冲突组 ID'] !== 'QH-CF-YZ-LONGKEDUO-COUNTS') {
+    || claimById.get('QH-A-YZ-0036')?.['冲突组 ID'] !== 'QH-CF-YZ-LONGKEDUO-COUNTS'
+    || claimById.get('QH-A-YZ-0043')?.['冲突组 ID'] !== 'QH-CF-YZ-LONGKEDUO-COUNTS') {
     errors.push('必须保留隆科多五十款/四十一款冲突组 QH-CF-YZ-LONGKEDUO-COUNTS');
+  }
+  const yz43 = `${claimById.get('QH-A-YZ-0043')?.['支持引文'] || ''}${claimById.get('QH-A-YZ-0043')?.['客体 ID 或值'] || ''}`;
+  if (!/四十一/.test(yz43) || !/暢春園外/.test(yz43) || /五十/.test(yz43)) {
+    errors.push('QH-A-YZ-0043 必须保留实录四十一款与畅春园外，不得写入本纪五十款');
+  }
+  const yz44 = `${claimById.get('QH-A-YZ-0044')?.['支持引文'] || ''}${claimById.get('QH-A-YZ-0044')?.['编辑备注'] || ''}`;
+  if (/始於此|始于此/.test(claimById.get('QH-A-YZ-0044')?.['支持引文'] || '')) {
+    errors.push('QH-A-YZ-0044 不得把本纪「始于此」写入实录引文');
+  }
+  if (!/策勒克/.test(yz44) || !/辦理軍機大臣/.test(claimById.get('QH-A-YZ-0044')?.['支持引文'] || '')) {
+    errors.push('QH-A-YZ-0044 必须保留办理军机大臣议奏追封策勒克');
   }
 
   if (!chapters.some((row) => row.slug === 'kangxi-01') || !chapters.some((row) => row.slug === 'yongzheng-01')) {
