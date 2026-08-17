@@ -110,16 +110,28 @@ for (const slug of registeredEras) {
 const unregistered = eras.find((slug) => !registeredEras.includes(slug));
 if (unregistered) {
   const out = await go(`#/${unregistered}`);
-  check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('尚未建立'));
+  check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('现有章节'));
 }
 
 const homeHtmlOut = await go('#/');
 check('首页现有可读入口', homeHtmlOut.includes('康熙这一段') && homeHtmlOut.includes('两废太子'));
+check('首页不叠六期评传入口', !homeHtmlOut.includes('由浅入深读全朝') && !homeHtmlOut.includes('#/overview/periods'));
+check('首页空朝不写结构化证据', !homeHtmlOut.includes('尚无结构化证据') && homeHtmlOut.includes('还没有逐日的官书条'));
+check('首页醒目标明个人研究稿', homeHtmlOut.includes('AI 辅助个人研究库') && homeHtmlOut.includes('并非专家审定本'));
+const descriptionTags = html.match(/<meta\s+name="description"\s+content="[^"]*">/g) || [];
+check('首页只有一条研究稿 description', descriptionTags.length === 1
+  && descriptionTags[0].includes('AI 辅助个人研究稿'));
 check('首页转轴入口', homeHtmlOut.includes('先看这几处转轴') && homeHtmlOut.includes('#/path'));
 const pathPage = await go('#/path');
 check('转轴年页', pathPage.includes('这几处转过轴') && pathPage.includes('1912') && pathPage.includes('密储落地'));
+const periods = await go('#/overview/periods');
+check('全朝专题显示史料核对警示', periods.includes('研究草稿｜本章尚未完成全文史料核对'));
 const spine = await go('#/spine/power');
 check('继承主轴', spine.includes('谁坐龙椅') && spine.includes('明立太子'));
+const money = await go('#/spine/money');
+check('饷和兵主轴', money.includes('税从哪来') && money.includes('耗羡'));
+const chronicleBare = await go('#/chronicle');
+check('大事记无年号不默默进康熙', chronicleBare.includes('还没有这份大事记') && !chronicleBare.includes('日子对得上的'));
 const chronicle = await go('#/chronicle/kangxi');
 check('康熙大事记', chronicle.includes('日子对得上的') && chronicle.includes('两说并存') && chronicle.includes('咸安宫'));
 const how = await go('#/how');
@@ -128,52 +140,60 @@ const yinreng = await go('#/person/QH-P-000004');
 check('胤礽页先讲解后收依据', yinreng.includes('两岁立为太子') && yinreng.includes('依据'));
 const person = await go('#/person/QH-P-000001');
 check('人物页渲染（含朝代内容模块）', person.includes('两废太子') || person.includes('分日'));
-check('康熙帝页拆栏', person.includes('见诸文书的习惯') && person.includes('当时要解决什么') && person.includes('本朝未开') === false && person.includes('未开'));
+check('康熙帝页拆栏', person.includes('见诸文书的习惯') && person.includes('当时要解决什么')
+  && person.includes('史料说明') && !person.includes('未开') && !person.includes('未拆'));
 const nurhaci = await go('#/person/QH-P-000051');
 check('努尔哈赤帝页有结构且非康熙腔', nurhaci.includes('当时要解决什么') && nurhaci.includes('吞并女真各部') && !nurhaci.includes('择吉不是册立'));
 const xuantong = await go('#/person/QH-P-000059');
 check('宣统帝页有结构', xuantong.includes('三岁不能算决策') && xuantong.includes('宣统政纪'));
 const qlChron = await go('#/chronicle/qianlong');
-check('无条次朝大事记不编年表', qlChron.includes('还没有逐日的官书条'));
+check('无条次朝大事记不编年表', qlChron.includes('还没有逐日的官书条') && qlChron.includes('#/qianlong'));
+const heshen = await go('#/lane/QH-L-0032');
+check('和珅对照栏', heshen.includes('第五天下狱') && heshen.includes('八亿两'));
+const nala = await go('#/lane/QH-L-0033');
+check('继皇后对照栏', nala.includes('那拉氏') && nala.includes('不择一'));
+const refuse = await go('#/question/QH-GQ-0072');
+check('阿鲁特拒答', refuse.includes('拒绝作答') || refuse.includes('不可证') || refuse.includes('正史含糊'));
 const chapter = await go('#/chapter/kangxi-02');
 check('章节插图语法渲染为权利受检 figure', chapter.includes('fig-inline') && chapter.includes('<img'));
 check('样板章原文块', chapter.includes('source-quote') && chapter.includes('選擇吉期具奏'));
 check('样板章行内主张', /data-claim="QH-A-KX-0\d+"/.test(chapter));
 check('样板章目录与上下篇', chapter.includes('chapter-toc') && chapter.includes('chapter-nav') && chapter.includes('上一篇'));
 check('章节提供可分享静态链接', chapter.includes('chapter/kangxi-02/'));
-check('样板章冲突并排', chapter.includes('claim-compare') && chapter.includes('QH-CF-KX-INVEST-DAY'));
+check('样板章冲突并排', chapter.includes('claim-compare') && chapter.includes('立储日'));
 check('样板章原文块', chapter.includes('source-quote'));
 check('样板章行内主张', chapter.includes('data-claim="QH-A-KX-0124"') || chapter.includes('data-claim="QH-A-KX-0086"'));
 check('样板章目录', chapter.includes('chapter-toc') && chapter.includes('data-scroll'));
 check('样板章上下篇', chapter.includes('chapter-nav') && chapter.includes('上一篇') && chapter.includes('下一篇'));
-check('样板章依据摘要不倾倒主张卡', chapter.includes('本章打开过的卷') && !chapter.includes('thread-block'));
+check('样板章依据摘要不倾倒主张卡', chapter.includes('本章可回查的卷') && !chapter.includes('thread-block'));
 check('两废章读这一句', chapter.includes('read-line') && chapter.includes('不能写成对质全文'));
 const kx01 = await go('#/chapter/kangxi-01');
 check('即位章原文块', kx01.includes('source-quote') && kx01.includes('上即皇帝位') && kx01.includes('崩於寢宮'));
 check('即位章行内主张', kx01.includes('data-claim="QH-A-KX-0001"') && kx01.includes('data-claim="QH-A-KX-0033"'));
 check('即位章目录与怎么读', kx01.includes('chapter-toc') && kx01.includes('data-scroll') && kx01.includes('怎么读这件事'));
-check('即位章冲突并排', kx01.includes('claim-compare') && kx01.includes('QH-CF-KX-SUCCESSION'));
+check('即位章冲突并排', kx01.includes('claim-compare') && kx01.includes('口谕、遗诏、本纪九'));
 check('即位章上下篇', kx01.includes('chapter-nav') && kx01.includes('下一篇'));
 check('即位章读这一句', kx01.includes('read-line') && kx01.includes('不能把「深肖朕躬」写成'));
 const yz01 = await go('#/chapter/yongzheng-01');
 check('雍正即位章原文块', yz01.includes('source-quote') && yz01.includes('即皇帝位') && yz01.includes('子刻'));
 check('雍正即位章行内主张', yz01.includes('data-claim="QH-A-YZ-0039"') && yz01.includes('data-claim="QH-A-YZ-0041"'));
 check('雍正即位章目录与怎么读', yz01.includes('chapter-toc') && yz01.includes('怎么读这件事'));
-check('雍正即位章冲突并排', yz01.includes('claim-compare') && yz01.includes('QH-CF-YZ-NIAN-DEATH') && yz01.includes('QH-CF-YZ-DEATH'));
+check('雍正即位章冲突并排', yz01.includes('claim-compare') && yz01.includes('年羹尧死法') && yz01.includes('本纪己丑与实录子刻'));
 const sevenDays = await go('#/chapter/yongzheng-07');
 check('康雍七日链专题形成证据闭环', sevenDays.includes('七日链')
   && sevenDays.includes('data-claim="QH-A-KX-0037"')
   && sevenDays.includes('data-claim="QH-A-YZ-0039"')
   && sevenDays.includes('claim-compare')
   && sevenDays.includes('继承记录为什么不能合成一条')
-  && sevenDays.includes('本章打开过的卷'));
+  && sevenDays.includes('本章可回查的卷'));
 check('路由更新页面标题', document.title === '从十三日崩逝到二十日即位 · 清史读本');
 const heshenChapter = await go('#/chapter/jiaqing-04');
 check('嘉庆和珅案形成分日证据闭环', heshenChapter.includes('五日下狱')
   && heshenChapter.includes('十五日后赐死')
   && heshenChapter.includes('data-claim="QH-A-JQ-0008"')
   && heshenChapter.includes('claim-compare')
-  && heshenChapter.includes('本章打开过的卷'));
+  && heshenChapter.includes('本章可回查的卷'));
+check('混合证据等级章节仍显示史料核对警示', heshenChapter.includes('研究草稿｜本章尚未完成全文史料核对'));
 const heshenPerson = await go('#/person/QH-P-000124');
 check('和珅人物页接入主张', heshenPerson.includes('钮祜禄·和珅')
   && heshenPerson.includes('QH-A-JQ-0006'));
@@ -185,25 +205,26 @@ const searchPy = await go('#/search?q=yinzhen');
 check('拼音检索 yinzhen 命中胤禛', searchPy.includes('QH-P-000002'));
 const works = await go('#/works');
 check('文献专栏按帝分组且有专论入口', works.includes('大义觉迷录') && works.includes('读专论') && works.includes('乾隆'));
-check('文献打开状态徽章', works.includes('条次已钉') || works.includes('主张已拆'));
-check('起居注不假装可读原文', works.includes('入口已登记') && works.includes('馆藏／咨询入口'));
+check('文献可读性徽章', works.includes('可查原文条目') || works.includes('已关联逐条依据'));
+check('起居注不假装可读原文', works.includes('馆藏入口') && works.includes('馆藏／咨询入口'));
 const juemilu = await go('#/chapter/yongzheng-04');
 check('大义觉迷录专论章渲染', juemilu.includes('自辩') && juemilu.includes('禁毁'));
+check('未完成全章核对的章节显示警示', juemilu.includes('研究草稿｜本章尚未完成全文史料核对'));
+check('纯原文闭环章节不误标为研究草稿', !kx01.includes('研究草稿｜本章尚未完成全文史料核对'));
 const goldenFailures = [];
 for (const row of reignData.questions || []) {
   const out = await go(`#/question/${row.question_id}`);
-  const expected = row['期望行为'] === '拒绝作答' ? row['拒答说明'] : row['可公开答案'];
-  const binds = String(row['绑定ID'] || '').split(/[；;]/).map((id) => id.trim()).filter(Boolean);
-  if (!out.includes(escExpected(row['问题'])) || !out.includes(escExpected(expected))
-    || binds.some((id) => !out.includes(id))) {
+  const expected = row.evidenceGap ? row.explanation : row.answer;
+  if (!out.includes(escExpected(row.question)) || !out.includes(escExpected(expected))
+    || (row.links || []).some((link) => !out.includes(escExpected(link.label)))) {
     goldenFailures.push(row.question_id);
   }
 }
 if (goldenFailures.length) console.error(`黄金问题渲染失败: ${goldenFailures.join(', ')}`);
 check(`黄金问题全量验收 ${reignData.questions?.length || 0} 道`, goldenFailures.length === 0);
 const adoptedClaim = await go('#/claim/QH-A-KX-0014');
-check('主张页公开采纳与复核记录', adoptedClaim.includes('已采纳')
-  && adoptedClaim.includes('zonglinxie-cyber') && adoptedClaim.includes('2026-08-15'));
+check('主张页公开读者核对状态但不暴露编辑身份', adoptedClaim.includes('已核对')
+  && !adoptedClaim.includes('zonglinxie-cyber') && !adoptedClaim.includes('2026-08-15'));
 const claimCf = await go('#/claim/QH-A-KX-0070');
 check('主张页同组异说并排区块', claimCf.includes('同组异说') && claimCf.includes('QH-CF-KX-INVEST-DAY'));
 const images = await go('#/images');
@@ -230,12 +251,18 @@ for (const chapterRow of reignData.chapters || []) {
   const file = path.join(siteDir, 'chapter', chapterRow.slug, 'index.html');
   if (!fs.existsSync(file)) { staticMissing.push(chapterRow.slug); continue; }
   const page = fs.readFileSync(file, 'utf8');
-  const indexable = Boolean(String(chapterRow.unit_ids || '').trim()) && /E1\s*单源回查/.test(chapterRow.status || '');
+  const indexable = Boolean(chapterRow.indexable);
   if (indexable) indexableChapters.push(chapterRow);
   else noindexChapters.push(chapterRow);
   if (!page.includes(`<meta name="robots" content="${indexable ? 'index,follow' : 'noindex,follow'}">`)
     || !page.includes('<link rel="canonical"') || !page.includes('application/ld+json')) {
     staticMissing.push(`${chapterRow.slug}:meta`);
+  }
+  if (!indexable && !page.includes('研究草稿｜本章尚未完成全文史料核对')) {
+    staticMissing.push(`${chapterRow.slug}:draft-banner`);
+  }
+  if (!indexable && !page.includes('研究草稿（未完成整章史料核对）：')) {
+    staticMissing.push(`${chapterRow.slug}:draft-description`);
   }
 }
 const staticEvidence = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-07', 'index.html'), 'utf8');
@@ -249,6 +276,43 @@ check(`sitemap 只收证据闭环章节 ${indexableChapters.length} 篇`,
 check('robots.txt 指向 sitemap', fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8').includes('/sitemap.xml'));
 check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
   && html.includes('"@type":"WebSite"') && html.includes('property="og:url"'));
+
+// 公开投影门禁：编辑待办、人员身份与 QA 字段不得进入任何可下载 JSON 或静态正文。
+const publicJsonFiles = ['home.json', 'people.json', `${dynastyConfig.chunk}.json`, 'catalog.json', 'search.json'];
+const privateKeys = new Set([
+  '选择理由', '核心待核主张', '责任人', '责任角色', '审核备注', '复核人', '复核日期', '录入人', '编辑备注',
+  '获取方式', '待核问题', '备注', '期望行为', '绑定ID', '拒答说明', 'markdown', 'file', 'sourceIndex', 'tasks', '下一动作',
+]);
+const leakedKeyPaths = [];
+function findPrivateKeys(value, at = '') {
+  if (Array.isArray(value)) return value.forEach((item, i) => findPrivateKeys(item, `${at}[${i}]`));
+  if (!value || typeof value !== 'object') return;
+  for (const [key, child] of Object.entries(value)) {
+    if (privateKeys.has(key)) leakedKeyPaths.push(`${at}.${key}`);
+    findPrivateKeys(child, `${at}.${key}`);
+  }
+}
+const publicJsonText = publicJsonFiles.map((name) => {
+  const text = fs.readFileSync(path.join(siteDir, 'data', name), 'utf8');
+  if (name !== 'search.json') findPrivateKeys(JSON.parse(text), name);
+  return text;
+}).join('\n');
+const staticChapterText = (reignData.chapters || []).map((row) => (
+  fs.readFileSync(path.join(siteDir, 'chapter', row.slug, 'index.html'), 'utf8')
+)).join('\n');
+const privateCopy = /选择理由|核心待核主张|待用户抽查|进入站点前|人工复核|M1\s*AI回查|待H1抽查|\bE1\b|\bIDX-\d+\b|任务队列|上次完成位置|下一步动作|下一步（|待续|第一版产出|项目北极星指标|技术架构组|结构化入库|接入站点|大事记组|task-queue|研究卡|和数据页的关系|全表可接入|尚未建档|见解读组|实录卷次回查状态|原子主张|证据抽屉|深挖版|康雍深挖|历法库|卷级索引|逐次钉入|能钉到|实录卷\d+钉到|不拆原子主张|不拆条|待核权|主张未单拆|打开原文后再建来源单元|尚未钉|分层登记|人物档把他登记为|不假装已回|本库|本轮|未开|未拆|尚无专章|逐款查档/;
+check('公开 JSON 不含内部字段', leakedKeyPaths.length === 0);
+check('公开 JSON 与静态章节不含编辑待办文案', !privateCopy.test(`${publicJsonText}\n${html}\n${staticChapterText}`));
+const publicChapterBodies = (reignData.chapters || []).map((row) => row.bodyHtml).join('\n');
+const publicChapterText = publicChapterBodies.replace(/<[^>]+>/g, ' ');
+check('章节正文不显示内部编号', !/\bQH-(?:W|CF|P|L|ST|CH|SU)-[A-Z0-9-]+\b/.test(publicChapterText));
+check('章节正文不显示原始路由或骨架标题', !/<code>#\//.test(publicChapterBodies)
+  && !/<h2 id="骨架">骨架<\/h2>/.test(publicChapterBodies));
+const publicHome = JSON.parse(fs.readFileSync(path.join(siteDir, 'data', 'home.json'), 'utf8'));
+const siteReaderText = (publicHome.sites || []).map((row) => [row['当时'], row['今日'], row['今地说明'], row['卡片钩子']].join(' ')).join('\n');
+check('今地文案不显示内部地点编号', !/\bQH-ST-\d+\b/.test(siteReaderText));
+const overviewReaderText = (reignData.overviews || []).map((row) => `${row.lede} ${row.bodyHtml.replace(/<[^>]+>/g, ' ')}`).join('\n');
+check('全朝专题不显示证据等级码或编辑术语', !/\bE1\b|原子主张|证据抽屉|深挖版|康雍深挖|骨架年份/.test(overviewReaderText));
 
 console.log(failed ? `渲染测试 ${failed} 项失败` : '渲染测试全部通过');
 process.exit(failed ? 1 : 0);

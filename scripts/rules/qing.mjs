@@ -6,6 +6,7 @@ export function check(ctx) {
     errors,
     emperors, cards, people, units, claims, chapters,
     empressTimeline, princes, princesses, heirChain, historicSites,
+    works, emperorTimeline, families,
   } = ctx;
   const chronicle = ctx.chronicle || [];
 
@@ -27,6 +28,19 @@ export function check(ctx) {
   emperors.forEach((row, i) => {
     if (!row['清史稿本纪'].startsWith(qsgVolumes[i])) errors.push(`${row.emperor_id} 清史稿卷次异常: ${row['清史稿本纪']}`);
     if (!/^https:\/\//.test(row['故宫人物页'])) errors.push(`${row.emperor_id} 故宫人物页不是 HTTPS`);
+  });
+  // 「前任/继任」是政治序列字段，必须与排序后的相邻皇帝逐项闭合；礼法承嗣另建关系，不得污染本链。
+  const orderedEmperors = [...emperors].sort((a, b) => Number(a['顺序']) - Number(b['顺序']));
+  orderedEmperors.forEach((row, i) => {
+    if (Number(row['顺序']) !== i + 1) errors.push(`${row.emperor_id} 顺序异常: ${row['顺序']}，应为 ${i + 1}`);
+    const expectedPredecessor = i === 0 ? '' : orderedEmperors[i - 1]['规范名'];
+    const expectedSuccessor = i === orderedEmperors.length - 1 ? '' : orderedEmperors[i + 1]['规范名'];
+    if (String(row['前任'] || '').trim() !== expectedPredecessor) {
+      errors.push(`${row.emperor_id} 政治前任异常: ${row['前任'] || '空'}，应为 ${expectedPredecessor || '空'}`);
+    }
+    if (String(row['继任'] || '').trim() !== expectedSuccessor) {
+      errors.push(`${row.emperor_id} 政治继任异常: ${row['继任'] || '空'}，应为 ${expectedSuccessor || '空'}`);
+    }
   });
   for (const map of ctx.crosswalk) {
     if (!cardIds.has(map.person_id)) errors.push(`${map.person_id} 缺少十二帝研究卡`);
@@ -97,6 +111,77 @@ export function check(ctx) {
 
   if (!chapters.some((row) => row.slug === 'kangxi-01') || !chapters.some((row) => row.slug === 'yongzheng-01')) {
     errors.push('必须同时有康熙即位章与雍正即位章');
+  }
+
+  // 已修正的高频纪年误压缩必须进入机器门禁，避免下次批量改写又退回旧口径。
+  const htCard = cards.find((row) => row.legacy_emperor_id === 'QH-E-02');
+  const htSkeleton = String(htCard?.['重大事件骨架'] || '');
+  if (!/1631[^；]*六部/.test(htSkeleton) || !/1636[^；]*内三院/.test(htSkeleton)) {
+    errors.push('皇太极研究卡必须分写「1631设六部」与「1636文馆改内三院」');
+  }
+  const guangxuCard = cards.find((row) => row.legacy_emperor_id === 'QH-E-11');
+  const guangxuReign = String(guangxuCard?.['在位口径'] || '');
+  if (/1874年底安排帝位/.test(guangxuReign)
+    || !/同治十三年十二月/.test(guangxuReign)
+    || !/公历1875年1月/.test(guangxuReign)
+    || !/光绪元年即位/.test(guangxuReign)
+    || !/1875—1908/.test(guangxuReign)) {
+    errors.push('光绪研究卡必须区分同治十三年十二月（公历1875年1月）议立与光绪元年即位');
+  }
+  const htWork = (works || []).find((row) => row.work_id === 'QH-W-004');
+  if (!/1631年设六部/.test(htWork?.['内容概述'] || '') || !/1636年文馆改内三院/.test(htWork?.['内容概述'] || '')) {
+    errors.push('QH-W-004 必须分写1631六部与1636内三院，不得压成同年');
+  }
+  const htAccessionChapter = chapters.find((row) => row.slug === 'huangtaiji-01');
+  const htTimelineChapter = chapters.find((row) => row.slug === 'huangtaiji-03');
+  for (const chapter of [htAccessionChapter, htTimelineChapter].filter(Boolean)) {
+    if (!/1626.*继汗位.*1627.*改元天聪/.test(chapter.lede || '')) {
+      errors.push(`${chapter.chapter_id} 必须分写1626继汗位、翌年1627改元天聪`);
+    }
+  }
+  const htTimelineRows = (emperorTimeline || []).filter((row) => row.emperor_id === 'QH-E-02');
+  const htSuccession = htTimelineRows.find((row) => row.timeline_id === 'TL-HT-002');
+  if (!/1627.*改元天聪/.test(htSuccession?.event || '')) {
+    errors.push('TL-HT-002 必须注明1626继汗位、翌年1627改元天聪');
+  }
+  const korea1627 = htTimelineRows.find((row) => row.year === '1627' && /朝鲜/.test(row.event || ''));
+  const korea1636 = htTimelineRows.find((row) => row.year === '1636' && /朝鲜/.test(row.event || ''));
+  if (!korea1627 || !/丁卯/.test(korea1627.event || '')) errors.push('皇太极年表缺少1627年第一次征朝鲜（丁卯之役）');
+  if (!korea1636 || !/1636—1637/.test(korea1636.event || '') || !/丙子/.test(korea1636.event || '')) {
+    errors.push('皇太极年表缺少1636—1637年第二次征朝鲜（丙子之役）');
+  }
+  const korea1627Index = (emperorTimeline || []).findIndex((row) => row.timeline_id === korea1627?.timeline_id);
+  const ministries1631Index = (emperorTimeline || []).findIndex((row) => row.timeline_id === 'TL-HT-006');
+  if (korea1627Index < 0 || ministries1631Index < 0 || korea1627Index > ministries1631Index) {
+    errors.push('皇太极年表物理顺序必须把1627丁卯之役排在1631设六部之前');
+  }
+
+  const shunzhiChapter = chapters.find((row) => row.slug === 'shunzhi-01');
+  const shunzhiLede = String(shunzhiChapter?.lede || '');
+  if (/年号才用顺治/.test(shunzhiLede)
+    || !/1643.*盛京.*翌年改元顺治/.test(shunzhiLede)
+    || !/1644.*再次.*登极/.test(shunzhiLede)) {
+    errors.push('顺治导语必须分写1643盛京即位并定翌年改元、1644北京再次登极');
+  }
+  const shunzhiRegency = (emperorTimeline || []).find((row) => row.timeline_id === 'TL-SZ-004');
+  if (shunzhiRegency?.year !== '1643'
+    || !/济尔哈朗/.test(shunzhiRegency?.event || '')
+    || !/多尔衮/.test(shunzhiRegency?.event || '')
+    || !/辅政|摄政/.test(shunzhiRegency?.event || '')) {
+    errors.push('顺治辅政/摄政时间轴必须从1643即位起，并同时保留济尔哈朗与多尔衮');
+  }
+  const yongzhengTimelineChapter = chapters.find((row) => row.slug === 'yongzheng-06');
+  if (/暴毙|猝死/.test(yongzhengTimelineChapter?.lede || '') || !/崩逝|薨/.test(yongzhengTimelineChapter?.lede || '')) {
+    errors.push('雍正年表导语只能写有据的崩逝/薨，不得写暴毙或猝死');
+  }
+
+  const familyById = new Map((families || []).map((row) => [row.family_id, row]));
+  for (const id of ['QH-SF-QSL-QL', 'QH-SF-QSL-JQ']) {
+    if (!familyById.has(id)) errors.push(`来源家族缺少 ${id}`);
+  }
+  const qsgParents = new Set(String(familyById.get('QH-SF-QSG')?.derives_from || '').split(/[；;]/).filter(Boolean));
+  for (const id of ['QH-SF-QSL-KX', 'QH-SF-QSL-YZ', 'QH-SF-QSL-QL', 'QH-SF-QSL-JQ']) {
+    if (!qsgParents.has(id)) errors.push(`QH-SF-QSG 派生树缺少 ${id}`);
   }
 
   for (const event of empressTimeline) {
@@ -226,6 +311,45 @@ export function check(ctx) {
     if (!/^QH-ST-\d{4}$/.test(site.site_id)) errors.push(`${site.site_id} 今地编号必须是 QH-ST-四位数字`);
     if (site['事件'] === '萨尔浒之战' && /兴京|新宾/.test(site['今日'])) {
       errors.push(`${site.site_id} 不得把萨尔浒主战场写成兴京或新宾`);
+    }
+  }
+
+  for (const id of ['QH-A-KX-0121', 'QH-A-KX-0122', 'QH-A-KX-0123']) {
+    if (claimById.get(id)?.['状态'] !== '审核中') {
+      errors.push(`${id} 必须保持审核中`);
+    }
+  }
+  for (const claim of claims) {
+    const note = `${claim['备注'] || ''}${claim['说明'] || ''}`;
+    if (/未打开/.test(note) && /已钉/.test(note)) {
+      errors.push(`${claim['Assertion ID']} 备注不得同时写未打开与已钉`);
+    }
+  }
+  for (const row of chronicle) {
+    const lo = row['公历下界'];
+    const hi = row['公历上界'] || lo;
+    if (!lo) continue;
+    for (const id of String(row['主张IDs'] || '').split(/[；;]/).map((s) => s.trim()).filter(Boolean)) {
+      const claim = claimById.get(id);
+      if (!claim) continue;
+      const cLo = claim['公历下界'];
+      const cHi = claim['公历上界'] || cLo;
+      if (cLo && (cLo < lo || cHi > hi)) {
+        const conflict = String(row['冲突组'] || '').trim();
+        if (conflict && String(claim['冲突组 ID'] || '').trim() === conflict) continue;
+        errors.push(`${row.entry_id} 公历 ${lo}–${hi} 盖不住 ${id} 的 ${cLo}–${cHi}`);
+      }
+    }
+  }
+  const pendingSets = new Set(
+    (ctx.conflictSets || [])
+      .filter((row) => /第二面待补|单面/.test(`${row['现行编辑判断'] || ''}${row['保留意见'] || ''}`))
+      .map((row) => row.conflict_set_id),
+  );
+  for (const row of emperorTimeline || []) {
+    if (pendingSets.has(row.conflict_set_id)) continue;
+    if (/设军机处（军机房）/.test(row.event || '') && !/不择一|待补|待开/.test(row.event || '')) {
+      errors.push(`${row.timeline_id} 不得把军机处七年说写成定点`);
     }
   }
 }

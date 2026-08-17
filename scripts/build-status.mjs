@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
 import { DATA_MANIFEST } from './lib/schema.mjs';
+import { isChapterIndexable } from '../site/templates.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const data = (name) => loadCsv(path.join(root, 'data', name));
@@ -29,9 +30,10 @@ const timelineState = countBy(timeline, 'status');
 const reviewed = claims.filter((row) => String(row['复核人'] || '').trim()).length;
 const sourceBoundChapters = chapters.filter((row) => String(row.unit_ids || '').trim()).length;
 const indexableChapters = chapters.filter((row) => {
-  if (!String(row.unit_ids || '').trim()) return false;
+  const unitCount = String(row.unit_ids || '').split(/[；;]/).map((id) => id.trim()).filter(Boolean).length;
   const markdown = fs.readFileSync(path.join(root, 'content', row.file), 'utf8');
-  return /(^|\n)状态：.*E1\s*单源回查/.test(markdown);
+  const chapterStatus = (markdown.match(/^状态：\s*(.+)$/m)?.[1] || '').replace(/`/g, '').trim();
+  return isChapterIndexable(chapterStatus, unitCount);
 }).length;
 
 const md = `# 当前状态
@@ -52,7 +54,7 @@ const md = `# 当前状态
 | 有主张的帝王 | ${emperorsWithClaims.size} / ${emperors.length} |
 | 可读章节 | ${chapters.length} |
 | 绑定来源单元的章节 | ${sourceBoundChapters} / ${chapters.length} |
-| 进入 sitemap 的 E1 章节 | ${indexableChapters} / ${chapters.length} |
+| 进入 sitemap 的整章 E1 章节 | ${indexableChapters} / ${chapters.length} |
 | 黄金问题 | ${questions.length} |
 
 ## 文献打开程度
