@@ -18,6 +18,17 @@ export function noOrphan(text) {
   return `${esc(m[1])}<span class="nobr">${esc(m[2])}</span>`;
 }
 
+/**
+ * 章节只有在绑定来源单元、达到 E1，且没有同时声明 S 级混合内容时，
+ * 才能作为整章进入索引。混合章不能用少数已核段落替整章背书。
+ */
+export function isChapterIndexable(status, unitCount) {
+  const value = String(status ?? '').trim();
+  const hasE1 = /(?:^|[/；])\s*E1\s*单源回查/.test(value);
+  const hasSecondaryDraft = /(?:^|[/；])\s*S\s*二手/.test(value);
+  return Number(unitCount) > 0 && hasE1 && !hasSecondaryDraft;
+}
+
 export function canEmbed(portrait) {
   return Boolean(portrait && portrait['权利颜色'] === '绿' && portrait['可公开展示'] === '是' && portrait['预览文件']);
 }
@@ -91,7 +102,6 @@ export function emperorCardVita(emperor) {
   const temple = emperor['庙号'] || '';
   const son = emperor['皇子序'] || '';
   const nick = emperor['外号'] || '';
-  const shi = emperor['谥号'] || '';
   const { born, died, from, to, age, reign } = yearSpan(emperor);
   const lines = [];
   if (given) lines.push(`<p class="card-name">${esc(given)}</p>`);
@@ -99,29 +109,34 @@ export function emperorCardVita(emperor) {
   if (born || died) lines.push(`<p>${esc(`${born}年–${died}年${age ? ` · ${age}岁` : ''}`)}</p>`);
   if (from || to) lines.push(`<p>${esc(`在位 ${reign}年 · ${from}–${to}`)}</p>`);
   if (nick) lines.push(`<p class="card-nick">${esc(nick)}</p>`);
-  const shihao = shi ? `<p class="card-shihao">谥号 ${esc(shi)}</p>` : '';
-  return `<div class="card-vita">${lines.join('')}${shihao}</div>`;
+  return `<div class="card-vita">${lines.join('')}</div>`;
 }
 
-const STRENGTH_CLASS = { '强': 'strong', '中': 'medium' };
 const EVIDENCE_CLASS = { 'S': 'medium', 'C': 'conflict', 'U': 'medium' };
+const EVIDENCE_LABEL = { S: '参考线索', E: '已列原文', C: '存在异说', U: '尚不确定' };
 
 export function credibilityBadge(cred) {
   if (!cred || !cred.claims) {
-    return '<span class="cred-badge cred-none">尚无结构化证据</span>';
+    return '<span class="cred-badge cred-none">还没有逐日的官书条</span>';
   }
-  const parts = Object.entries(cred.byStatus || {}).filter(([, v]) => v);
-  const statusText = parts.length === 1
-    ? esc(parts[0][0])
-    : parts.map(([k, v]) => `${esc(k)} ${v}`).join(' · ');
-  const strength = cred.topStrength ? ` · ${esc(cred.topStrength)}` : '';
-  const cls = STRENGTH_CLASS[cred.topStrength] || 'none';
-  return `<span class="cred-badge cred-${cls}">证据 ${cred.claims} · ${statusText}${strength}</span>`;
+  return '';
 }
 
 export function noEvidenceBanner(headline, explanation) {
   const ex = explanation ? `\n  <p>${esc(explanation)}</p>` : '';
   return `<aside class="x-banner"><p class="x-banner-head">${esc(headline)}</p>${ex}</aside>`;
+}
+
+export function researchDraftBanner(scope = 'chapter') {
+  const chapter = scope === 'chapter';
+  const headline = chapter ? '研究草稿｜本章尚未完成全文史料核对' : 'AI 辅助个人研究库｜并非专家审定本';
+  const text = chapter
+    ? '本章可能只有部分段落已对到原文，其余仍依赖后出史书或现代研究。请按正文中的「看依据」链接核对，不要把整章当作已成定论。'
+    : '全库只有部分条目已对到可回查的原文。请优先阅读每条主张的引文和出处，并将其他内容视为待继续完善的研究草稿。';
+  return `<aside class="research-banner research-banner-${chapter ? 'draft' : 'site'}" role="note" aria-label="研究状态">
+    <p class="research-banner-head">${headline}</p>
+    <p>${text}</p>
+  </aside>`;
 }
 
 export function emperorCard(emperor, opts = {}) {
@@ -161,9 +176,10 @@ export function siteCard(site, opts = {}) {
       onerror: opts.onerror !== false,
     })
     : '<div class="img-fallback">图像权利受限，不嵌入</div>';
-  const evStatus = site['证据状态'] || '';
-  const evCls = evStatus ? (EVIDENCE_CLASS[evStatus[0]] || 'site') : '';
-  const siteBadge = evStatus ? `<span class="cred-badge cred-${evCls}">${esc(evStatus.slice(1) || evStatus)}</span>` : '';
+  const rawStatus = site['证据状态'] || '';
+  const publicStatus = site['公开证据状态'] || EVIDENCE_LABEL[rawStatus[0]] || '';
+  const evCls = rawStatus ? (EVIDENCE_CLASS[rawStatus[0]] || 'site') : (publicStatus === '存在异说' ? 'conflict' : 'medium');
+  const siteBadge = publicStatus ? `<span class="cred-badge cred-${evCls}">${esc(publicStatus)}</span>` : '';
   return `
       <article class="card emperor-card site-card">
         <a class="card-pic" href="#/site/${esc(site.site_id)}" aria-label="${esc(site['事件'])}">
@@ -197,56 +213,14 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <h1>${esc(dynasty?.headline || '')}</h1>
         <p class="lede">${noOrphan(dynasty?.lede || '')}</p>
       </div>
+      ${researchDraftBanner('site')}
       <div class="grid cards">${emperors.map((row) => emperorCard(row, opts)).join('')}</div>
       <section class="now-read">
         <div class="page-head story">
           <h2>先看这几处转轴</h2>
         </div>
         <p class="lede">称汗、称帝、入关、密储、内禅、条约、热河、退位。走完这一页，再点皇帝。</p>
-        <p class="actions"><a class="link" href="#/path">276年转轴</a> · <a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/overview/periods">全朝脉络</a></p>
-      </section>
-      <section class="now-read">
-        <div class="page-head story">
-          <h2>由浅入深读全朝</h2>
-        </div>
-        <p class="lede">先看脉络，再逐帝读评传、争议与白话解读，最后追到原文。</p>
-        <ol class="threads now-read-list">
-          <li>
-            <a class="thread" href="#/overview/periods">
-              <span class="thread-year">六期</span>
-              <h2>六期脉络</h2>
-              <p>创业立国到新政终结，296 年一条主线。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/overview/timeline">
-              <span class="thread-year">十二帝</span>
-              <h2>大事记</h2>
-              <p>每帝关键年份与事件，骨架年份已回查。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/overview/appraisals">
-              <span class="thread-year">十帝</span>
-              <h2>评传</h2>
-              <p>性格、施政、功过，事实与评价分栏。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/overview/disputes">
-              <span class="thread-year">十帝</span>
-              <h2>争议</h2>
-              <p>学术、野史、影视三分级，标证据状态。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/overview/reading">
-              <span class="thread-year">原文</span>
-              <h2>白话解读</h2>
-              <p>十帝关键文献原文对照，译评分栏。</p>
-            </a>
-          </li>
-        </ol>
+        <p class="actions"><a class="link" href="#/path">276年转轴</a> · <a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/spine/money">饷从哪来，兵谁养</a></p>
       </section>
       <section class="now-read">
         <div class="page-head story">
