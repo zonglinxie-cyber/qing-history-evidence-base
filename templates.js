@@ -251,6 +251,35 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
           </li>
         </ol>
       </section>
+      <section class="now-read">
+        <div class="page-head story">
+          <h2>已经对上日子的几处</h2>
+        </div>
+        <p class="lede">和珅不是第五天处死。继后那拉氏，官书没有写成抗旨宫斗。十三日崩，二十日才即位礼。</p>
+        <ol class="threads now-read-list">
+          <li>
+            <a class="thread" href="#/chapter/jiaqing-04">
+              <span class="thread-year">1796–99</span>
+              <h2>内禅之后：太上皇崩与和珅案</h2>
+              <p>第五天下狱，十五日后赐死。二十条是上谕列罪，不是抄家清册。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/lane/QH-L-0033">
+              <span class="thread-year">继后</span>
+              <h2>继皇后那拉氏</h2>
+              <p>官书有断发叙述。没有写成抗旨宫斗。姓氏两说，不择一。</p>
+            </a>
+          </li>
+          <li>
+            <a class="thread" href="#/chapter/yongzheng-07">
+              <span class="thread-year">1722</span>
+              <h2>从十三日崩逝到二十日即位</h2>
+              <p>口谕、遗诏、即位礼，不是同一天。</p>
+            </a>
+          </li>
+        </ol>
+      </section>
       <section class="sites-home">
         <div class="page-head story">
           <h2>这些事，今天在哪儿</h2>
