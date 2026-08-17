@@ -29,3 +29,7 @@ conflict-sets.csv,qing,,conflict_sets,"conflict_set_id;议题;冲突维度;现�
 community-corrections.csv,qing,,community_corrections,"correction_id;位置ID;纠错内容;状态",correction_id,
 overviews.csv,qing,,overview,"overview_id;slug;title;file;lede",overview_id,5
 emperor-timeline.csv,qing,,emperor_timeline,"timeline_id;emperor_id;year;reign_year;event;status;source_refs;claim_ids",timeline_id,92
+qianlong-source-units.csv,qing,qianlong,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,3
+qianlong-source-claims.csv,qing,qianlong,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,6
+jiaqing-source-units.csv,qing,jiaqing,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,3
+jiaqing-source-claims.csv,qing,jiaqing,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,13

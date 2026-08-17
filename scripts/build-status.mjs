@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
+import { DATA_MANIFEST } from './lib/schema.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const data = (name) => loadCsv(path.join(root, 'data', name));
@@ -13,7 +14,8 @@ const countBy = (rows, field) => Object.fromEntries(
 const emperors = data('qing-emperors.csv');
 const crosswalk = data('entity-id-crosswalk.csv');
 const people = data('phase0-people.csv');
-const claims = [...data('kangxi-source-claims.csv'), ...data('yongzheng-source-claims.csv')];
+const claims = DATA_MANIFEST.filter((entry) => entry.kind === 'source_claims')
+  .flatMap((entry) => data(entry.file));
 const chapters = data('chapters.csv');
 const works = data('imperial-works.csv');
 const sourceIndex = data('qing-emperor-source-index.csv');
