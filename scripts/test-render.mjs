@@ -192,9 +192,12 @@ check('即位章上下篇', kx01.includes('chapter-nav') && kx01.includes('下�
 check('即位章读这一句', /<aside class="read-line"[\s\S]*不能把「深肖朕躬」写成[\s\S]*<\/aside>/.test(kx01));
 const yz01 = await go('#/chapter/yongzheng-01');
 check('雍正即位章原文块', yz01.includes('source-quote') && yz01.includes('即皇帝位') && yz01.includes('子刻'));
-check('雍正即位章行内主张', yz01.includes('data-claim="QH-A-YZ-0039"') && yz01.includes('data-claim="QH-A-YZ-0041"'));
+check('雍正即位章行内主张', yz01.includes('data-claim="QH-A-YZ-0039"') && yz01.includes('data-claim="QH-A-YZ-0041"') && yz01.includes('data-claim="QH-A-YZ-0043"'));
 check('雍正即位章目录与怎么读', yz01.includes('chapter-toc') && yz01.includes('怎么读这件事'));
 check('雍正即位章冲突并排', yz01.includes('claim-compare') && yz01.includes('年羹尧死法') && yz01.includes('本纪己丑与实录子刻'));
+check('雍正即位章读这一句', /<aside class="read-line"[\s\S]*永遠禁錮[\s\S]*不能把四十一款[\s\S]*<\/aside>/.test(yz01));
+const junjiQuote = yz01.match(/<blockquote class="quote source-quote"><p>([^<]*策勒克[^<]*)<\/p><\/blockquote>/);
+check('雍正即位章军机实录不是始设', yz01.includes('data-claim="QH-A-YZ-0044"') && Boolean(junjiQuote) && !/始於此|始于此/.test(junjiQuote[1]));
 const sevenDays = await go('#/chapter/yongzheng-07');
 check('康雍七日链专题形成证据闭环', sevenDays.includes('七日链')
   && sevenDays.includes('data-claim="QH-A-KX-0037"')
