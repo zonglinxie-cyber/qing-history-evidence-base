@@ -280,6 +280,13 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
           </li>
         </ol>
       </section>
+      <section class="now-read">
+        <div class="page-head story">
+          <h2>纸上的字</h2>
+        </div>
+        <p class="lede">朱批是红笔。御笔是纸本。令旨不是幼帝亲批。黄标只给外链。</p>
+        <p class="actions"><a class="link" href="#/hands">真迹手稿</a> · <a class="link" href="#/image/QH-V-E05I">雍正朱批</a> · <a class="link" href="#/image/QH-V-E10C">入承大统诏</a></p>
+      </section>
       <section class="sites-home">
         <div class="page-head story">
           <h2>这些事，今天在哪儿</h2>

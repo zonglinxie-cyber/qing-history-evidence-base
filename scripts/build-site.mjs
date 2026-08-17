@@ -626,7 +626,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable }) 
   <header class="masthead static-masthead">
     <a class="brand" href="./">清史读本</a>
     <nav class="nav" aria-label="主导航">
-      <a href="./#/path">转轴</a><a href="./">十二帝</a><a href="./#/sites">今地</a><a href="./#/works">文献</a>
+      <a href="./#/path">转轴</a><a href="./">十二帝</a><a href="./#/hands">手稿</a><a href="./#/sites">今地</a><a href="./#/works">文献</a>
     </nav>
   </header>
   <main id="main" tabindex="-1">

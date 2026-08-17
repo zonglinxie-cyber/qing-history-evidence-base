@@ -63,6 +63,7 @@ const VIEW_CHUNKS = {
   people: ['home', 'people'],
   images: ['home', 'people'],
   image: ['home', 'people'],
+  hands: ['home', 'people'],
   chapter: ['home', REIGN_CHUNK],
   claims: ['home', REIGN_CHUNK, 'people'],
   claim: ['home', REIGN_CHUNK, 'people'],
@@ -854,7 +855,7 @@ function eraPage(slug) {
             </a>
           </li>`).join('')}
       </ol>
-      <p class="actions"><a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/spine/money">饷和兵</a> · <a class="link" href="#/questions?type=%E8%AF%81%E6%8D%AE%E8%BE%B9%E7%95%8C">现有材料答不了</a> · <a class="link" href="#/kangxi">康熙朝</a></p>
+      <p class="actions"><a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/spine/money">饷和兵</a> · <a class="link" href="#/hands">真迹手稿</a> · <a class="link" href="#/questions?type=%E8%AF%81%E6%8D%AE%E8%BE%B9%E7%95%8C">现有材料答不了</a></p>
     `;
   }
 
@@ -978,8 +979,15 @@ function eraPage(slug) {
       'QH-P-000001': [['#/chapter/kangxi-02', '两废太子'], ['#/chapter/kangxi-01', '即位、崩逝与遗诏'], ['#/succession', '储位全链'], ['#/princes', '儿子怎么排'], ['#/princesses', '女儿怎么排']],
       'QH-P-000002': [['#/kangxi', '康熙朝的储位与对照'], ['#/lanes', '改诏、丹药等传闻']],
       'QH-P-000019': [['#/lane/QH-L-0033', '继皇后对照'], ['#/chapter/jiaqing-04', '内禅与和珅分日']],
-      'QH-P-000053': [['#/lane/QH-L-0010', '出家说']],
-      'QH-P-000054': [['#/lane/QH-L-0032', '和珅对照'], ['#/question/QH-GQ-0068', '八亿两答不了']],
+      'QH-P-000053': [['#/lane/QH-L-0010', '出家说'], ['#/image/QH-V-E03C', '多尔衮令旨'], ['#/hands', '真迹手稿']],
+      'QH-P-000054': [['#/lane/QH-L-0032', '和珅对照'], ['#/question/QH-GQ-0068', '八亿两答不了'], ['#/image/QH-V-E07B', '嘉庆朱批']],
+      'QH-P-000051': [['#/chapter/nurhaci-01', '本纪怎么写称汗'], ['#/hands', '真迹手稿']],
+      'QH-P-000052': [['#/chapter/huangtaiji-01', '汗位与帝位'], ['#/hands', '真迹手稿']],
+      'QH-P-000055': [['#/chapter/daoguang-01', '议款这一句'], ['#/image/QH-V-E08C', '道光朱批']],
+      'QH-P-000056': [['#/chapter/xianfeng-01', '幸木兰'], ['#/image/QH-V-E09C', '咸丰朱批']],
+      'QH-P-000057': [['#/chapter/tongzhi-01', '祺祥不是纪年'], ['#/image/QH-V-E10C', '入承大统诏']],
+      'QH-P-000058': [['#/chapter/guangxu-01', '继文宗为子'], ['#/image/QH-V-E11C', '光绪朱批']],
+      'QH-P-000059': [['#/chapter/xuantong-01', '统治权公诸全国'], ['#/hands', '真迹手稿']],
     };
     const extra = extras[personId] || [];
     if (!chapters.length && !extra.length) return '';
@@ -1760,11 +1768,51 @@ function eraPage(slug) {
     `;
   }
 
+  function handsPage() {
+    const roles = [
+      { role: '奏折朱批', title: '朱批与诏书', hint: '红笔是皇帝批的。黑字是臣工写的。黄标只给外链。' },
+      { role: '御笔书法', title: '御笔', hint: '碑是刻出来的。纸上才是这一笔。' },
+    ];
+    const emperors = DATA.emperors || [];
+    return `
+      <div class="reading">
+        <p class="kicker">真迹</p>
+        <h1>纸上的字，才是这一笔</h1>
+        <p class="lede">朝服是定妆。红笔是批折。匾额是每天抬头看见的。刻本《朱批谕旨》不是原折。</p>
+      </div>
+      ${roles.map(({ role, title, hint }) => {
+        const cards = emperors.flatMap((emperor) => {
+          const list = portraitsByEmperor.get(emperor.emperor_id) || emperor.portraits || [];
+          return list.filter((row) => row['展示角色'] === role).map((row) => ({ emperor, row }));
+        });
+        if (!cards.length) return '';
+        return `
+          <h2>${esc(title)}</h2>
+          <p class="muted">${esc(hint)}</p>
+          <ol class="threads">
+            ${cards.map(({ emperor, row }) => {
+              const era = String(emperor['年号或通称'] || '').split('；')[0];
+              return `
+              <li>
+                <a class="thread" href="#/image/${esc(row.visual_id)}">
+                  <span class="thread-year">${esc(era)}　${canEmbed(row) ? '绿' : '黄'}</span>
+                  <h2>${esc(row['对象标题'])}</h2>
+                  <p>${esc(row['卡片钩子'] || row['画面解析'] || row['图像性质'] || '')}</p>
+                </a>
+              </li>`;
+            }).join('')}
+          </ol>`;
+      }).join('')}
+      <p class="actions"><a class="link" href="#/images">朝服像</a> · <a class="link" href="#/works">文献</a> · <a class="link" href="#/path">转轴</a></p>
+    `;
+  }
+
   function imagesPage() {
     return `
       <div class="page-head">
         <h1>画像</h1>
       </div>
+      <p class="lede">朝服是定妆。朱批和御笔在 <a class="link" href="#/hands">真迹手稿</a>。</p>
       ${DATA.emperors.map((emperor) => {
         const list = emperor.portraits || portraitsByEmperor.get(emperor.emperor_id) || [];
         const primary = list.find((row) => row['展示角色'] === '默认朝服像') || list[0];
@@ -2086,6 +2134,7 @@ function eraPage(slug) {
     else if (view === 'question') html = questionPage(parts[1]);
     else if (view === 'images') html = imagesPage();
     else if (view === 'image') html = imagePage(parts[1]);
+    else if (view === 'hands') html = handsPage();
     else if (view === 'sites') html = sitesPage();
     else if (view === 'site') html = sitePage(parts[1]);
     else if (view === 'lanes') html = lanesPage(query);

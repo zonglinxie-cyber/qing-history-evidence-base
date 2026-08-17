@@ -33,3 +33,5 @@ qianlong-source-units.csv,qing,qianlong,source_units,"source_unit_id;source_enti
 qianlong-source-claims.csv,qing,qianlong,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,6
 jiaqing-source-units.csv,qing,jiaqing,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,3
 jiaqing-source-claims.csv,qing,jiaqing,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,13
+qing-other-source-units.csv,qing,,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,14
+qing-other-source-claims.csv,qing,,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,16
