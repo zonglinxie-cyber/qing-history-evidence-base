@@ -151,7 +151,7 @@ export const EMPEROR_READS = {
     problems: [
       { title: '边疆还要往外推', text: '准噶尔悬了三代。他写成了「十全」。每一仗的账，没有公开算。', href: '#/chapter/qianlong-01' },
       { title: '书要收，也要禁', text: '四库收三千多种。禁毁数量各家对不上。', href: '#/chapter/qianlong-02' },
-      { title: '和珅', text: '和珅受到的制度性恩宠，与后世流传的家产数字和逸闻不是同一层材料。' },
+      { title: '和珅', text: '和珅受到的制度性恩宠，与后世流传的家产数字和逸闻不是同一层材料。', href: '#/lane/QH-L-0032' },
       { title: '禅了，还在批', text: '名义交了。养心殿还是他的。三年说不清。' },
     ],
     habits: [
@@ -166,8 +166,8 @@ export const EMPEROR_READS = {
       { key: '南巡', text: '乾隆六次南巡，路线、行程和财政负担各有差异。' },
       { key: '用人处分', text: '和珅受宠有制度记录，后世家产数字与传说需要分别辨析。' },
       { key: '文字狱', text: '文字狱案件应按个案考察，不宜用口径不一的总数简单概括。' },
-      { key: '宫廷继承', text: '继皇后被收回册宝、丧仪降格且没有谥号，不能按一般皇后经历概括。' },
-      { key: '禅位训政', text: '1796—1799 年间，名义上的皇帝与实际决策者并不完全重合。', href: '#/chapter/jiaqing-01' },
+      { key: '宫廷继承', text: '继皇后被收回册宝、丧仪降格且没有谥号，不能按一般皇后经历概括。', href: '#/lane/QH-L-0033' },
+      { key: '禅位训政', text: '1796—1799 年间，名义上的皇帝与实际决策者并不完全重合。', href: '#/chapter/jiaqing-04' },
       { key: '对外交涉', text: '马戛尔尼使团在热河觐见，中英双方留下了立场不同的记录。', href: '#/site/QH-ST-0030' },
     ],
     beats: [
@@ -415,8 +415,8 @@ export const PATH_NODES = [
   {
     year: '1796–99',
     title: '内禅仍训政',
-    text: '禅位了，太上皇还批折子。名义在位和实际管事，要分开写。',
-    href: '#/chapter/qianlong-01',
+    text: '禅位了，太上皇还批折子。第五天下狱，不是第五天处死。',
+    href: '#/chapter/jiaqing-04',
   },
   {
     year: '1842',
@@ -461,10 +461,23 @@ export const SPINE_POWER = [
   },
   {
     title: '禅位、顾命、垂帘、过继',
-    text: '太上皇还在批折。后来有赞襄、有垂帘、有过继兼祧。坐龙椅的人，不一定是拍板的人。',
-    href: '#/chapter/jiaqing-01',
+    text: '太上皇还在批折。第五天下狱，十五日后赐死。坐龙椅的人，不一定是拍板的人。',
+    href: '#/chapter/jiaqing-04',
   },
 ];
+
+export const ERA_PINNED = {
+  qianlong: [
+    { href: '#/chapter/jiaqing-04', year: '1796–99', title: '内禅之后：太上皇崩与和珅案', text: '禅了位，太上皇还批折子。第五天下狱，不是第五天处死。' },
+    { href: '#/lane/QH-L-0033', year: '继后', title: '继皇后那拉氏', text: '官书有断发叙述。没有写成抗旨宫斗。姓氏两说，不择一。' },
+    { href: '#/chapter/qianlong-05', year: '后妃', title: '三后与生母', text: '孝仪生前不是皇后。继后无谥。玉牒未见。' },
+  ],
+  jiaqing: [
+    { href: '#/chapter/jiaqing-04', year: '1799', title: '内禅之后：太上皇崩与和珅案', text: '壬戌崩，丁卯下狱，丁丑赐死。二十条是上谕列罪。' },
+    { href: '#/lane/QH-L-0032', year: '对照', title: '和珅：第五天下狱', text: '通行说法常写成五日即死。官书把下狱和赐死分开写。' },
+    { href: '#/question/QH-GQ-0068', year: '答不了', title: '抄家是八亿两吗？', text: '已打开的列传没有这个总数。' },
+  ],
+};
 
 export const SPINE_MONEY = [
   {
