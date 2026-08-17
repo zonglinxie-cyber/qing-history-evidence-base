@@ -1,0 +1,54 @@
+# main 推送后自动发布到 gh-pages 分支（GitHub Pages 当前从该分支服务）。
+# 取代手工 npm run build + 手动同步 gh-pages 的流程。
+#
+# 前置条件（仓库 Settings）：
+#   Settings → Actions → General → Workflow permissions 需要 "Read and write"，
+#   否则 GITHUB_TOKEN 无法推送 gh-pages 分支。
+name: Deploy Pages
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 结构与史料规则校验
+        run: npm run validate
+
+      - name: 构建站点
+        run: npm run build
+
+      - name: 构建产物可重复
+        run: git diff --exit-code -- STATUS.md site/
+
+      - name: 渲染冒烟测试
+        run: npm test
+
+      - name: 发布到 gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          # 与手工同步一致：全量替换，清理已删除的媒体与数据文件
+          keep_files: false
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com

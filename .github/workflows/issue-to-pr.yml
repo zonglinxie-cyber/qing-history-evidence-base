@@ -1,0 +1,71 @@
+# 结构化纠错 Issue → 自动 PR。
+# 贡献者填 correction-claim 表单后，机器人把纠错写入 data/community-corrections.csv（状态=审核中）并开 PR；
+# 维护者审核后才把纠错升格为主张表行——贡献者不碰命令行，标准不降低。
+name: Issue to PR
+
+on:
+  issues:
+    # opened 与 labeled 都接收；并发锁和已有 PR 检查保证同一 Issue 幂等。
+    types: [opened, labeled]
+
+concurrency:
+  group: correction-issue-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  correction-pr:
+    if: >-
+      github.event.issue.state == 'open' &&
+      ((github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'content-correction')) ||
+      (github.event.action == 'labeled' && github.event.label.name == 'content-correction'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 解析表单生成纠错行
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: node scripts/issue-to-pr.mjs
+
+      - name: 开 PR 并回复 Issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          [ -f data/community-corrections.csv ] || { echo "没有生成纠错行，跳过。"; exit 0; }
+          git add data/community-corrections.csv
+          if git diff --cached --quiet; then
+            echo "没有新的纠错行，跳过开 PR。"
+            exit 0
+          fi
+          BRANCH="bot/issue-${ISSUE_NUMBER}"
+          EXISTING_PR="$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // ""')"
+          if [ -n "$EXISTING_PR" ]; then
+            echo "该 Issue 已有自动 PR：$EXISTING_PR"
+            gh issue comment "$ISSUE_NUMBER" --body "该纠错已进入自动 PR：$EXISTING_PR"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git checkout -B "$BRANCH"
+          git commit -m "纠错队列：issue #${ISSUE_NUMBER} 结构化录入（审核中）"
+          git push -u origin "$BRANCH"
+          gh pr create --title "纠错队列：issue #${ISSUE_NUMBER}" \
+            --body "自动解析自纠错表单 #${ISSUE_NUMBER}。纠错进入 data/community-corrections.csv（状态=审核中），维护者抽查后升格为主张表行。" \
+            --base main
+          gh issue comment "$ISSUE_NUMBER" --body "已收到结构化纠错，自动 PR 已开（见上方）。维护者抽查来源后会把它升格为主张；若证据不足会在 PR 里说明退回理由。"
