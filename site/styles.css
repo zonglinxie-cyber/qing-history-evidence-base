@@ -1392,6 +1392,12 @@ a.img-fallback.yellow,
   letter-spacing: 0.12em;
 }
 .read-line p { margin: 0 0 8px; font-size: 16px; }
+.read-line .read-field strong {
+  display: inline-block;
+  min-width: 5em;
+  color: var(--ink-soft, #6b6358);
+  font-weight: 600;
+}
 .chronicle-year { margin: 0 0 32px; max-width: var(--read); }
 .chronicle-list { max-width: var(--read); }
 

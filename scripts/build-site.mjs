@@ -401,7 +401,20 @@ function mdToHtml(src, fig) {
       const id = headingSlug(title, usedIds);
       const body = [];
       i += 1;
-      while (i < lines.length && lines[i].trim() && !/^#{1,4} /.test(lines[i]) && !lines[i].startsWith('>') && !lines[i].startsWith('{{')) {
+      let sawField = false;
+      while (i < lines.length && !/^#{1,4} /.test(lines[i]) && !lines[i].startsWith('>') && !lines[i].startsWith('{{')) {
+        if (!lines[i].trim()) {
+          i += 1;
+          continue;
+        }
+        const field = lines[i].match(/^\*\*(原文|今译|当时|今天还读|不能写成)\*\*\s*(.*)$/);
+        if (field) {
+          sawField = true;
+          body.push(`<p class="read-field" data-field="${escHtml(field[1])}"><strong>${escHtml(field[1])}</strong>　${inlineMd(field[2])}</p>`);
+          i += 1;
+          continue;
+        }
+        if (sawField) break;
         body.push(`<p>${inlineMd(lines[i])}</p>`);
         i += 1;
       }
@@ -630,7 +643,7 @@ ${indexable ? '' : `        ${researchDraftBanner('chapter')}\n`}        <p clas
     </article>
   </main>
   <footer class="foot">
-    <p class="foot-links"><a href="#/how">怎么读</a> · <a href="#/questions">黄金问题</a> · <a href="#/sources">来源</a></p>
+    <p class="foot-links"><a href="#/how">怎么读</a> · <a href="#/questions">现有材料答不了</a> · <a href="#/sources">来源</a></p>
     <p class="foot-note">AI 辅助个人研究稿；未经专业清史学者全面审校。</p>
     <p class="foot-links"><a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base" rel="noopener">开源仓库</a></p>
   </footer>

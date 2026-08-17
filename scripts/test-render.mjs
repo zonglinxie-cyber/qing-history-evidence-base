@@ -110,11 +110,12 @@ for (const slug of registeredEras) {
 const unregistered = eras.find((slug) => !registeredEras.includes(slug));
 if (unregistered) {
   const out = await go(`#/${unregistered}`);
-  check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('现有章节'));
+  check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('已经写下的') || out.includes('现有章节'));
 }
 
 const homeHtmlOut = await go('#/');
 check('首页现有可读入口', homeHtmlOut.includes('康熙这一段') && homeHtmlOut.includes('两废太子'));
+check('首页已打开对照入口', homeHtmlOut.includes('已经对上日子的几处') && homeHtmlOut.includes('#/chapter/jiaqing-04') && homeHtmlOut.includes('#/lane/QH-L-0033'));
 check('首页不叠六期评传入口', !homeHtmlOut.includes('由浅入深读全朝') && !homeHtmlOut.includes('#/overview/periods'));
 check('首页空朝不写结构化证据', !homeHtmlOut.includes('尚无结构化证据') && homeHtmlOut.includes('还没有逐日的官书条'));
 check('首页醒目标明个人研究稿', homeHtmlOut.includes('AI 辅助个人研究库') && homeHtmlOut.includes('并非专家审定本'));
@@ -124,6 +125,7 @@ check('首页只有一条研究稿 description', descriptionTags.length === 1
 check('首页转轴入口', homeHtmlOut.includes('先看这几处转轴') && homeHtmlOut.includes('#/path'));
 const pathPage = await go('#/path');
 check('转轴年页', pathPage.includes('这几处转过轴') && pathPage.includes('1912') && pathPage.includes('密储落地'));
+check('内禅转轴接到和珅分日章', pathPage.includes('#/chapter/jiaqing-04'));
 const periods = await go('#/overview/periods');
 check('全朝专题显示史料核对警示', periods.includes('研究草稿｜本章尚未完成全文史料核对'));
 const spine = await go('#/spine/power');
@@ -148,8 +150,15 @@ const xuantong = await go('#/person/QH-P-000059');
 check('宣统帝页有结构', xuantong.includes('三岁不能算决策') && xuantong.includes('宣统政纪'));
 const qlChron = await go('#/chronicle/qianlong');
 check('无条次朝大事记不编年表', qlChron.includes('还没有逐日的官书条') && qlChron.includes('#/qianlong'));
+check('无条次朝大事记仍给出已写章节', qlChron.includes('#/chapter/qianlong-01') || qlChron.includes('十全'));
+const qlEra = await go('#/qianlong');
+check('乾隆朝页钉住已打开对照', qlEra.includes('#/lane/QH-L-0033') && qlEra.includes('#/chapter/jiaqing-04') && qlEra.includes('已经写下的'));
+const questionsPage = await go('#/questions');
+check('问题页不再自称导读或黄金问题', questionsPage.includes('这类问题，现在停在这里') && !questionsPage.includes('从问题进入清史') && !questionsPage.includes('黄金问题'));
+check('问题页先放三道拒答', questionsPage.includes('八亿两') && questionsPage.includes('抗旨断发') && questionsPage.includes('九子夺嫡是哪一天'));
 const heshen = await go('#/lane/QH-L-0032');
 check('和珅对照栏', heshen.includes('第五天下狱') && heshen.includes('八亿两'));
+check('和珅对照栏挂上拒答', heshen.includes('#/question/QH-GQ-0068') || heshen.includes('八亿两吗'));
 const nala = await go('#/lane/QH-L-0033');
 check('继皇后对照栏', nala.includes('那拉氏') && nala.includes('不择一'));
 const refuse = await go('#/question/QH-GQ-0072');
@@ -166,14 +175,14 @@ check('样板章行内主张', chapter.includes('data-claim="QH-A-KX-0124"') || 
 check('样板章目录', chapter.includes('chapter-toc') && chapter.includes('data-scroll'));
 check('样板章上下篇', chapter.includes('chapter-nav') && chapter.includes('上一篇') && chapter.includes('下一篇'));
 check('样板章依据摘要不倾倒主张卡', chapter.includes('本章可回查的卷') && !chapter.includes('thread-block'));
-check('两废章读这一句', chapter.includes('read-line') && chapter.includes('不能写成对质全文'));
+check('两废章读这一句', /<aside class="read-line"[\s\S]*不能写成对质全文[\s\S]*<\/aside>/.test(chapter));
 const kx01 = await go('#/chapter/kangxi-01');
 check('即位章原文块', kx01.includes('source-quote') && kx01.includes('上即皇帝位') && kx01.includes('崩於寢宮'));
 check('即位章行内主张', kx01.includes('data-claim="QH-A-KX-0001"') && kx01.includes('data-claim="QH-A-KX-0033"'));
 check('即位章目录与怎么读', kx01.includes('chapter-toc') && kx01.includes('data-scroll') && kx01.includes('怎么读这件事'));
 check('即位章冲突并排', kx01.includes('claim-compare') && kx01.includes('口谕、遗诏、本纪九'));
 check('即位章上下篇', kx01.includes('chapter-nav') && kx01.includes('下一篇'));
-check('即位章读这一句', kx01.includes('read-line') && kx01.includes('不能把「深肖朕躬」写成'));
+check('即位章读这一句', /<aside class="read-line"[\s\S]*不能把「深肖朕躬」写成[\s\S]*<\/aside>/.test(kx01));
 const yz01 = await go('#/chapter/yongzheng-01');
 check('雍正即位章原文块', yz01.includes('source-quote') && yz01.includes('即皇帝位') && yz01.includes('子刻'));
 check('雍正即位章行内主张', yz01.includes('data-claim="QH-A-YZ-0039"') && yz01.includes('data-claim="QH-A-YZ-0041"'));
@@ -193,10 +202,13 @@ check('嘉庆和珅案形成分日证据闭环', heshenChapter.includes('五日�
   && heshenChapter.includes('data-claim="QH-A-JQ-0008"')
   && heshenChapter.includes('claim-compare')
   && heshenChapter.includes('本章可回查的卷'));
+check('和珅章读这一句', /<aside class="read-line"[\s\S]*擁戴自居[\s\S]*<\/aside>/.test(heshenChapter)
+  && !/<aside class="read-line"[^>]*>[\s\S]*賜自尽[\s\S]*<\/aside>/.test(heshenChapter));
 check('混合证据等级章节仍显示史料核对警示', heshenChapter.includes('研究草稿｜本章尚未完成全文史料核对'));
 const heshenPerson = await go('#/person/QH-P-000124');
 check('和珅人物页接入主张', heshenPerson.includes('钮祜禄·和珅')
   && heshenPerson.includes('QH-A-JQ-0006'));
+check('和珅人物页先讲分日', heshenPerson.includes('第五天下狱') && heshenPerson.includes('#/chapter/jiaqing-04'));
 const searchHeshen = await go('#/search?q=和珅');
 check('全站检索命中和珅', searchHeshen.includes('QH-P-000124') && searchHeshen.includes('<mark>'));
 const searchCn = await go('#/search?q=胤禛');
