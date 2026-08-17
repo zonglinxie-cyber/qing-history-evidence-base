@@ -79,7 +79,7 @@ npm install
 npm run validate
 npm run build          # 构建站点并同步 STATUS.md
 npm run status         # 只刷新 STATUS.md
-npm test               # 渲染冒烟测试（含 64 道黄金问题全量验收）
+npm test               # 渲染冒烟测试（黄金问题数量由数据动态读取）
 npm run watch          # 监视 CSV / 正文变化并重建
 python3 -m http.server 8765 --directory site
 ```
@@ -89,7 +89,8 @@ python3 -m http.server 8765 --directory site
 ## 目录关系与部署
 
 - **`site/` 是唯一的前端构建产物源**。`scripts/build-site.mjs` 把 CSV/正文编成 `site/data/*.json`、直出首页 HTML，并生成 `site/chapter/<slug>/` 可分享静态页、`sitemap.xml` 与 `robots.txt`。所有前端改动只改 `site/*`（`app.js`/`templates.js`/`search.js`/`styles.css`；清朝专属内容常量在 `site/qing-content.mjs`）。
-- **不是所有文章都进入搜索引擎**：只有同时绑定 `unit_ids` 且状态含 E1 的章节进入 sitemap；其余静态页自动标记 `noindex`，避免把卷级索引包装成已核内容。部署到其他域名时可用 `SITE_URL=https://example.com/base/ npm run build` 改写 canonical。
+- **不是所有文章都进入搜索引擎**：章节必须绑定 `unit_ids`、状态含 E1，且不能同时声明 S 级混合内容，才进入 sitemap；其余静态页自动标记 `noindex`，避免用少数已回查段落替整章背书。部署到其他域名时可用 `SITE_URL=https://example.com/base/ npm run build` 改写 canonical。
+  - 未达到整章收录门槛的页面同时显示醒目研究草稿横幅；`noindex` 只是搜索控制，不代替公开披露。
   - **站点是单朝代运行时**：`#dynasty-config`、首页直出与 `home/people/catalog.json` 一次只承载一个朝代。切换当前朝代 = 在 `dynasties.csv` 只保留一个 `active=是` 并备齐该朝内容模块与数据。同时启用多个朝代时 `build` 会报错拦截（并非并存）——多朝代并存需要先把数据块前缀化为 `d-<code>`、给前端加朝代切换器，属后续改造而非纯 CSV 操作。
 - **发布由 GitHub Actions 自动完成**：推送 `main` 后，`.github/workflows/deploy.yml` 运行校验、构建与渲染测试，把 `site/` 发布到 `gh-pages` 分支（GitHub Pages 从该分支服务）。无需再手工同步；`npm run deploy` 的根目录镜像方式已废弃。
 - 前置条件：仓库 Settings → Actions → General → Workflow permissions 需选 **Read and write**（GITHUB_TOKEN 要推送 gh-pages）。

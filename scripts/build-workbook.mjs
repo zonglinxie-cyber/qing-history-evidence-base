@@ -5,7 +5,9 @@ import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
 
 const __filename = fileURLToPath(import.meta.url);
 const scriptDir = path.dirname(__filename);
-const phase0Dir = path.resolve(scriptDir, "..");
+const phase0Dir = process.env.QH_PHASE0_DIR
+  ? path.resolve(process.env.QH_PHASE0_DIR)
+  : path.resolve(scriptDir, "..");
 const dataDir = path.join(phase0Dir, "data");
 const outputDir = path.join(phase0Dir, "outputs", "qing-history-phase0");
 const previewDir = process.env.QH_PREVIEW_DIR || path.join("/tmp", "qing-history-phase0-previews");
@@ -43,25 +45,27 @@ const workbook = Workbook.create();
 workbook.comments.setSelf({ displayName: "User" });
 
 const dashboard = workbook.worksheets.add("仪表盘");
+const manifestSheet = workbook.worksheets.add("数据清单");
 const emperorsSheet = workbook.worksheets.add("十二帝总档");
 const emperorSourcesSheet = workbook.worksheets.add("帝王史料索引");
 const portraitsSheet = workbook.worksheets.add("十二帝画像");
 const tasksSheet = workbook.worksheets.add("持续任务队列");
 const idSheet = workbook.worksheets.add("人物ID对照");
 const cardsSheet = workbook.worksheets.add("十二帝研究卡");
-const sourceUnitsSheet = workbook.worksheets.add("康熙来源单元");
+const sourceUnitsSheet = workbook.worksheets.add("帝王来源单元");
 const planSheet = workbook.worksheets.add("六批次计划");
-const peopleSheet = workbook.worksheets.add("康雍50人");
+const peopleSheet = workbook.worksheets.add("人物档案");
 const sourcesSheet = workbook.worksheets.add("来源版权台账");
 const claimsSheet = workbook.worksheets.add("主张工作台");
-const relationshipsSheet = workbook.worksheets.add("关系工作台");
-const imagesSheet = workbook.worksheets.add("图像工作台");
+const relationshipsSheet = workbook.worksheets.add("身份关系主张");
+const imagesSheet = workbook.worksheets.add("图像区域标注");
 const decisionsSheet = workbook.worksheets.add("决策日志");
 const risksSheet = workbook.worksheets.add("风险登记");
 const vocabSheet = workbook.worksheets.add("受控词表");
 
 for (const sheet of [
   dashboard,
+  manifestSheet,
   emperorsSheet,
   emperorSourcesSheet,
   portraitsSheet,
@@ -256,20 +260,72 @@ function parseCSV(text) {
     row.push(field.replace(/\r$/, ""));
     rows.push(row);
   }
+  if (rows[0]?.[0]) rows[0][0] = rows[0][0].replace(/^\uFEFF/, "");
   return rows;
 }
 
-const peopleCsv = parseCSV(await fs.readFile(path.join(dataDir, "phase0-people.csv"), "utf8"));
-const sourceCsv = parseCSV(await fs.readFile(path.join(dataDir, "source-rights-ledger.csv"), "utf8"));
-const vocabCsv = parseCSV(await fs.readFile(path.join(dataDir, "controlled-vocabularies.csv"), "utf8"));
-const emperorsCsv = parseCSV(await fs.readFile(path.join(dataDir, "qing-emperors.csv"), "utf8"));
-const emperorSourcesCsv = parseCSV(await fs.readFile(path.join(dataDir, "qing-emperor-source-index.csv"), "utf8"));
-const portraitsCsv = parseCSV(await fs.readFile(path.join(dataDir, "emperor-portraits.csv"), "utf8"));
-const taskCsv = parseCSV(await fs.readFile(path.join(dataDir, "task-queue.csv"), "utf8"));
-const idCsv = parseCSV(await fs.readFile(path.join(dataDir, "entity-id-crosswalk.csv"), "utf8"));
-const cardsCsv = parseCSV(await fs.readFile(path.join(dataDir, "qing-emperor-research-cards.csv"), "utf8"));
-const sourceUnitsCsv = parseCSV(await fs.readFile(path.join(dataDir, "kangxi-source-units.csv"), "utf8"));
-const verifiedClaimsCsv = parseCSV(await fs.readFile(path.join(dataDir, "kangxi-source-claims.csv"), "utf8"));
+async function readCsv(file) {
+  return parseCSV(await fs.readFile(path.join(dataDir, file), "utf8"));
+}
+
+const manifestCsv = await readCsv("data-manifest.csv");
+const manifestHeader = manifestCsv[0];
+const manifestKindIndex = manifestHeader.indexOf("kind");
+if (manifestKindIndex < 0) throw new Error("data-manifest.csv 缺少 kind 列");
+
+async function mergeManifestKind(kind) {
+  const entries = manifestCsv.slice(1).filter((row) => row[manifestKindIndex] === kind);
+  if (!entries.length) throw new Error(`data-manifest.csv 未登记 ${kind}`);
+  let header = null;
+  const rows = [];
+  const files = [];
+  for (const entry of entries) {
+    const file = entry[0];
+    const csv = await readCsv(file);
+    if (!header) header = csv[0];
+    if (JSON.stringify(header) !== JSON.stringify(csv[0])) {
+      throw new Error(`${kind} 表头不一致：${file}`);
+    }
+    rows.push(...csv.slice(1));
+    files.push({ file, reign: entry[2], rows: csv.length - 1 });
+  }
+  return { csv: [header, ...rows], files };
+}
+
+const peopleCsv = await readCsv("phase0-people.csv");
+const sourceCsv = await readCsv("source-rights-ledger.csv");
+const vocabCsv = await readCsv("controlled-vocabularies.csv");
+const emperorsCsv = await readCsv("qing-emperors.csv");
+const emperorSourcesCsv = await readCsv("qing-emperor-source-index.csv");
+const portraitsCsv = await readCsv("emperor-portraits.csv");
+const taskCsv = await readCsv("task-queue.csv");
+const idCsv = await readCsv("entity-id-crosswalk.csv");
+const cardsCsv = await readCsv("qing-emperor-research-cards.csv");
+const imageRegionsCsv = await readCsv("image-regions.csv");
+const { csv: sourceUnitsCsv, files: sourceUnitFiles } = await mergeManifestKind("source_units");
+const { csv: verifiedClaimsCsv, files: sourceClaimFiles } = await mergeManifestKind("source_claims");
+const relationshipRows = verifiedClaimsCsv.slice(1).filter((row) => ["人物关系", "身份或关系", "实体关系"].includes(row[1]));
+const manifestStatsRows = await Promise.all(manifestCsv.slice(1).map(async (row) => {
+  const csv = await readCsv(row[0]);
+  return [...row, Math.max(0, csv.length - 1), csv[0]?.length ?? 0];
+}));
+
+const expectedWidths = {
+  claims: 23,
+  portraits: 23,
+  emperorSources: 11,
+  people: 13,
+  vocabulary: 10,
+};
+for (const [label, actual, expected] of [
+  ["主张", verifiedClaimsCsv[0].length, expectedWidths.claims],
+  ["画像", portraitsCsv[0].length, expectedWidths.portraits],
+  ["史料索引", emperorSourcesCsv[0].length, expectedWidths.emperorSources],
+  ["人物", peopleCsv[0].length, expectedWidths.people],
+  ["受控词表", vocabCsv[0].length, expectedWidths.vocabulary],
+]) {
+  if (actual !== expected) throw new Error(`${label}表头应为 ${expected} 列，实际为 ${actual} 列`);
+}
 
 const planRows = [
   ["B1-01", 1, "十二帝", "建立十二帝统一骨架", "12 条、继承链连续、均有官方人物页", "P0", "已完成", "AI", "", "", "基础年份仍需逐帝细化到日期"],
@@ -279,7 +335,7 @@ const planRows = [
   ["B2-02", 2, "皇子女", "建立皇子、公主候选表", "齿序口径、母系和封号时态分开", "P0", "未开始", "AI", "", "", "从卷161—166开始但不可终审"],
   ["B2-03", 2, "玉牒", "建立公开玉牒版本与目录", "看不到原件的关系一律标玉牒待核", "P0", "未开始", "AI", "", "", "只做版本级目录不编造全谱"],
   ["B3-01", 3, "康熙", "完成康熙来源包", "史料入口、版本、访问和权利字段齐全", "P0", "未开始", "AI", "", "", "先查实录卷1及卷300"],
-  ["B3-02", 3, "人物", "回查康雍50人候选档", "异名、身份、首要证据和待核项齐全", "P0", "未开始", "AI", "", "", "一轮处理20—30条主张"],
+  ["B3-02", 3, "人物", "回查人物候选档", "异名、身份、首要证据和待核项齐全", "P0", "未开始", "AI", "", "", "一轮处理20—30条主张"],
   ["B3-03", 3, "关系", "完成60条关系候选", "每条有关系类型、时间和证据状态", "P0", "未开始", "AI", "", "", "生母、嫡母、抚育者不可混写"],
   ["B3-04", 3, "储位", "建立两废太子与继承事件链", "具体事件替代“九子夺嫡”笼统标签", "P0", "未开始", "AI", "", "", "冲突说法并列保存"],
   ["B4-01", 4, "图像", "补核十二帝画像馆藏与版本", "对象、数字文件、认定、许可四层分开", "P0", "未开始", "AI", "", "", "Commons许可不等于认定无误"],
@@ -313,55 +369,30 @@ const riskRows = [
   ["R18", "许可改变后无法撤下派生物", 2, 5, "=C22*D22", "数字资产与页面无依赖关系", "资产、许可、主张和叙事建立可追踪引用", "AI", "开放", ""],
 ];
 
-const exampleClaimRow = [
-  "QH-A-EXAMPLE-001",
-  "人物关系",
-  "QH-P-000002",
-  "has_biological_mother",
-  "QH-P-000025",
-  "雍正帝为德妃乌雅氏所生（示例候选）",
-  "",
-  "",
-  "不确定",
-  "草稿",
-  "",
-  "待精确到具体《玉牒》版本、卷页或档号",
-  "",
-  "仅提及",
-  "语境性",
-  "未评级",
-  "",
-  "",
-  "人工录入",
-  "",
-  "",
-  "仅演示字段结构；不得视为已核验主张，正式取证后另建稳定 Assertion ID",
-];
-
-const exampleRelationshipRow = [
-  "QH-A-EXAMPLE-001",
-  "QH-P-000002",
-  "爱新觉罗·胤禛",
-  "has_biological_mother",
-  "生母为",
-  "QH-P-000025",
-  "乌雅氏（孝恭仁皇后）",
-  "",
-  "",
-  "",
-  "来源原记",
-  "",
-  "待精确到具体《玉牒》版本、卷页或档号",
-  "未核验",
-  "草稿",
-  "",
-  "结构示例，不构成史实核验完成",
-];
+const rowEnd = (csv) => csv.length + 3;
+const colFor = (csv, header) => {
+  const index = csv[0].indexOf(header);
+  if (index < 0) throw new Error(`缺少列：${header}`);
+  return columnName(index + 1);
+};
+const taskLastRow = rowEnd(taskCsv);
+const claimLastRow = rowEnd(verifiedClaimsCsv);
+const claimStatusCol = colFor(verifiedClaimsCsv, "状态");
+const claimReviewDateCol = colFor(verifiedClaimsCsv, "复核日期");
+const claimReviewerIndex = verifiedClaimsCsv[0].indexOf("复核人");
+const namedReviewerCount = verifiedClaimsCsv
+  .slice(1)
+  .filter((row) => String(row[claimReviewerIndex] ?? "").trim() !== "").length;
+const sourceUnitLastRow = rowEnd(sourceUnitsCsv);
+const peopleLastRow = rowEnd(peopleCsv);
+const portraitLastRow = rowEnd(portraitsCsv);
+const sourceIndexLastRow = rowEnd(emperorSourcesCsv);
+const vocabLastRow = rowEnd(vocabCsv);
 
 // 仪表盘
-setTitle(dashboard, "L", "清史证据库 · 零预算工作台", "范围：十二帝骨架＋康熙样卷持续深挖｜现金预算0元｜所有关键事实必须回到具体版本、卷页、档号或逐文件许可页");
+setTitle(dashboard, "L", "清史证据库 · 零预算工作台", `范围：十二帝骨架＋${sourceClaimFiles.length}帝来源包｜现金预算0元｜所有关键事实必须回到具体版本、卷页、档号或逐文件许可页`);
 dashboard.getRange("A4:L4").merge();
-dashboard.getRange("A4").values = [["执行状态：零预算持续生产已启动。十二帝骨架、史料入口和首批画像台账已落盘；未经来源回查的内容始终标为候选或待核。"]];
+dashboard.getRange("A4").values = [[`执行状态：清单自动发现 ${sourceClaimFiles.length} 个帝王主张包与 ${sourceUnitFiles.length} 个来源单元包；当前合并 ${verifiedClaimsCsv.length - 1} 条主张、${sourceUnitsCsv.length - 1} 个来源单元。未经回查的内容仍为候选或待核。`]];
 dashboard.getRange("A4").format = {
   fill: COLORS.greenSoft,
   font: { name: FONT_BODY, bold: true, color: COLORS.green, size: 11 },
@@ -371,15 +402,14 @@ dashboard.getRange("A4").format = {
 dashboard.getRange("A4").format.rowHeight = 34;
 
 const cardLabels = [
-  ["十二帝骨架", "来源台账", "画像候选", "任务总数"],
-  ["康雍候选人物", "绿色来源", "可展示画像", "来源回查主张"],
-  ["任务已完成", "阻塞任务", "高风险项", "有争议主张"],
+  ["十二帝骨架", "人物档案", "画像记录", "史料索引"],
+  ["来源单元", "原子主张", "正式采纳", "具名复核"],
+  ["任务已完成", "A2来源单元", "受控词条", "现金预算（元）"],
 ];
-const taskLastRow = taskCsv.length + 3;
 const cardFormulas = [
-  ["=COUNTA('十二帝总档'!$A$5:$A$16)", "=COUNTA('来源版权台账'!$A$5:$A$31)", "=COUNTA('十二帝画像'!$A$5:$A$16)", `=COUNTA('持续任务队列'!$A$5:$A$${taskLastRow})`],
-  ["=COUNTA('康雍50人'!$A$5:$A$54)", "=COUNTIF('来源版权台账'!$G$5:$G$31,\"绿\")", "=COUNTIF('十二帝画像'!$L$5:$L$16,\"是\")", "=COUNTIF('主张工作台'!$J$5:$J$204,\"审核中\")"],
-  [`=COUNTIF('持续任务队列'!$H$5:$H$${taskLastRow},\"已完成\")`, `=COUNTIF('持续任务队列'!$H$5:$H$${taskLastRow},\"阻塞\")`, "=COUNTIF('风险登记'!$E$5:$E$22,\">=15\")", "=COUNTIF('主张工作台'!$J$5:$J$204,\"有争议\")"],
+  [`=COUNTA('十二帝总档'!$A$5:$A$${rowEnd(emperorsCsv)})`, `=COUNTA('人物档案'!$A$5:$A$${peopleLastRow})`, `=COUNTA('十二帝画像'!$A$5:$A$${portraitLastRow})`, `=COUNTA('帝王史料索引'!$A$5:$A$${sourceIndexLastRow})`],
+  [`=COUNTA('帝王来源单元'!$A$5:$A$${sourceUnitLastRow})`, `=COUNTA('主张工作台'!$A$5:$A$${claimLastRow})`, `=COUNTIF('主张工作台'!$${claimStatusCol}$5:$${claimStatusCol}$${claimLastRow},\"已采纳\")`, `=${namedReviewerCount}`],
+  [`=COUNTIF('持续任务队列'!$H$5:$H$${taskLastRow},\"已完成\")`, `=COUNTIF('帝王来源单元'!$J$5:$J$${sourceUnitLastRow},\"A2\")`, `=COUNTA('受控词表'!$A$5:$A$${vocabLastRow})`, "=0"],
 ];
 
 for (let r = 0; r < 3; r += 1) {
@@ -419,12 +449,19 @@ dashboard.getRange("A16").format = {
 };
 dashboard.getRange("A17:L22").values = [
   ["门槛", "当前判定", "操作入口", "检查重点", null, null, "门槛", "当前判定", "操作入口", "检查重点", null, null],
-  ["十二帝骨架", "12/12已建", "十二帝总档", "本纪卷次已校正；日期和称号继续细化", null, null, "首批画像", "12/12已登记", "十二帝画像", "逐文件公版；人物认定和馆藏号仍需回查", null, null],
-  ["120 条核验主张", "28/120 审核中", "主张工作台", "已定位卷1即位条与卷300遗诏条；待用户抽查", null, null, "60 条关系", "尚未开始", "关系工作台", "每条边一条证据；关系类型不可混写", null, null],
-  ["50 人候选", "已建待回查", "康雍50人", "人物仍须逐条取证，不能视为已证实", null, null, "18 个风险", "均已登记", "风险登记", "高风险由AI复查并进入用户抽查", null, null],
-  ["持续任务", "磁盘队列已建", "持续任务队列", "每轮记录完成位置、未决问题和下一动作", null, null, "资料边界", "外链优先", "来源版权台账", "免费可看不等于允许镜像", null, null],
+  ["十二帝骨架", null, "十二帝总档", "目标12；日期、称号和继承口径需继续核查", null, null, "画像记录", null, "十二帝画像", "人物认定、馆藏号与逐文件许可分列", null, null],
+  ["来源单元", null, "帝王来源单元", "由 data-manifest 自动发现全部帝王来源包", null, null, "原子主张", null, "主张工作台", "23列完整保留，含复核人与复核日期", null, null],
+  ["人物档案", null, "人物档案", "人物仍须逐条取证，条目数不等于已核验", null, null, "正式采纳", null, "主张工作台", "正式产品只读取达到发布门槛的主张", null, null],
+  ["数据文件", null, "数据清单", "实际行数与列数随磁盘CSV重建", null, null, "资料边界", "外链优先", "来源版权台账", "免费可看不等于允许镜像", null, null],
   ["现金预算", "0 元", "项目章程", "不买数据库、图片、服务器或商业API", null, null, "产品形态", "个人研究库", "信息架构", "不是权威专家审定库；错误可修订", null, null],
 ];
+dashboard.getRange("B18").formulas = [[`=COUNTA('十二帝总档'!$A$5:$A$${rowEnd(emperorsCsv)})`]];
+dashboard.getRange("H18").formulas = [[`=COUNTA('十二帝画像'!$A$5:$A$${portraitLastRow})`]];
+dashboard.getRange("B19").formulas = [[`=COUNTA('帝王来源单元'!$A$5:$A$${sourceUnitLastRow})`]];
+dashboard.getRange("H19").formulas = [[`=COUNTA('主张工作台'!$A$5:$A$${claimLastRow})`]];
+dashboard.getRange("B20").formulas = [[`=COUNTA('人物档案'!$A$5:$A$${peopleLastRow})`]];
+dashboard.getRange("H20").formulas = [[`=COUNTIF('主张工作台'!$${claimStatusCol}$5:$${claimStatusCol}$${claimLastRow},\"已采纳\")`]];
+dashboard.getRange("B21").formulas = [[`=COUNTA('数据清单'!$A$5:$A$${rowEnd(manifestCsv)})`]];
 dashboard.getRange("A17:L17").format = { fill: COLORS.vermilionSoft, font: { bold: true, color: COLORS.vermilion }, wrapText: true };
 dashboard.getRange("A18:L22").format = { fill: COLORS.panel, font: { name: FONT_BODY, size: 9, color: COLORS.ink }, wrapText: true, verticalAlignment: "top" };
 dashboard.getRange("A17:L22").format.borders = { preset: "outside", style: "thin", color: COLORS.line };
@@ -440,35 +477,49 @@ dashboard.getRange("D:D").format.columnWidth = 18;
 dashboard.getRange("G:G").format.columnWidth = 17;
 dashboard.getRange("J:J").format.columnWidth = 18;
 
+// 数据清单
+const manifestHeaders = [...manifestCsv[0], "当前行数", "当前列数"];
+const manifestEndCol = columnName(manifestHeaders.length);
+setTitle(manifestSheet, manifestEndCol, "数据清单与实际规模", "构建器从本表识别各帝 source_units/source_claims 文件；末两列为重建时读取到的实际规模，不使用旧阈值冒充当前数量。 ");
+writeRows(manifestSheet, 4, manifestHeaders, manifestStatsRows, "DataManifestTable");
+manifestSheet.freezePanes.freezeRows(4);
+manifestSheet.freezePanes.freezeColumns(4);
+const manifestWidths = [34, 12, 14, 22, 56, 30, 12, 12, 12];
+manifestWidths.forEach((w, i) => { manifestSheet.getRangeByIndexes(0, i, rowEnd(manifestCsv), 1).format.columnWidth = w; });
+manifestSheet.getRange(`A5:${manifestEndCol}${rowEnd(manifestCsv)}`).format.rowHeight = 30;
+
 // 十二帝总档
-setTitle(emperorsSheet, "S", "十二帝总档", "努尔哈赤至溥仪统一骨架；在位年份与年号纪年不是同一口径，后续将细化到日期级事件");
+const emperorEndCol = columnName(emperorsCsv[0].length);
+setTitle(emperorsSheet, emperorEndCol, "十二帝总档", "努尔哈赤至溥仪统一骨架；在位年份与年号纪年不是同一口径，后续将细化到日期级事件");
 writeRows(emperorsSheet, 4, emperorsCsv[0], emperorsCsv.slice(1), "QingEmperorsTable");
-addStatusFormatting(emperorsSheet.getRange(`R5:R${emperorsCsv.length + 3}`));
+addStatusFormatting(emperorsSheet.getRange(`S5:S${rowEnd(emperorsCsv)}`));
 emperorsSheet.freezePanes.freezeRows(4);
 emperorsSheet.freezePanes.freezeColumns(4);
-const emperorWidths = [14, 7, 24, 18, 10, 9, 9, 10, 10, 24, 28, 24, 24, 20, 32, 30, 48, 16, 48];
-emperorWidths.forEach((w, i) => { emperorsSheet.getRangeByIndexes(0, i, emperorsCsv.length + 3, 1).format.columnWidth = w; });
-emperorsSheet.getRange(`A5:S${emperorsCsv.length + 3}`).format.rowHeight = 46;
+const emperorWidths = [14, 7, 24, 18, 10, 9, 9, 10, 10, 12, 28, 28, 24, 24, 20, 32, 40, 52, 16, 48, 10, 24, 56];
+emperorWidths.forEach((w, i) => { emperorsSheet.getRangeByIndexes(0, i, rowEnd(emperorsCsv), 1).format.columnWidth = w; });
+emperorsSheet.getRange(`A5:${emperorEndCol}${rowEnd(emperorsCsv)}`).format.rowHeight = 46;
 
 // 帝王史料索引
-setTitle(emperorSourcesSheet, "J", "帝王史料索引", "官方人物页、实录、《清史稿》和图像库入口；在线可检索不等于允许整库复制");
+const emperorSourceEndCol = columnName(emperorSourcesCsv[0].length);
+setTitle(emperorSourcesSheet, emperorSourceEndCol, "帝王史料索引", "官方人物页、实录、《清史稿》和图像库入口；在线可检索不等于允许整库复制");
 writeRows(emperorSourcesSheet, 4, emperorSourcesCsv[0], emperorSourcesCsv.slice(1), "EmperorSourceIndexTable");
 addStatusFormatting(emperorSourcesSheet.getRange(`J5:J${emperorSourcesCsv.length + 3}`));
 emperorSourcesSheet.freezePanes.freezeRows(4);
 emperorSourcesSheet.freezePanes.freezeColumns(3);
-const emperorSourceWidths = [14, 14, 34, 24, 34, 58, 42, 56, 14, 14];
+const emperorSourceWidths = [14, 14, 34, 24, 34, 58, 42, 56, 14, 14, 12];
 emperorSourceWidths.forEach((w, i) => { emperorSourcesSheet.getRangeByIndexes(0, i, emperorSourcesCsv.length + 3, 1).format.columnWidth = w; });
-emperorSourcesSheet.getRange(`A5:J${emperorSourcesCsv.length + 3}`).format.rowHeight = 44;
+emperorSourcesSheet.getRange(`A5:${emperorSourceEndCol}${emperorSourcesCsv.length + 3}`).format.rowHeight = 44;
 
 // 十二帝画像
-setTitle(portraitsSheet, "Q", "十二帝画像与历史照片", "每帝先登记一件免费可用候选；公版许可、人物认定、原作馆藏和数字文件来源分别管理");
+const portraitEndCol = columnName(portraitsCsv[0].length);
+setTitle(portraitsSheet, portraitEndCol, "十二帝画像与历史照片", "完整收录当前画像记录；公版许可、人物认定、原作馆藏、画面解析和数字文件来源分别管理");
 writeRows(portraitsSheet, 4, portraitsCsv[0], portraitsCsv.slice(1), "EmperorPortraitsTable");
 addRightsFormatting(portraitsSheet.getRange(`K5:K${portraitsCsv.length + 3}`));
 portraitsSheet.freezePanes.freezeRows(4);
 portraitsSheet.freezePanes.freezeColumns(4);
-const portraitWidths = [14, 14, 24, 48, 22, 22, 26, 62, 62, 18, 10, 14, 14, 22, 14, 50, 46];
+const portraitWidths = [16, 14, 24, 46, 22, 22, 26, 55, 55, 22, 10, 14, 14, 22, 14, 46, 46, 20, 42, 54, 42, 42, 22];
 portraitWidths.forEach((w, i) => { portraitsSheet.getRangeByIndexes(0, i, portraitsCsv.length + 3, 1).format.columnWidth = w; });
-portraitsSheet.getRange(`A5:Q${portraitsCsv.length + 3}`).format.rowHeight = 52;
+portraitsSheet.getRange(`A5:${portraitEndCol}${portraitsCsv.length + 3}`).format.rowHeight = 52;
 
 // 持续任务队列
 setTitle(tasksSheet, "M", "持续任务队列", "聊天上下文不是项目记忆；每轮从磁盘队列恢复，并记录完成位置、未决问题、下一动作和质量检查");
@@ -502,14 +553,15 @@ const cardWidths = [18, 16, 24, 10, 18, 34, 26, 40, 54, 60, 76, 76, 30, 44, 56, 
 cardWidths.forEach((w, i) => { cardsSheet.getRangeByIndexes(0, i, cardsCsv.length + 3, 1).format.columnWidth = w; });
 cardsSheet.getRange(`A5:R${cardsCsv.length + 3}`).format.rowHeight = 76;
 
-// 康熙首批来源单元
-setTitle(sourceUnitsSheet, "M", "康熙首批来源单元", "两个可直接打开并精确到卷、年月日和当日条次的《圣祖实录》记录；数字平台、底本和使用边界分开登记");
-writeRows(sourceUnitsSheet, 4, sourceUnitsCsv[0], sourceUnitsCsv.slice(1), "KangxiSourceUnitsTable");
+// data-manifest 自动发现的帝王来源单元
+const sourceUnitEndCol = columnName(sourceUnitsCsv[0].length);
+setTitle(sourceUnitsSheet, sourceUnitEndCol, "帝王来源单元", `自动合并 ${sourceUnitFiles.length} 个帝王来源包、${sourceUnitsCsv.length - 1} 个单元；数字平台、底本、定位和使用边界分开登记`);
+writeRows(sourceUnitsSheet, 4, sourceUnitsCsv[0], sourceUnitsCsv.slice(1), "EmperorSourceUnitsTable");
 sourceUnitsSheet.freezePanes.freezeRows(4);
 sourceUnitsSheet.freezePanes.freezeColumns(4);
 const sourceUnitWidths = [20, 14, 28, 12, 28, 14, 12, 72, 64, 12, 52, 14, 56];
 sourceUnitWidths.forEach((w, i) => { sourceUnitsSheet.getRangeByIndexes(0, i, sourceUnitsCsv.length + 3, 1).format.columnWidth = w; });
-sourceUnitsSheet.getRange(`A5:M${sourceUnitsCsv.length + 3}`).format.rowHeight = 68;
+sourceUnitsSheet.getRange(`A5:${sourceUnitEndCol}${sourceUnitsCsv.length + 3}`).format.rowHeight = 68;
 
 // 六批次计划
 setTitle(planSheet, "K", "零预算六批次计划", "批次不与自然周绑定；质量门不过就先修复，状态、责任人与日期均可继续更新");
@@ -528,94 +580,76 @@ const planWidths = [14, 8, 12, 34, 36, 10, 12, 14, 13, 13, 32];
 planWidths.forEach((w, i) => { planSheet.getRangeByIndexes(0, i, planLastRow, 1).format.columnWidth = w; });
 planSheet.getRange(`A5:K${planLastRow}`).format.rowHeight = 34;
 
-// 康雍首批 50 人
-setTitle(peopleSheet, "M", "康熙—雍正首批 50 人候选档", "这是深挖样本而非全清名人榜；每人仍需逐条来源回查，当前记录不得视为已证实");
+// 全部人物档案
+setTitle(peopleSheet, columnName(peopleCsv[0].length), "人物档案", `当前收录 ${peopleCsv.length - 1} 人；条目数量不是核验数量，每人仍需逐条来源回查`);
 writeRows(peopleSheet, 4, peopleCsv[0], peopleCsv.slice(1), "Phase0PeopleTable");
-peopleSheet.getRange("G5:G54").dataValidation = { rule: { type: "list", values: ["P0", "P1", "P2"] } };
-peopleSheet.getRange("K5:K54").dataValidation = { rule: { type: "list", values: ["待取证", "取证中", "待审核", "已核验", "阻塞"] } };
-peopleSheet.getRange("L5:M54").format.fill = COLORS.blueInput;
-addPriorityFormatting(peopleSheet.getRange("G5:G54"));
-addStatusFormatting(peopleSheet.getRange("K5:K54"));
+peopleSheet.getRange(`G5:G${peopleLastRow}`).dataValidation = { rule: { type: "list", values: ["P0", "P1", "P2", "P3"] } };
+peopleSheet.getRange(`K5:K${peopleLastRow}`).dataValidation = { rule: { type: "list", values: ["待取证", "取证中", "待审核", "已核验", "阻塞"] } };
+peopleSheet.getRange(`L5:M${peopleLastRow}`).format.fill = COLORS.blueInput;
+addPriorityFormatting(peopleSheet.getRange(`G5:G${peopleLastRow}`));
+addStatusFormatting(peopleSheet.getRange(`K5:K${peopleLastRow}`));
 peopleSheet.freezePanes.freezeRows(4);
 peopleSheet.freezePanes.freezeColumns(4);
 const peopleWidths = [16, 7, 18, 26, 30, 20, 10, 38, 55, 52, 12, 14, 30];
-peopleWidths.forEach((w, i) => { peopleSheet.getRangeByIndexes(0, i, 54, 1).format.columnWidth = w; });
-peopleSheet.getRange("A5:M54").format.rowHeight = 48;
+peopleWidths.forEach((w, i) => { peopleSheet.getRangeByIndexes(0, i, peopleLastRow, 1).format.columnWidth = w; });
+peopleSheet.getRange(`A5:M${peopleLastRow}`).format.rowHeight = 48;
 
 // 来源版权台账
 setTitle(sourcesSheet, "S", "来源与版权台账", "绿色仅表示明确纳入开放许可或已授权的对象；黄色默认只存自建元数据并外链；红色不得按计划获取或展示");
 writeRows(sourcesSheet, 4, sourceCsv[0], sourceCsv.slice(1), "SourceRightsTable");
-sourcesSheet.getRange("G5:G31").dataValidation = { rule: { type: "list", values: ["绿", "黄", "红"] } };
-sourcesSheet.getRange("Q5:S31").format.fill = COLORS.blueInput;
-addRightsFormatting(sourcesSheet.getRange("G5:G31"));
-addStatusFormatting(sourcesSheet.getRange("S5:S31"));
+const sourceLastRow = rowEnd(sourceCsv);
+sourcesSheet.getRange(`G5:G${sourceLastRow}`).dataValidation = { rule: { type: "list", values: ["绿", "黄", "红"] } };
+sourcesSheet.getRange(`Q5:S${sourceLastRow}`).format.fill = COLORS.blueInput;
+addRightsFormatting(sourcesSheet.getRange(`G5:G${sourceLastRow}`));
+addStatusFormatting(sourcesSheet.getRange(`S5:S${sourceLastRow}`));
 sourcesSheet.freezePanes.freezeRows(4);
 sourcesSheet.freezePanes.freezeColumns(4);
 const sourceWidths = [13, 30, 22, 10, 38, 24, 10, 22, 24, 22, 18, 44, 46, 48, 48, 13, 38, 14, 16];
-sourceWidths.forEach((w, i) => { sourcesSheet.getRangeByIndexes(0, i, 31, 1).format.columnWidth = w; });
-sourcesSheet.getRange("A5:S31").format.rowHeight = 52;
+sourceWidths.forEach((w, i) => { sourcesSheet.getRangeByIndexes(0, i, sourceLastRow, 1).format.columnWidth = w; });
+sourcesSheet.getRange(`A5:S${sourceLastRow}`).format.rowHeight = 52;
 
 // 主张工作台
-setTitle(claimsSheet, "V", "主张工作台", "一行一条可争议、可审核、可替换的原子主张。蓝底为输入；状态达到“已采纳”前不得进入正式叙事。");
-const claimHeaders = ["Assertion ID", "主张类型", "主体 ID", "谓词/关系", "客体 ID 或值", "原始时间表达", "公历下界", "公历上界", "确定性", "状态", "来源实体 ID", "卷页/档号/图像定位", "支持引文", "证据立场", "证据直接性", "证据强度", "来源家族 ID", "冲突组 ID", "获取方式", "录入人", "复核人", "编辑备注"];
-const blankClaims = Array.from({ length: 200 }, () => Array(claimHeaders.length).fill(""));
-for (let i = 1; i < verifiedClaimsCsv.length; i += 1) blankClaims[i - 1] = verifiedClaimsCsv[i];
-blankClaims[verifiedClaimsCsv.length - 1] = exampleClaimRow;
-writeRows(claimsSheet, 4, claimHeaders, blankClaims, "ClaimsWorkbenchTable");
-styleBlankTemplate(claimsSheet.getRange("A5:V204"));
-claimsSheet.getRange("B5:B204").dataValidation = { rule: { type: "list", values: ["实体关系", "文字或数值陈述", "人物关系", "称号授予", "事件发生", "事件参与", "图像表现认定"] } };
-claimsSheet.getRange("I5:I204").dataValidation = { rule: { type: "list", values: ["确定", "约略", "不确定", "约略且不确定", "推定", "未知"] } };
-claimsSheet.getRange("J5:J204").dataValidation = { rule: { type: "list", values: ["草稿", "审核中", "已采纳", "有争议", "已驳回", "已废弃"] } };
-claimsSheet.getRange("N5:N204").dataValidation = { rule: { type: "list", values: ["支持", "反驳", "提供语境", "仅提及"] } };
-claimsSheet.getRange("O5:O204").dataValidation = { rule: { type: "list", values: ["明确记载", "推定", "语境性", "以沉默为据"] } };
-claimsSheet.getRange("P5:P204").dataValidation = { rule: { type: "list", values: ["一手直接", "强", "中", "弱", "未评级"] } };
-claimsSheet.getRange("S5:S204").dataValidation = { rule: { type: "list", values: ["人工录入", "结构化导入", "规则抽取", "OCR 抽取", "实体识别抽取", "大模型抽取"] } };
-claimsSheet.getRange("G5:H204").format.numberFormat = "yyyy-mm-dd";
-addStatusFormatting(claimsSheet.getRange("J5:J204"));
+const claimEndCol = columnName(verifiedClaimsCsv[0].length);
+setTitle(claimsSheet, claimEndCol, "主张工作台", `一行一条可争议、可审核、可替换的原子主张；从 data-manifest 自动合并 ${sourceClaimFiles.length} 个帝王包，共 ${verifiedClaimsCsv.length - 1} 条。`);
+writeRows(claimsSheet, 4, verifiedClaimsCsv[0], verifiedClaimsCsv.slice(1), "ClaimsWorkbenchTable");
+claimsSheet.getRange(`B5:B${claimLastRow}`).dataValidation = { rule: { type: "list", values: ["实体关系", "身份或关系", "文字或数值陈述", "人物关系", "称号授予", "事件发生", "事件参与", "制度或机构", "图像表现认定"] } };
+claimsSheet.getRange(`I5:I${claimLastRow}`).dataValidation = { rule: { type: "list", values: ["确定", "较确定", "约略", "不确定", "约略且不确定", "推定", "未知"] } };
+claimsSheet.getRange(`J5:J${claimLastRow}`).dataValidation = { rule: { type: "list", values: ["草稿", "审核中", "已采纳", "有争议", "已驳回", "已废弃"] } };
+claimsSheet.getRange(`N5:N${claimLastRow}`).dataValidation = { rule: { type: "list", values: ["支持", "反驳", "提供语境", "仅提及"] } };
+claimsSheet.getRange(`O5:O${claimLastRow}`).dataValidation = { rule: { type: "list", values: ["明确记载", "推定", "语境性", "后出转引", "来源内冲突", "以沉默为据"] } };
+claimsSheet.getRange(`P5:P${claimLastRow}`).dataValidation = { rule: { type: "list", values: ["一手直接", "强", "中", "弱", "未评级"] } };
+claimsSheet.getRange(`S5:S${claimLastRow}`).dataValidation = { rule: { type: "list", values: ["人工录入", "结构化导入", "规则抽取", "OCR 抽取", "实体识别抽取", "大模型抽取"] } };
+claimsSheet.getRange(`G5:H${claimLastRow}`).format.numberFormat = "yyyy-mm-dd";
+claimsSheet.getRange(`${claimReviewDateCol}5:${claimReviewDateCol}${claimLastRow}`).format.numberFormat = "yyyy-mm-dd";
+addStatusFormatting(claimsSheet.getRange(`${claimStatusCol}5:${claimStatusCol}${claimLastRow}`));
 claimsSheet.freezePanes.freezeRows(4);
 claimsSheet.freezePanes.freezeColumns(5);
-const claimWidths = [18, 18, 18, 25, 30, 24, 13, 13, 13, 13, 18, 40, 55, 13, 14, 13, 18, 16, 18, 14, 14, 38];
-claimWidths.forEach((w, i) => { claimsSheet.getRangeByIndexes(0, i, 204, 1).format.columnWidth = w; });
-claimsSheet.getRange("A5:V204").format.rowHeight = 32;
+const claimWidths = [18, 18, 18, 25, 30, 24, 13, 13, 13, 13, 18, 40, 55, 13, 16, 14, 18, 16, 18, 14, 14, 13, 40];
+claimWidths.forEach((w, i) => { claimsSheet.getRangeByIndexes(0, i, claimLastRow, 1).format.columnWidth = w; });
+claimsSheet.getRange(`A5:${claimEndCol}${claimLastRow}`).format.rowHeight = 34;
 
-// 关系工作台
-setTitle(relationshipsSheet, "Q", "人物关系工作台", "关系是有时间、有类型、有证据的主张，不是静态家谱连线。生母、嫡母、抚育者、乳母与承嗣必须分开。");
-const relationshipHeaders = ["Assertion ID", "主体人物 ID", "主体名", "关系类型代码", "关系中文标签", "客体人物 ID", "客体名", "有效起始", "有效结束", "排行数值", "排行口径", "来源实体 ID", "精确定位", "证据状态", "主张状态", "复核人", "备注"];
-const blankRelationships = Array.from({ length: 120 }, () => Array(relationshipHeaders.length).fill(""));
-blankRelationships[0] = exampleRelationshipRow;
-writeRows(relationshipsSheet, 4, relationshipHeaders, blankRelationships, "RelationshipsWorkbenchTable");
-styleBlankTemplate(relationshipsSheet.getRange("A5:Q124"));
-relationshipsSheet.getRange("D5:D124").dataValidation = { rule: { type: "list", values: ["has_biological_father", "has_biological_mother", "has_legal_father", "has_legal_mother", "has_ritual_mother", "has_adoptive_parent", "has_foster_parent", "spouse_of", "betrothed_to", "member_of_lineage", "teacher_of", "student_of", "political_ally_of", "political_opponent_of"] } };
-relationshipsSheet.getRange("K5:K124").dataValidation = { rule: { type: "list", values: ["出生总序", "存活子女序", "皇子序", "来源原记", "编辑推定"] } };
-relationshipsSheet.getRange("N5:N124").dataValidation = { rule: { type: "list", values: ["未核验", "定位已核", "引文已核", "完全核验"] } };
-relationshipsSheet.getRange("O5:O124").dataValidation = { rule: { type: "list", values: ["草稿", "审核中", "已采纳", "有争议", "已驳回", "已废弃"] } };
-relationshipsSheet.getRange("H5:I124").format.numberFormat = "yyyy-mm-dd";
-addStatusFormatting(relationshipsSheet.getRange("N5:O124"));
+// 身份与关系主张：从主张包筛选，不再预留固定空白容量
+const relationshipLastRow = 4 + relationshipRows.length;
+setTitle(relationshipsSheet, claimEndCol, "身份与关系主张", `从全部主张中动态筛出 ${relationshipRows.length} 条身份或关系记录；关系是有时间、有类型、有证据的主张，不是静态家谱连线。`);
+writeRows(relationshipsSheet, 4, verifiedClaimsCsv[0], relationshipRows, "RelationshipClaimsTable");
+relationshipsSheet.getRange(`G5:H${relationshipLastRow}`).format.numberFormat = "yyyy-mm-dd";
+relationshipsSheet.getRange(`${claimReviewDateCol}5:${claimReviewDateCol}${relationshipLastRow}`).format.numberFormat = "yyyy-mm-dd";
+addStatusFormatting(relationshipsSheet.getRange(`${claimStatusCol}5:${claimStatusCol}${relationshipLastRow}`));
 relationshipsSheet.freezePanes.freezeRows(4);
-relationshipsSheet.freezePanes.freezeColumns(7);
-const relationWidths = [18, 18, 20, 26, 22, 18, 20, 13, 13, 10, 16, 18, 40, 14, 13, 14, 36];
-relationWidths.forEach((w, i) => { relationshipsSheet.getRangeByIndexes(0, i, 124, 1).format.columnWidth = w; });
-relationshipsSheet.getRange("A5:Q124").format.rowHeight = 32;
+relationshipsSheet.freezePanes.freezeColumns(5);
+claimWidths.forEach((w, i) => { relationshipsSheet.getRangeByIndexes(0, i, relationshipLastRow, 1).format.columnWidth = w; });
+relationshipsSheet.getRange(`A5:${claimEndCol}${relationshipLastRow}`).format.rowHeight = 36;
 
-// 图像工作台
-setTitle(imagesSheet, "S", "画像与图像工作台", "图像对象、数字文件、人物认定和使用许可是四件事。AI 再现必须永久标记，不得伪装成历史原件。");
-const imageHeaders = ["Visual ID", "对象标题", "图像性质", "馆藏机构", "馆藏号", "人物 ID", "人物认定类型", "制作时间", "来源网址", "权利颜色", "权利 URI/许可", "署名要求", "可本地保存", "可公开展示", "可商业使用", "撤下日期", "责任人", "审核状态", "备注"];
-const blankImages = Array.from({ length: 100 }, () => Array(imageHeaders.length).fill(""));
-writeRows(imagesSheet, 4, imageHeaders, blankImages, "ImagesWorkbenchTable");
-styleBlankTemplate(imagesSheet.getRange("A5:S104"));
-imagesSheet.getRange("C5:C104").dataValidation = { rule: { type: "list", values: ["历史原件", "后世历史艺术", "现代插画", "AI 再现", "文献影像"] } };
-imagesSheet.getRange("G5:G104").dataValidation = { rule: { type: "list", values: ["题名明确", "馆藏著录认定", "学术研究认定", "传统传称", "很可能", "可能", "已否定认定"] } };
-imagesSheet.getRange("J5:J104").dataValidation = { rule: { type: "list", values: ["绿", "黄", "红"] } };
-imagesSheet.getRange("M5:O104").dataValidation = { rule: { type: "list", values: ["是", "否", "待确认"] } };
-imagesSheet.getRange("R5:R104").dataValidation = { rule: { type: "list", values: ["未开始", "待补来源", "一校完成", "二校完成", "学术审核中", "权利审核中", "已通过", "阻塞"] } };
-imagesSheet.getRange("P5:P104").format.numberFormat = "yyyy-mm-dd";
-addRightsFormatting(imagesSheet.getRange("J5:J104"));
-addStatusFormatting(imagesSheet.getRange("R5:R104"));
+// 图像区域标注：替代固定100行空白图像表
+const imageRegionLastRow = rowEnd(imageRegionsCsv);
+const imageRegionEndCol = columnName(imageRegionsCsv[0].length);
+setTitle(imagesSheet, imageRegionEndCol, "图像区域标注", `当前 ${imageRegionsCsv.length - 1} 个区域标注；图像对象、人物认定、局部标注和证据主张分层管理。`);
+writeRows(imagesSheet, 4, imageRegionsCsv[0], imageRegionsCsv.slice(1), "ImageRegionsTable");
 imagesSheet.freezePanes.freezeRows(4);
 imagesSheet.freezePanes.freezeColumns(5);
-const imageWidths = [16, 32, 20, 26, 18, 18, 22, 20, 48, 11, 36, 34, 16, 16, 16, 13, 14, 18, 40];
-imageWidths.forEach((w, i) => { imagesSheet.getRangeByIndexes(0, i, 104, 1).format.columnWidth = w; });
-imagesSheet.getRange("A5:S104").format.rowHeight = 34;
+const imageRegionWidths = [18, 18, 34, 10, 10, 10, 10, 20, 18, 50];
+imageRegionWidths.forEach((w, i) => { imagesSheet.getRangeByIndexes(0, i, imageRegionLastRow, 1).format.columnWidth = w; });
+imagesSheet.getRange(`A5:${imageRegionEndCol}${imageRegionLastRow}`).format.rowHeight = 34;
 
 // 决策日志
 setTitle(decisionsSheet, "K", "决策日志", "任何会改变范围、数据模型、权利边界或批次顺序的决定都应登记，保证后续轮次知道为何这样做");
@@ -680,13 +714,15 @@ workbook.comments.addThread({ cell: tasksSheet.getRange("H4") }, "任务状态�
 // 紧凑校验输出
 const checks = [];
 checks.push((await workbook.inspect({ kind: "table", range: "仪表盘!A1:L23", include: "values,formulas", tableMaxRows: 23, tableMaxCols: 12, maxChars: 10000 })).ndjson);
-checks.push((await workbook.inspect({ kind: "table", range: "十二帝总档!A1:S16", include: "values,formulas", tableMaxRows: 16, tableMaxCols: 19, maxChars: 12000 })).ndjson);
-checks.push((await workbook.inspect({ kind: "table", range: "十二帝画像!A1:Q16", include: "values,formulas", tableMaxRows: 16, tableMaxCols: 17, maxChars: 12000 })).ndjson);
+checks.push((await workbook.inspect({ kind: "table", range: `数据清单!A1:${manifestEndCol}12`, include: "values,formulas", tableMaxRows: 12, tableMaxCols: manifestHeaders.length, maxChars: 12000 })).ndjson);
+checks.push((await workbook.inspect({ kind: "table", range: `十二帝总档!A1:${emperorEndCol}16`, include: "values,formulas", tableMaxRows: 16, tableMaxCols: emperorsCsv[0].length, maxChars: 14000 })).ndjson);
+checks.push((await workbook.inspect({ kind: "table", range: `十二帝画像!A1:${portraitEndCol}12`, include: "values,formulas", tableMaxRows: 12, tableMaxCols: portraitsCsv[0].length, maxChars: 14000 })).ndjson);
 checks.push((await workbook.inspect({ kind: "table", range: "持续任务队列!A1:M12", include: "values,formulas", tableMaxRows: 12, tableMaxCols: 13, maxChars: 10000 })).ndjson);
 checks.push((await workbook.inspect({ kind: "table", range: "人物ID对照!A1:F16", include: "values,formulas", tableMaxRows: 16, tableMaxCols: 6, maxChars: 8000 })).ndjson);
 checks.push((await workbook.inspect({ kind: "table", range: "十二帝研究卡!A1:R8", include: "values,formulas", tableMaxRows: 8, tableMaxCols: 18, maxChars: 12000 })).ndjson);
-checks.push((await workbook.inspect({ kind: "table", range: "康熙来源单元!A1:M6", include: "values,formulas", tableMaxRows: 6, tableMaxCols: 13, maxChars: 10000 })).ndjson);
-checks.push((await workbook.inspect({ kind: "table", range: "康雍50人!A1:M10", include: "values,formulas", tableMaxRows: 10, tableMaxCols: 13, maxChars: 8000 })).ndjson);
+checks.push((await workbook.inspect({ kind: "table", range: `帝王来源单元!A1:${sourceUnitEndCol}10`, include: "values,formulas", tableMaxRows: 10, tableMaxCols: sourceUnitsCsv[0].length, maxChars: 12000 })).ndjson);
+checks.push((await workbook.inspect({ kind: "table", range: "人物档案!A1:M10", include: "values,formulas", tableMaxRows: 10, tableMaxCols: 13, maxChars: 9000 })).ndjson);
+checks.push((await workbook.inspect({ kind: "table", range: `主张工作台!A1:${claimEndCol}10`, include: "values,formulas", tableMaxRows: 10, tableMaxCols: verifiedClaimsCsv[0].length, maxChars: 14000 })).ndjson);
 checks.push((await workbook.inspect({ kind: "table", range: "来源版权台账!A1:S9", include: "values,formulas", tableMaxRows: 9, tableMaxCols: 19, maxChars: 9000 })).ndjson);
 checks.push((await workbook.inspect({ kind: "table", range: "风险登记!A1:J12", include: "values,formulas", tableMaxRows: 12, tableMaxCols: 10, maxChars: 9000 })).ndjson);
 const formulaErrors = await workbook.inspect({ kind: "match", searchTerm: "#REF!|#DIV/0!|#VALUE!|#NAME\\?|#N/A", options: { useRegex: true, maxResults: 300 }, summary: "final formula error scan", maxChars: 8000 });
@@ -695,22 +731,23 @@ await fs.writeFile(verificationPath, checks.join("\n"), "utf8");
 
 const previewSpecs = [
   ["仪表盘", "A1:L23"],
-  ["十二帝总档", "A1:S16"],
-  ["帝王史料索引", "A1:J12"],
-  ["十二帝画像", "A1:Q16"],
-  ["持续任务队列", "A1:M14"],
+  ["数据清单", `A1:${manifestEndCol}18`],
+  ["十二帝总档", `A1:${emperorEndCol}16`],
+  ["帝王史料索引", `A1:${emperorSourceEndCol}18`],
+  ["十二帝画像", `A1:${portraitEndCol}16`],
+  ["持续任务队列", "A1:M18"],
   ["人物ID对照", "A1:F16"],
-  ["十二帝研究卡", "A1:R10"],
-  ["康熙来源单元", "A1:M6"],
-  ["六批次计划", "A1:K14"],
-  ["康雍50人", "A1:M10"],
-  ["来源版权台账", "A1:S9"],
-  ["主张工作台", "A1:V10"],
-  ["关系工作台", "A1:Q10"],
-  ["图像工作台", "A1:S10"],
-  ["决策日志", "A1:K10"],
-  ["风险登记", "A1:J12"],
-  ["受控词表", "A1:J12"],
+  ["十二帝研究卡", "A1:R16"],
+  ["帝王来源单元", `A1:${sourceUnitEndCol}18`],
+  ["六批次计划", "A1:K18"],
+  ["人物档案", "A1:M18"],
+  ["来源版权台账", "A1:S18"],
+  ["主张工作台", `A1:${claimEndCol}18`],
+  ["身份关系主张", `A1:${claimEndCol}${Math.min(relationshipLastRow, 18)}`],
+  ["图像区域标注", `A1:${imageRegionEndCol}${Math.min(imageRegionLastRow, 18)}`],
+  ["决策日志", "A1:K13"],
+  ["风险登记", "A1:J18"],
+  ["受控词表", "A1:J18"],
 ];
 
 for (let i = 0; i < previewSpecs.length; i += 1) {
@@ -721,5 +758,26 @@ for (let i = 0; i < previewSpecs.length; i += 1) {
 
 const output = await SpreadsheetFile.exportXlsx(workbook);
 await output.save(outputPath);
+await fs.rm(`${outputPath}.inspect.ndjson`, { force: true });
 
-console.log(JSON.stringify({ outputPath, previewDir, verificationPath, sheets: previewSpecs.map(([name]) => name), emperors: emperorsCsv.length - 1, researchCards: cardsCsv.length - 1, portraits: portraitsCsv.length - 1, tasks: taskCsv.length - 1, idMappings: idCsv.length - 1, people: peopleCsv.length - 1, sources: sourceCsv.length - 1, kangxiSourceUnits: sourceUnitsCsv.length - 1, kangxiClaims: verifiedClaimsCsv.length - 1, vocabularyTerms: vocabCsv.length - 1 }, null, 2));
+console.log(JSON.stringify({
+  outputPath,
+  previewDir,
+  verificationPath,
+  sheets: previewSpecs.map(([name]) => name),
+  manifestFiles: manifestCsv.length - 1,
+  emperors: emperorsCsv.length - 1,
+  researchCards: cardsCsv.length - 1,
+  portraits: portraitsCsv.length - 1,
+  tasks: taskCsv.length - 1,
+  idMappings: idCsv.length - 1,
+  people: peopleCsv.length - 1,
+  sources: sourceCsv.length - 1,
+  sourceUnits: sourceUnitsCsv.length - 1,
+  sourceUnitFiles,
+  claims: verifiedClaimsCsv.length - 1,
+  sourceClaimFiles,
+  relationshipClaims: relationshipRows.length,
+  imageRegions: imageRegionsCsv.length - 1,
+  vocabularyTerms: vocabCsv.length - 1,
+}, null, 2));

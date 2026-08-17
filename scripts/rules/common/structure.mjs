@@ -21,6 +21,7 @@ const REVIEW_INDEX = new Set(['E1单源回查', 'S二手索引', 'C来源冲突'
 const EMPEROR_TIMELINE_STATES = new Set(['E1单源回查', 'S二手索引', 'C来源冲突', 'U待核', 'X目前不可证']);
 const CHAPTER_STATUS_MARKER = /(?:E1\s*单源回查|S\s*二手(?:索引|转述)|C\s*来源冲突|U\s*待核|X\s*目前不可证)/;
 const TIMELINE_TYPES = new Set(['册立', '册封', '晋封', '生育', '崩逝', '初谥', '改谥', '安葬', '尊封', '时态说明']);
+const CTEXT_PLACEHOLDER_RES = new Set(['418273', '666666', '777777', '888888', '999999', '111111']);
 
 function splitIds(value) {
   return String(value || '').split(/[；;]/).map((item) => item.trim()).filter(Boolean);
@@ -50,6 +51,7 @@ export function check(ctx) {
 
   const emperorIds = new Set(emperors.map((r) => r.emperor_id));
   const crosswalkByLegacy = new Map(crosswalk.map((r) => [r.legacy_emperor_id, r]));
+  const peopleIds = new Set(people.map((r) => r.person_id));
   const knownPersonIds = new Set([...people.map((r) => r.person_id), ...crosswalk.map((r) => r.person_id)]);
   const sourceIds = new Set(sources.map((r) => r.source_id));
   const sourceIndexIds = new Set(sourceIndex.map((r) => r.index_id));
@@ -67,9 +69,16 @@ export function check(ctx) {
     if (!map) errors.push(`${emperor.emperor_id} 缺少人物 ID 对照`);
     else if (map.canonical_name !== emperor['规范名']) errors.push(`${emperor.emperor_id} 对照姓名不一致`);
   }
+  // crosswalk 是兼容映射，不是人物主表的替代品；十二帝的 QH-P 必须真实落入 people。
+  for (const map of crosswalk) {
+    if (!peopleIds.has(map.person_id)) {
+      errors.push(`${map.person_id} 仅存在于 crosswalk、未进入 phase0-people 人物主表`);
+    }
+  }
 
   // 画像：角色、权利一致性、默认朝服像
   const primaryByEmperor = new Map();
+  const strongButUnaccessioned = [];
   for (const portrait of portraits) {
     if (!emperorIds.has(portrait.emperor_id)) errors.push(`${portrait.visual_id} 引用了未知皇帝 ${portrait.emperor_id}`);
     if (!PORTRAIT_ROLES.has(portrait['展示角色'])) errors.push(`${portrait.visual_id} 展示角色无效: ${portrait['展示角色']}`);
@@ -97,14 +106,49 @@ export function check(ctx) {
       if (primaryByEmperor.has(portrait.emperor_id)) errors.push(`${portrait.emperor_id} 存在多张默认朝服像`);
       primaryByEmperor.set(portrait.emperor_id, portrait.visual_id);
     }
+    // 「绿」只表示当前权利层可用，不表示人物认定、作者和年代已经完成对象级核验。
+    // 对仍作强断言却没有馆藏登录号的记录给汇总 warning，不把 52 个待办一次性升级为阻断错误。
+    const identification = String(portrait['对象认定状态'] || '');
+    const author = String(portrait['作者或摄影者'] || '');
+    const madeAt = String(portrait['制作年代或摄影日期'] || '');
+    const strongIdentification = /明确|馆藏著录|对应对象页/.test(identification)
+      && !/待核|可能|传统|或为|不确定/.test(identification);
+    const strongAuthor = author
+      && !/佚名|未明|待核|传统|文件页|见 Commons|不详/.test(author);
+    const strongDate = /(?:^|\D)(?:1[5-9]\d{2}|20\d{2})(?:-\d{2}-\d{2})?(?:$|\D)/.test(madeAt)
+      && !/或|约|前后|世纪|时期|清代|晚清|待核|朝/.test(madeAt);
+    if (portrait['权利颜色'] === '绿' && !String(portrait['馆藏登录号'] || '').trim()
+      && (strongIdentification || strongAuthor || strongDate)) {
+      strongButUnaccessioned.push(portrait.visual_id);
+    }
   }
   for (const emperorId of emperorIds) {
     if (!primaryByEmperor.has(emperorId)) errors.push(`${emperorId} 缺少默认朝服像`);
+  }
+  if (strongButUnaccessioned.length) {
+    warnings.push(`画像绿标只代表权利层：${strongButUnaccessioned.length} 条记录在馆藏登录号为空时仍对对象认定/作者/日期作较强陈述（${strongButUnaccessioned.slice(0, 8).join('、')}${strongButUnaccessioned.length > 8 ? '等' : ''}）；须逐件补馆藏号或降级表述`);
   }
 
   // 来源索引与任务
   for (const row of sourceIndex) {
     if (row.emperor_id !== 'ALL' && !emperorIds.has(row.emperor_id)) errors.push(`${row.index_id} 范围值无效: ${row.emperor_id}`);
+    const url = String(row['访问网址'] || '').trim();
+    const status = String(row['状态'] || '').trim();
+    const explicitlyUnopened = /^(?:入口待核|未打开)/.test(status);
+    if (!url && !explicitlyUnopened) {
+      errors.push(`${row.index_id} 访问网址为空时状态必须明确为「入口待核」或「未打开」，当前为: ${status || '空'}`);
+    }
+    if (url && !httpsOk(url)) errors.push(`${row.index_id} 访问网址不是 HTTPS: ${url}`);
+    const ctextRes = url.match(/[?&]res=(\d+)/)?.[1];
+    if (ctextRes && (CTEXT_PLACEHOLDER_RES.has(ctextRes) || /^(\d)\1{5,}$/.test(ctextRes))) {
+      errors.push(`${row.index_id} 使用明显占位的 CText res=${ctextRes}`);
+    }
+    if (/维基文库/.test(row['资源名称'] || '') && url && !/^https:\/\/zh\.wikisource\.org\//.test(url)) {
+      errors.push(`${row.index_id} 名称标为维基文库但网址不属于 zh.wikisource.org`);
+    }
+    if (/中国哲学书电子化计划/.test(row['资源名称'] || '') && url && !/^https:\/\/ctext\.org\//.test(url)) {
+      errors.push(`${row.index_id} 名称标为中国哲学书电子化计划但网址不属于 ctext.org`);
+    }
   }
   for (const task of tasks) {
     if (task.emperor_id !== 'ALL' && !emperorIds.has(task.emperor_id)) errors.push(`${task.task_id} 范围值无效: ${task.emperor_id}`);
@@ -125,6 +169,19 @@ export function check(ctx) {
   const predicates = new Set(
     (vocab || []).filter((r) => r.scheme_code === 'assertion_predicate' && r['是否启用'] !== 'false').map((r) => r.term_code),
   );
+  const enabledLabels = (scheme) => new Set(
+    (vocab || []).filter((r) => r.scheme_code === scheme && r['是否启用'] !== 'false').map((r) => r['中文标签']),
+  );
+  const claimEnums = new Map([
+    ['主张类型', enabledLabels('assertion_kind')],
+    ['确定性', enabledLabels('certainty')],
+    ['状态', enabledLabels('assertion_status')],
+    ['证据立场', enabledLabels('evidence_stance')],
+    ['证据直接性', enabledLabels('evidence_directness')],
+    ['证据强度', enabledLabels('evidence_strength')],
+    ['获取方式', enabledLabels('acquisition_method')],
+  ]);
+  const rangesByOriginalExpression = new Map();
   for (const claim of claims) {
     if (!sourceUnitIds.has(claim['来源实体 ID'])) errors.push(`${claim['Assertion ID']} 引用了未知来源单元 ${claim['来源实体 ID']}`);
     if (!knownPersonIds.has(claim['主体 ID'])) errors.push(`${claim['Assertion ID']} 引用了未知主体 ${claim['主体 ID']}`);
@@ -133,6 +190,26 @@ export function check(ctx) {
     }
     if (!claim['卷页/档号/图像定位'] || !claim['支持引文']) errors.push(`${claim['Assertion ID']} 缺少定位或支持引文`);
     if (!claim['公历下界'] || !claim['公历上界']) errors.push(`${claim['Assertion ID']} 缺少公历对照`);
+    for (const [column, allowed] of claimEnums) {
+      if (!allowed.has(claim[column])) {
+        errors.push(`${claim['Assertion ID']} ${column} 未登记: ${claim[column] || '空'}`);
+      }
+    }
+    const lower = String(claim['公历下界'] || '');
+    const upper = String(claim['公历上界'] || '');
+    if (lower && !/^\d{4}-\d{2}-\d{2}$/.test(lower)) errors.push(`${claim['Assertion ID']} 公历下界格式无效: ${lower}`);
+    if (upper && !/^\d{4}-\d{2}-\d{2}$/.test(upper)) errors.push(`${claim['Assertion ID']} 公历上界格式无效: ${upper}`);
+    if (lower && upper && lower > upper) errors.push(`${claim['Assertion ID']} 公历下界晚于上界: ${lower} > ${upper}`);
+    const originalTime = String(claim['原始时间表达'] || '').trim();
+    const sourceUnit = String(claim['来源实体 ID'] || '').trim();
+    if (sourceUnit && originalTime && lower && upper) {
+      const key = `${sourceUnit}\u0000${originalTime}`;
+      const entry = rangesByOriginalExpression.get(key) || { ranges: new Map(), ids: [] };
+      const range = `${lower}..${upper}`;
+      entry.ranges.set(range, (entry.ranges.get(range) || 0) + 1);
+      entry.ids.push(claim['Assertion ID']);
+      rangesByOriginalExpression.set(key, entry);
+    }
     const reviewer = String(claim['复核人'] || '').trim();
     const reviewedAt = String(claim['复核日期'] || '').trim();
     if (claim['状态'] === '已采纳' && !reviewer) {
@@ -147,10 +224,18 @@ export function check(ctx) {
     if (reviewedAt && !reviewer) {
       errors.push(`${claim['Assertion ID']} 有复核日期但复核人为空`);
     }
+    if (reviewer && /^(?:AI|LLM|自动(?:化)?|system|bot)$/i.test(reviewer)) {
+      errors.push(`${claim['Assertion ID']} 复核人不得使用自动化占位名 ${reviewer}；具名复核不等于机器生成`);
+    }
     const pred = claim['谓词/关系'];
     if (pred && predicates.size && !predicates.has(pred)) {
       errors.push(`${claim['Assertion ID']} 谓词未登记: ${pred}`);
     }
+  }
+  for (const [key, entry] of rangesByOriginalExpression) {
+    if (entry.ranges.size <= 1) continue;
+    const [sourceUnit, originalTime] = key.split('\u0000');
+    errors.push(`${sourceUnit} 同一原始时间表达「${originalTime}」出现不一致公历边界：${[...entry.ranges.keys()].join(' / ')}（${entry.ids.join('、')}）`);
   }
 
   // 黄金问题
