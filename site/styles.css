@@ -407,7 +407,11 @@ tr[data-href] { cursor: pointer; }
   color: var(--ink);
 }
 .card-shihao {
+  display: -webkit-box;
   margin-top: 8px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 12px;
   line-height: 1.6;
   color: var(--shihao);
@@ -1225,7 +1229,42 @@ a.img-fallback.yellow,
 }
 @media (max-width: 600px) {
   main { padding: 24px 18px 56px; }
-  .masthead { padding: 18px 18px 14px; }
+  .masthead {
+    display: grid;
+    grid-template-columns: auto minmax(7rem, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 18px 10px;
+  }
+  .brand {
+    grid-column: 1;
+    grid-row: 1;
+    white-space: nowrap;
+    font-size: 17px;
+    letter-spacing: 0.12em;
+  }
+  .search {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+  }
+  .search input { min-width: 0; }
+  .suggest { min-width: min(18rem, calc(100vw - 36px)); }
+  .theme-toggle { grid-column: 3; grid-row: 1; }
+  .nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-wrap: nowrap;
+    gap: 0 24px;
+    overflow-x: auto;
+    padding-top: 2px;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: 0 0 auto; }
   .cards { grid-template-columns: repeat(2, 1fr); gap: 22px 14px; }
   .site-cards { grid-template-columns: 1fr; }
   .era { font-size: 18px; }

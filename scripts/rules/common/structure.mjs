@@ -18,6 +18,8 @@ const QUESTION_ACTIONS = new Set(['返回答案', '并陈冲突', '拒绝作答'
 const LANE_COLUMNS = new Set(['后宫趣事', '野史对照', '罕读史料']);
 const REVIEW_TRANSCRIPT = new Set(['E1单源回查', 'S二手转述', 'C来源冲突', 'U待核', 'X目前不可证']);
 const REVIEW_INDEX = new Set(['E1单源回查', 'S二手索引', 'C来源冲突', 'U待核', 'X目前不可证']);
+const EMPEROR_TIMELINE_STATES = new Set(['E1单源回查', 'S二手索引', 'C来源冲突', 'U待核', 'X目前不可证']);
+const CHAPTER_STATUS_MARKER = /(?:E1\s*单源回查|S\s*二手(?:索引|转述)|C\s*来源冲突|U\s*待核|X\s*目前不可证)/;
 const TIMELINE_TYPES = new Set(['册立', '册封', '晋封', '生育', '崩逝', '初谥', '改谥', '安葬', '尊封', '时态说明']);
 
 function splitIds(value) {
@@ -28,20 +30,32 @@ function httpsOk(value) {
   return /^https:\/\//.test(value || '');
 }
 
+function imageKind(file) {
+  const fd = fs.openSync(file, 'r');
+  const head = Buffer.alloc(12);
+  try { fs.readSync(fd, head, 0, head.length, 0); } finally { fs.closeSync(fd); }
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return 'jpg';
+  if (head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'png';
+  if (head.subarray(0, 4).toString() === 'RIFF' && head.subarray(8, 12).toString() === 'WEBP') return 'webp';
+  return 'unknown';
+}
+
 export function check(ctx) {
   const {
     errors, warnings, contentDir,
     emperors, portraits, crosswalk, people, sources, sourceIndex, tasks, vocab,
     units, claims, questions, chapters, lanes, empressTimeline,
-    heirChain, historicSites, works,
+    heirChain, historicSites, works, conflictSets, emperorTimeline,
   } = ctx;
 
   const emperorIds = new Set(emperors.map((r) => r.emperor_id));
   const crosswalkByLegacy = new Map(crosswalk.map((r) => [r.legacy_emperor_id, r]));
   const knownPersonIds = new Set([...people.map((r) => r.person_id), ...crosswalk.map((r) => r.person_id)]);
   const sourceIds = new Set(sources.map((r) => r.source_id));
+  const sourceIndexIds = new Set(sourceIndex.map((r) => r.index_id));
   const sourceUnitIds = new Set(units.map((r) => r.source_unit_id));
   const claimById = new Map(claims.map((row) => [row['Assertion ID'], row]));
+  const conflictSetIds = new Set((conflictSets || []).map((row) => row.conflict_set_id));
   const siteIds = new Set(historicSites.map((row) => row.site_id));
   const laneIds = new Set(lanes.map((row) => row.lane_id));
   const emperorPersonIds = new Set(crosswalk.map((row) => row.person_id));
@@ -115,8 +129,19 @@ export function check(ctx) {
     if (!sourceUnitIds.has(claim['来源实体 ID'])) errors.push(`${claim['Assertion ID']} 引用了未知来源单元 ${claim['来源实体 ID']}`);
     if (!claim['卷页/档号/图像定位'] || !claim['支持引文']) errors.push(`${claim['Assertion ID']} 缺少定位或支持引文`);
     if (!claim['公历下界'] || !claim['公历上界']) errors.push(`${claim['Assertion ID']} 缺少公历对照`);
-    if (claim['状态'] === '已采纳' && !String(claim['复核人'] || '').trim()) {
+    const reviewer = String(claim['复核人'] || '').trim();
+    const reviewedAt = String(claim['复核日期'] || '').trim();
+    if (claim['状态'] === '已采纳' && !reviewer) {
       errors.push(`${claim['Assertion ID']} 标为已采纳但复核人为空；H1 抽查必须由具名复核人完成`);
+    }
+    if (claim['状态'] === '已采纳' && !reviewedAt) {
+      errors.push(`${claim['Assertion ID']} 标为已采纳但复核日期为空`);
+    }
+    if (reviewer && !/^\d{4}-\d{2}-\d{2}$/.test(reviewedAt)) {
+      errors.push(`${claim['Assertion ID']} 已具名复核但复核日期无效: ${reviewedAt || '空'}`);
+    }
+    if (reviewedAt && !reviewer) {
+      errors.push(`${claim['Assertion ID']} 有复核日期但复核人为空`);
     }
     const pred = claim['谓词/关系'];
     if (pred && predicates.size && !predicates.has(pred)) {
@@ -135,6 +160,26 @@ export function check(ctx) {
     if (row['期望行为'] !== '拒绝作答' && !row['可公开答案']) {
       errors.push(`${row.question_id} 缺少可公开答案`);
     }
+    const binds = splitIds(row['绑定ID']);
+    for (const id of binds) {
+      let known = false;
+      if (id.startsWith('QH-A-')) known = claimById.has(id);
+      else if (id.startsWith('QH-CF-')) known = conflictSetIds.has(id);
+      else if (id.startsWith('QH-ST-')) known = siteIds.has(id);
+      else if (id.startsWith('QH-P-')) known = knownPersonIds.has(id);
+      else if (id.startsWith('QH-L-')) known = laneIds.has(id);
+      else if (id.startsWith('QH-SU-')) known = sourceUnitIds.has(id);
+      if (!known) errors.push(`${row.question_id} 绑定了未知 ID ${id}`);
+    }
+    if (String(row['证据状态'] || '').startsWith('E1')
+      && !binds.some((id) => id.startsWith('QH-A-') || id.startsWith('QH-SU-'))) {
+      errors.push(`${row.question_id} 标为 E1 但未绑定主张或来源单元`);
+    }
+    if (row['期望行为'] === '并陈冲突') {
+      const claimCount = binds.filter((id) => id.startsWith('QH-A-')).length;
+      const hasConflict = binds.some((id) => id.startsWith('QH-CF-'));
+      if (!hasConflict && claimCount < 2) errors.push(`${row.question_id} 要求并陈冲突但未绑定冲突组或两条主张`);
+    }
   }
   const refuseCount = questions.filter((row) => row['类别'] === '无证据拒答').length;
   const conflictCount = questions.filter((row) => row['类别'] === '版本冲突').length;
@@ -149,8 +194,26 @@ export function check(ctx) {
     else if (!emperorPersonIds.has(row.person_id)) errors.push(`${row.chapter_id} 引用了未知皇帝人物 ${row.person_id}`);
     else chapterPersons.add(row.person_id);
     const chapterFile = path.join(contentDir, row.file);
-    if (!fs.existsSync(chapterFile)) errors.push(`${row.chapter_id} 找不到正文 ${row.file}`);
-    for (const unitId of splitIds(row.unit_ids)) {
+    const unitIds = splitIds(row.unit_ids);
+    if (!fs.existsSync(chapterFile)) {
+      errors.push(`${row.chapter_id} 找不到正文 ${row.file}`);
+    } else {
+      const markdown = fs.readFileSync(chapterFile, 'utf8');
+      const status = markdown.match(/^状态：\s*(.+)$/m)?.[1] || '';
+      if (!status || !CHAPTER_STATUS_MARKER.test(status)) {
+        errors.push(`${row.chapter_id} 缺少可识别的章节证据状态`);
+      }
+      if (/E1\s*单源回查/.test(status) && unitIds.length === 0) {
+        errors.push(`${row.chapter_id} 标为 E1 但未绑定 unit_ids`);
+      }
+      for (const id of [...markdown.matchAll(/\{\{claim:([A-Za-z0-9-]+)\}\}/g)].map((m) => m[1])) {
+        if (!claimById.has(id)) errors.push(`${row.chapter_id} 正文引用了未知主张 ${id}`);
+      }
+      for (const id of [...markdown.matchAll(/\{\{conflict:([A-Za-z0-9-]+)/g)].map((m) => m[1])) {
+        if (!conflictSetIds.has(id)) errors.push(`${row.chapter_id} 正文引用了未知冲突组 ${id}`);
+      }
+    }
+    for (const unitId of unitIds) {
       if (!sourceUnitIds.has(unitId)) errors.push(`${row.chapter_id} 引用了未知来源单元 ${unitId}`);
     }
     for (const href of splitIds(row.related)) {
@@ -242,16 +305,63 @@ export function check(ctx) {
 
   const OPEN_STATES = new Set(['L0', 'L1', 'L2', 'L3']);
   for (const work of works) {
+    if (work.emperor_id !== 'ALL' && !emperorIds.has(work.emperor_id)) errors.push(`${work.work_id} 引用了未知皇帝 ${work.emperor_id}`);
     if (!REVIEW_INDEX.has(work['证据状态'])) {
       errors.push(`${work.work_id} 证据状态无效: ${work['证据状态']}`);
     }
     if (!OPEN_STATES.has(work.open_state)) {
       errors.push(`${work.work_id} open_state 无效: ${work.open_state}`);
     }
+    const workUnitIds = splitIds(work.source_unit_ids);
+    for (const id of workUnitIds) {
+      if (!sourceUnitIds.has(id)) errors.push(`${work.work_id} 引用了未知来源单元 ${id}`);
+    }
+    if (['L2', 'L3'].includes(work.open_state) && workUnitIds.length === 0) {
+      errors.push(`${work.work_id} 标为 ${work.open_state} 但未绑定 source_unit_ids`);
+    }
+    if (work.open_state === 'L3'
+      && !claims.some((claim) => workUnitIds.includes(claim['来源实体 ID']))) {
+      errors.push(`${work.work_id} 标为 L3 但绑定条次尚无结构化主张`);
+    }
   }
   for (const row of sourceIndex) {
     if (row.open_state && !OPEN_STATES.has(row.open_state)) {
       errors.push(`${row.index_id} open_state 无效: ${row.open_state}`);
+    }
+  }
+
+  // 十二帝年表：索引级必须能回到卷；E1/C 级必须继续绑定主张。
+  for (const row of emperorTimeline || []) {
+    if (!emperorIds.has(row.emperor_id)) errors.push(`${row.timeline_id} 引用了未知皇帝 ${row.emperor_id}`);
+    if (!EMPEROR_TIMELINE_STATES.has(row.status)) errors.push(`${row.timeline_id} 状态无效: ${row.status}`);
+    const refs = splitIds(row.source_refs);
+    const boundClaims = splitIds(row.claim_ids);
+    for (const id of refs) {
+      if (!sourceIndexIds.has(id)) errors.push(`${row.timeline_id} 引用了未知来源索引 ${id}`);
+    }
+    for (const id of boundClaims) {
+      if (!claimById.has(id)) errors.push(`${row.timeline_id} 引用了未知主张 ${id}`);
+    }
+    if (row.status === 'S二手索引' && refs.length === 0) {
+      errors.push(`${row.timeline_id} 标为 S二手索引但没有 source_refs`);
+    }
+    if (row.status === 'E1单源回查' && boundClaims.length === 0) {
+      errors.push(`${row.timeline_id} 标为 E1 但没有 claim_ids`);
+    }
+    if (row.status === 'C来源冲突' && boundClaims.length < 2) {
+      errors.push(`${row.timeline_id} 标为冲突但不足两条 claim_ids`);
+    }
+  }
+
+  // 本地媒体扩展名必须与真实编码一致，避免 .jpg 实际装 PNG 导致错误 MIME 与超大体积。
+  const mediaDir = path.resolve(contentDir, '../site/media');
+  if (fs.existsSync(mediaDir)) {
+    for (const name of fs.readdirSync(mediaDir)) {
+      const match = name.toLowerCase().match(/\.(jpe?g|png|webp)$/);
+      if (!match) continue;
+      const expected = match[1] === 'jpeg' ? 'jpg' : match[1];
+      const actual = imageKind(path.join(mediaDir, name));
+      if (actual !== expected) errors.push(`${name} 扩展名为 ${expected}，实际编码为 ${actual}`);
     }
   }
 }

@@ -25,8 +25,20 @@ function thumbUrl(url, width = 960) {
   return `${host}/thumb/${a}/${ab}/${file}/${width}px-${file}`;
 }
 
-async function download(url, dest) {
-  const tmp = `${dest}.part`;
+function sourceExtension(url) {
+  try {
+    const pathname = decodeURIComponent(new URL(url).pathname).toLowerCase();
+    const match = pathname.match(/\.(png|jpe?g|webp)$/);
+    if (!match) return 'jpg';
+    return match[1] === 'jpeg' ? 'jpg' : match[1];
+  } catch {
+    return 'jpg';
+  }
+}
+
+async function download(url, dest, { toWebp = false } = {}) {
+  const tmp = `${dest}.source.part`;
+  const encoded = `${dest}.encoded.part`;
   let lastErr;
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     try {
@@ -41,11 +53,17 @@ async function download(url, dest) {
       ], { timeout: 70000 });
       const size = fs.statSync(tmp).size;
       if (size < 1024) throw new Error(`too small: ${size}B`);
-      fs.renameSync(tmp, dest);
-      return size;
+      if (toWebp) {
+        await execFileAsync('cwebp', ['-quiet', '-q', '95', '-m', '6', tmp, '-o', encoded], { timeout: 70000 });
+        fs.unlinkSync(tmp);
+        fs.renameSync(encoded, dest);
+      } else {
+        fs.renameSync(tmp, dest);
+      }
+      return fs.statSync(dest).size;
     } catch (err) {
       lastErr = err;
-      if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+      for (const file of [tmp, encoded]) if (fs.existsSync(file)) fs.unlinkSync(file);
       await sleep(5000 * attempt);
     }
   }
@@ -77,18 +95,28 @@ async function main() {
   const force = process.argv.includes('--force');
   const hires = process.argv.includes('--hires');
   const items = jobs();
+  let canWebp = false;
+  try {
+    await execFileAsync('cwebp', ['-version'], { timeout: 5000 });
+    canWebp = true;
+  } catch {
+    console.warn('WARN cwebp 不可用：PNG 将按 .png 原格式缓存，不再伪装成 .jpg');
+  }
   let ok = 0;
   let skip = 0;
   let fail = 0;
   for (const item of items) {
-    const dest = path.join(mediaDir, hires ? `${item.id}@2x.jpg` : `${item.id}.jpg`);
     const url = hires ? thumbUrl(item.url, 1280) : item.url;
+    const nativeExt = sourceExtension(url);
+    const toWebp = nativeExt === 'png' && canWebp;
+    const ext = toWebp ? 'webp' : nativeExt;
+    const dest = path.join(mediaDir, `${item.id}${hires ? '@2x' : ''}.${ext}`);
     if (!force && fs.existsSync(dest) && fs.statSync(dest).size > 1024) {
       skip += 1;
       continue;
     }
     try {
-      const bytes = await download(url, dest);
+      const bytes = await download(url, dest, { toWebp });
       ok += 1;
       console.log(`OK ${path.basename(dest)} ${bytes}B`);
       await sleep(1500);

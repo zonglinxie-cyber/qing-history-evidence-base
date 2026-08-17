@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-site.mjs",
+    "build": "node scripts/build-site.mjs && node scripts/build-status.mjs",
     "watch": "node scripts/build-site.mjs --watch",
+    "status": "node scripts/build-status.mjs",
     "validate": "node scripts/validate-data.mjs",
     "test": "node scripts/test-render.mjs",
     "cache-media": "node scripts/cache-media.mjs",
