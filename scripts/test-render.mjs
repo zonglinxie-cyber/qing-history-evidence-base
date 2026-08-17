@@ -13,6 +13,8 @@ if (!configMatch) {
   process.exit(1);
 }
 const config = configMatch[1];
+const dynastyConfig = JSON.parse(config);
+const reignData = JSON.parse(fs.readFileSync(path.join(siteDir, 'data', `${dynastyConfig.chunk}.json`), 'utf8'));
 
 const els = new Map();
 function fakeEl(id) {
@@ -92,6 +94,11 @@ function check(name, cond) {
   console.log((cond ? 'PASS' : 'FAIL') + ': ' + name);
   if (!cond) failed++;
 }
+function escExpected(value) {
+  return String(value ?? '').replace(/[&<>\"]/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  }[ch]));
+}
 
 // 年号专题路由：注册表命中（康熙/雍正）+ 未建专题页的年号优雅降级（年号路由泛化验收点）
 const eras = Object.keys(JSON.parse(config).eras);
@@ -133,6 +140,7 @@ check('章节插图语法渲染为权利受检 figure', chapter.includes('fig-in
 check('样板章原文块', chapter.includes('source-quote') && chapter.includes('選擇吉期具奏'));
 check('样板章行内主张', /data-claim="QH-A-KX-0\d+"/.test(chapter));
 check('样板章目录与上下篇', chapter.includes('chapter-toc') && chapter.includes('chapter-nav') && chapter.includes('上一篇'));
+check('章节提供可分享静态链接', chapter.includes('chapter/kangxi-02/'));
 check('样板章冲突并排', chapter.includes('claim-compare') && chapter.includes('QH-CF-KX-INVEST-DAY'));
 check('样板章原文块', chapter.includes('source-quote'));
 check('样板章行内主张', chapter.includes('data-claim="QH-A-KX-0124"') || chapter.includes('data-claim="QH-A-KX-0086"'));
@@ -152,6 +160,14 @@ check('雍正即位章原文块', yz01.includes('source-quote') && yz01.includes
 check('雍正即位章行内主张', yz01.includes('data-claim="QH-A-YZ-0039"') && yz01.includes('data-claim="QH-A-YZ-0041"'));
 check('雍正即位章目录与怎么读', yz01.includes('chapter-toc') && yz01.includes('怎么读这件事'));
 check('雍正即位章冲突并排', yz01.includes('claim-compare') && yz01.includes('QH-CF-YZ-NIAN-DEATH') && yz01.includes('QH-CF-YZ-DEATH'));
+const sevenDays = await go('#/chapter/yongzheng-07');
+check('康雍七日链专题形成证据闭环', sevenDays.includes('七日链')
+  && sevenDays.includes('data-claim="QH-A-KX-0037"')
+  && sevenDays.includes('data-claim="QH-A-YZ-0039"')
+  && sevenDays.includes('claim-compare')
+  && sevenDays.includes('继承记录为什么不能合成一条')
+  && sevenDays.includes('本章打开过的卷'));
+check('路由更新页面标题', document.title === '从十三日崩逝到二十日即位 · 清史读本');
 const searchCn = await go('#/search?q=胤禛');
 check('检索高亮 mark 生效', searchCn.includes('<mark>'));
 const searchPy = await go('#/search?q=yinzhen');
@@ -162,6 +178,21 @@ check('文献打开状态徽章', works.includes('条次已钉') || works.includ
 check('起居注不假装可读原文', works.includes('入口已登记') && works.includes('馆藏／咨询入口'));
 const juemilu = await go('#/chapter/yongzheng-04');
 check('大义觉迷录专论章渲染', juemilu.includes('自辩') && juemilu.includes('禁毁'));
+const goldenFailures = [];
+for (const row of reignData.questions || []) {
+  const out = await go(`#/question/${row.question_id}`);
+  const expected = row['期望行为'] === '拒绝作答' ? row['拒答说明'] : row['可公开答案'];
+  const binds = String(row['绑定ID'] || '').split(/[；;]/).map((id) => id.trim()).filter(Boolean);
+  if (!out.includes(escExpected(row['问题'])) || !out.includes(escExpected(expected))
+    || binds.some((id) => !out.includes(id))) {
+    goldenFailures.push(row.question_id);
+  }
+}
+if (goldenFailures.length) console.error(`黄金问题渲染失败: ${goldenFailures.join(', ')}`);
+check(`黄金问题全量验收 ${reignData.questions?.length || 0} 道`, goldenFailures.length === 0);
+const adoptedClaim = await go('#/claim/QH-A-KX-0014');
+check('主张页公开采纳与复核记录', adoptedClaim.includes('已采纳')
+  && adoptedClaim.includes('zonglinxie-cyber') && adoptedClaim.includes('2026-08-15'));
 const claimCf = await go('#/claim/QH-A-KX-0070');
 check('主张页同组异说并排区块', claimCf.includes('同组异说') && claimCf.includes('QH-CF-KX-INVEST-DAY'));
 const images = await go('#/images');
@@ -179,6 +210,34 @@ check('largestVariant 本地图原样', largestVariant('media/QH-V-E04.jpg') ===
 check('句末不孤字', noOrphan('以官书原文为底本，逐条整理。').includes('class="nobr">整理。'));
 const homeOut = await go('#/');
 check('首页导语句末不孤字', homeOut.includes('class="nobr"') && homeOut.includes('整理。'));
+
+// 可分享静态页：全部章节可打开，只有来源闭环章节进入 sitemap。
+const staticMissing = [];
+const indexableChapters = [];
+const noindexChapters = [];
+for (const chapterRow of reignData.chapters || []) {
+  const file = path.join(siteDir, 'chapter', chapterRow.slug, 'index.html');
+  if (!fs.existsSync(file)) { staticMissing.push(chapterRow.slug); continue; }
+  const page = fs.readFileSync(file, 'utf8');
+  const indexable = Boolean(String(chapterRow.unit_ids || '').trim()) && /E1\s*单源回查/.test(chapterRow.status || '');
+  if (indexable) indexableChapters.push(chapterRow);
+  else noindexChapters.push(chapterRow);
+  if (!page.includes(`<meta name="robots" content="${indexable ? 'index,follow' : 'noindex,follow'}">`)
+    || !page.includes('<link rel="canonical"') || !page.includes('application/ld+json')) {
+    staticMissing.push(`${chapterRow.slug}:meta`);
+  }
+}
+const staticEvidence = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-07', 'index.html'), 'utf8');
+const sitemap = fs.readFileSync(path.join(siteDir, 'sitemap.xml'), 'utf8');
+check(`静态章节全量生成 ${reignData.chapters?.length || 0} 篇`, staticMissing.length === 0);
+check('静态证据页保留可回主张链接', staticEvidence.includes('href="#/claim/QH-A-KX-0037"')
+  && !staticEvidence.includes('<button type="button" class="link claim-ref"'));
+check(`sitemap 只收证据闭环章节 ${indexableChapters.length} 篇`,
+  indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
+  && noindexChapters.every((row) => !sitemap.includes(`/chapter/${row.slug}/`)));
+check('robots.txt 指向 sitemap', fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8').includes('/sitemap.xml'));
+check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
+  && html.includes('"@type":"WebSite"') && html.includes('property="og:url"'));
 
 console.log(failed ? `渲染测试 ${failed} 项失败` : '渲染测试全部通过');
 process.exit(failed ? 1 : 0);

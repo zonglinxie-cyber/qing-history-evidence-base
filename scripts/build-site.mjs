@@ -13,6 +13,8 @@ const dataDir = path.join(root, 'data');
 const siteDir = path.join(root, 'site');
 const dataOutDir = path.join(siteDir, 'data');
 const contentDir = path.join(root, 'content');
+const siteBaseUrl = new URL(process.env.SITE_URL || 'https://zonglinxie-cyber.github.io/qing-history-evidence-base/');
+if (!siteBaseUrl.pathname.endsWith('/')) siteBaseUrl.pathname += '/';
 
 function load(file) {
   return loadCsv(path.join(dataDir, file), {
@@ -23,10 +25,12 @@ function load(file) {
 
 function localPreview(id, remoteUrl) {
   const remote = String(remoteUrl || '').trim();
-  // 优先使用本地缓存，即使 remote URL 为空也能用本地文件
+  // 优先使用本地缓存；格式按真实内容保存，避免把 PNG 伪装成 .jpg。
   if (id) {
-    const localRel = `media/${id}.jpg`;
-    if (fs.existsSync(path.join(siteDir, localRel))) return localRel;
+    for (const ext of ['webp', 'png', 'jpg', 'jpeg']) {
+      const localRel = `media/${id}.${ext}`;
+      if (fs.existsSync(path.join(siteDir, localRel))) return localRel;
+    }
   }
   return remote;
 }
@@ -245,6 +249,137 @@ function wrapTeach(html) {
     '$1<div class="teach">$2</div>',
   );
 }
+function staticChapterBody(html) {
+  return String(html || '')
+    .replace(
+      /<button type="button" class="link claim-ref" data-claim="([A-Za-z0-9-]+)">看依据<\/button>/g,
+      (_, id) => `<a class="link claim-ref" href="#/claim/${escHtml(id)}">看依据</a>`,
+    )
+    .replace(
+      /<div class="claim-compare conflict-embed" data-conflict="([A-Za-z0-9-]+)"(?: data-label="[^"]*")?><\/div>/g,
+      (_, id) => `<aside class="read-line"><h4>同组异说</h4><p><a class="link" href="#/claims">在交互版查看冲突组 ${escHtml(id)}</a></p></aside>`,
+    );
+}
+
+function staticChapterHtml({ chapter, units, portrait, prev, next, indexable }) {
+  const canonical = new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href;
+  const image = portrait?.['预览文件'] ? new URL(portrait['预览文件'], siteBaseUrl).href : '';
+  const robots = indexable ? 'index,follow' : 'noindex,follow';
+  const structured = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: chapter.title,
+    description: chapter.lede,
+    inLanguage: 'zh-Hans',
+    isPartOf: { '@type': 'WebSite', name: '清史读本', url: siteBaseUrl.href },
+    url: canonical,
+    ...(image ? { image } : {}),
+  }).replace(/</g, '\\u003c');
+  const evidence = units.length
+    ? `<section class="chapter-evidence">
+        <h2>本章打开过的卷</h2>
+        <p>${units.length} 处结构化来源。逐条主张、复核状态和原文链接请进入交互版。</p>
+        <p class="actions">${units.map((unit) => `<a class="link" href="#/claims?unit=${escHtml(unit.source_unit_id)}">${escHtml([unit['史料名'], unit['卷次']].filter(Boolean).join(' '))}</a>`).join(' · ')}</p>
+      </section>`
+    : `<p class="bound">本章尚未绑定结构化来源单元，因此不会进入 sitemap；当前页面仅供分享与人工检查。</p>`;
+  const nav = (prev || next) ? `<nav class="chapter-nav" aria-label="上下篇">
+      ${prev ? `<a class="link" href="chapter/${escHtml(prev.slug)}/">上一篇 ${escHtml(prev.title)}</a>` : '<span></span>'}
+      ${next ? `<a class="link" href="chapter/${escHtml(next.slug)}/">下一篇 ${escHtml(next.title)}</a>` : '<span></span>'}
+    </nav>` : '';
+  return `<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="../../">
+  <title>${escHtml(chapter.title)} · 清史读本</title>
+  <meta name="description" content="${escHtml(chapter.lede)}">
+  <meta name="robots" content="${robots}">
+  <link rel="canonical" href="${escHtml(canonical)}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="清史读本">
+  <meta property="og:title" content="${escHtml(chapter.title)}">
+  <meta property="og:description" content="${escHtml(chapter.lede)}">
+  <meta property="og:url" content="${escHtml(canonical)}">
+  ${image ? `<meta property="og:image" content="${escHtml(image)}">` : ''}
+  <meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">
+  <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#191512" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+  <link rel="stylesheet" href="styles.css?v=9">
+  <script type="application/ld+json">${structured}</script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="masthead static-masthead">
+    <a class="brand" href="./">清史读本</a>
+    <nav class="nav" aria-label="主导航">
+      <a href="#/path">读路</a><a href="#/">十二帝</a><a href="#/sites">今地</a><a href="#/works">文献</a>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    <article>
+      <div class="reading">
+        <p class="kicker">${escHtml(chapter.era)}</p>
+        <h1>${escHtml(chapter.title)}</h1>
+        <p class="lede">${escHtml(chapter.lede)}</p>
+        ${chapter.status ? `<p class="status-chip">${escHtml(chapter.status)}</p>` : ''}
+        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版与主张抽屉</a></p>
+      </div>
+      <div class="md">${staticChapterBody(chapter.bodyHtml)}</div>
+      ${evidence}
+      ${nav}
+    </article>
+  </main>
+  <footer class="foot">
+    <p class="foot-links"><a href="#/how">怎么读</a> · <a href="#/questions">黄金问题</a> · <a href="#/sources">来源</a></p>
+    <p class="foot-links"><a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base" rel="noopener">开源仓库</a></p>
+  </footer>
+</body>
+</html>
+`;
+}
+
+function writeStaticChapterPages({ chapters, units, portraits, emperors }) {
+  const chapterDir = path.join(siteDir, 'chapter');
+  fs.rmSync(chapterDir, { recursive: true, force: true });
+  fs.mkdirSync(chapterDir, { recursive: true });
+  const unitById = new Map(units.map((unit) => [unit.source_unit_id, unit]));
+  const emperorByPerson = new Map(emperors.map((emperor) => [emperor.person_id, emperor]));
+  const primaryByEmperor = new Map();
+  for (const portrait of portraits) {
+    if (portrait['展示角色'] === '默认朝服像') primaryByEmperor.set(portrait.emperor_id, portrait);
+  }
+  const indexable = [];
+  for (const chapter of chapters) {
+    if (!/^[a-z0-9-]+$/.test(chapter.slug)) throw new Error(`静态章节 slug 非法: ${chapter.slug}`);
+    const sourceUnits = String(chapter.unit_ids || '').split(/[；;]/).map((id) => unitById.get(id.trim())).filter(Boolean);
+    const canIndex = sourceUnits.length > 0 && /E1\s*单源回查/.test(chapter.status || '');
+    const siblings = chapters.filter((row) => row.person_id === chapter.person_id)
+      .slice().sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
+    const at = siblings.findIndex((row) => row.slug === chapter.slug);
+    const emperor = emperorByPerson.get(chapter.person_id);
+    const page = staticChapterHtml({
+      chapter,
+      units: sourceUnits,
+      portrait: emperor ? primaryByEmperor.get(emperor.emperor_id) : null,
+      prev: at > 0 ? siblings[at - 1] : null,
+      next: at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null,
+      indexable: canIndex,
+    });
+    const out = path.join(chapterDir, chapter.slug);
+    fs.mkdirSync(out, { recursive: true });
+    fs.writeFileSync(path.join(out, 'index.html'), page);
+    if (canIndex) indexable.push(chapter);
+  }
+
+  const urls = [siteBaseUrl.href, ...indexable.map((chapter) => new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href)];
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((url) => `  <url><loc>${escHtml(url)}</loc></url>`).join('\n')}\n</urlset>\n`;
+  fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), sitemap);
+  fs.writeFileSync(path.join(siteDir, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', siteBaseUrl).href}\n`);
+  return { total: chapters.length, indexable: indexable.length };
+}
+
 
 // 装载本朝文件（含 shared 共享文件），按 kind 合并；返回 { dynasty, data: {field: rows} }。
 // 主张行保留 manifest.reign，供覆盖度按朝分组；不从 Assertion ID 正则推朝次。
@@ -464,7 +599,7 @@ function buildDynasty({ dynasty, data }) {
       ),
     }),
     writeJson('home.json', {
-      generatedAt: new Date().toISOString(),
+      // 构建产物必须可重复；发布时间由部署平台提供，不写入每次变化的当前时间。
       notice: '引文可回原文。家谱尚未用玉牒核对。',
       dynasty: slim,
       emperors: emperorRecords,
@@ -489,7 +624,7 @@ function buildDynasty({ dynasty, data }) {
   const homeRe = /<main id="main"[^>]*>[\s\S]*?<\/main>/;
   if (homeRe.test(indexHtml)) {
     const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false });
-    indexHtml = indexHtml.replace(homeRe, `<main id="main" data-ssr="home">\n${home}\n  </main>`);
+    indexHtml = indexHtml.replace(homeRe, `<main id="main" tabindex="-1" data-ssr="home">\n${home}\n  </main>`);
   } else {
     console.warn('WARN: index.html 未找到 <main id="main">，跳过直出。');
   }
@@ -505,9 +640,33 @@ function buildDynasty({ dynasty, data }) {
   indexHtml = configRe.test(indexHtml)
     ? indexHtml.replace(configRe, configTag)
     : indexHtml.replace('</head>', `${configTag}</head>`);
+  const homePortrait = portraits.find((row) => row.emperor_id === 'QH-E-04' && row['展示角色'] === '默认朝服像')
+    || portraits.find((row) => row['展示角色'] === '默认朝服像');
+  const homeImage = homePortrait?.['预览文件'] ? new URL(homePortrait['预览文件'], siteBaseUrl).href : '';
+  const homeStructured = JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'WebSite', name: '清史读本',
+    url: siteBaseUrl.href, inLanguage: 'zh-Hans', description: dynasty.lede,
+  }).replace(/</g, '\\u003c');
+  const discoveryMeta = `  <!-- generated-site-meta:start -->
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="${escHtml(siteBaseUrl.href)}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="清史读本">
+  <meta property="og:title" content="清史读本">
+  <meta property="og:description" content="${escHtml(dynasty.lede)}">
+  <meta property="og:url" content="${escHtml(siteBaseUrl.href)}">
+  ${homeImage ? `<meta property="og:image" content="${escHtml(homeImage)}">` : ''}
+  <meta name="twitter:card" content="${homeImage ? 'summary_large_image' : 'summary'}">
+  <script type="application/ld+json">${homeStructured}</script>
+  <!-- generated-site-meta:end -->`;
+  const discoveryMetaRe = /  <!-- generated-site-meta:start -->[\s\S]*?  <!-- generated-site-meta:end -->/;
+  indexHtml = discoveryMetaRe.test(indexHtml)
+    ? indexHtml.replace(discoveryMetaRe, discoveryMeta)
+    : indexHtml.replace('</head>', `${discoveryMeta}\n</head>`);
   fs.writeFileSync(indexPath, indexHtml);
 
-  return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length };
+  const staticPages = writeStaticChapterPages({ chapters, units, portraits, emperors: emperorRecords });
+  return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length, staticPages };
 }
 
 function build() {
@@ -550,7 +709,7 @@ function build() {
     .join(', ');
   console.log(`Wrote site/data/{${reports.flatMap((r) => r.written.map((item) => item.name)).join(', ')}} (${summary})`);
   const home = reports.find((r) => r.dynasty !== 'search');
-  if (home) console.log(`Home emperors ${home.emperorCount}, sites ${home.siteCount}, search entries ${allSearchEntries.length}`);
+  if (home) console.log(`Home emperors ${home.emperorCount}, sites ${home.siteCount}, search entries ${allSearchEntries.length}; static chapters ${home.staticPages.total}, indexable ${home.staticPages.indexable}`);
 }
 
 build();

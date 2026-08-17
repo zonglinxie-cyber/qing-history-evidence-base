@@ -31,17 +31,18 @@
 ## PR 流程
 
 1. Fork 本仓库，在 `phase-0/` 目录工作。
-2. 修改对应的 CSV / content/ 正文。新增主张请沿用现有 ID 段与列结构，状态从 `审核中` 起步，**不要自行改成「已采纳」**——采纳需要维护者抽查。
+2. 修改对应的 CSV / content/ 正文。新增主张请沿用现有 ID 段与列结构，状态从 `审核中` 起步，**不要自行改成「已采纳」**——采纳需要维护者抽查，并同时填写具名复核人和 `YYYY-MM-DD` 复核日期。
 3. 本地验证：
 
    ```bash
    cd phase-0
    npm install
-   npm run validate   # 必须全绿（0 errors）
-   npm run build      # 重新生成 site/data/*.json
+   npm run validate   # 必须全绿（0 errors / 0 warnings）
+   npm run build      # 重建 site/data/*.json 与 STATUS.md
+   npm test           # 跑路由及黄金问题全量验收
    ```
 
-4. 提交 PR：说明你改了什么、依据哪条史料（版本+卷页）。CI 会自动运行 `validate` 与 `build`。
+4. 提交 PR：说明你改了什么、依据哪条史料（版本+卷页）。CI 会自动运行 `validate`、确定性构建与渲染测试。
 5. 维护者审核合并。涉及生母、承嗣、即位合法性、死因、画像认定的改动需要更高级别复核，可能需要等待。
 
 ## 数据格式速查

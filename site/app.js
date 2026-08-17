@@ -483,6 +483,8 @@ function eraPage(slug) {
       else if (key === 'works') on = current === 'works';
       else on = key === current;
       link.classList.toggle('active', on);
+      if (on) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
     });
   }
 
@@ -525,9 +527,10 @@ function eraPage(slug) {
     if (!box || !boxImg) return;
     lightboxTrigger = trigger || null;
     const caption = img.getAttribute('data-lightbox') || img.alt || '';
-    const base = img.getAttribute('data-src') || img.currentSrc || img.src;
-    // 本地缓存图优先试 1280px 档（cache-media.mjs --hires 产物），404 时回退 960
-    const localHi = base.match(/^media\/[^@]+\.jpg$/) ? base.replace(/\.jpg$/, '@2x.jpg') : '';
+    const base = img.getAttribute('data-src') || img.getAttribute('src') || img.currentSrc || img.src;
+    // 本地缓存图优先试 1280px 同格式档（jpg/png/webp），404 时回退普通档。
+    const local = base.match(/^(media\/[^@]+)(\.(?:jpe?g|png|webp))$/i);
+    const localHi = local ? `${local[1]}@2x${local[2]}` : '';
     boxImg.onerror = localHi ? () => { boxImg.onerror = null; boxImg.src = base; } : null;
     boxImg.src = localHi || largestVariant(base);
     boxImg.alt = caption;
@@ -579,6 +582,8 @@ function eraPage(slug) {
         <dt>纪年</dt><dd>${esc(claim['原始时间表达'])}</dd>
         <dt>公历</dt><dd>${esc(claim['公历下界'] || claim['公历上界'] || '尚未换算')}</dd>
         <dt>出处</dt><dd>${esc(claim['卷页/档号/图像定位'])}</dd>
+        <dt>状态</dt><dd>${esc([claim['状态'], claim['证据直接性'], claim['证据强度']].filter(Boolean).join(' · '))}</dd>
+        <dt>复核</dt><dd>${claim['复核人'] ? `${esc(claim['复核人'])}${claim['复核日期'] ? ` · ${esc(claim['复核日期'])}` : ''}` : '未具名复核'}</dd>
       </dl>
       ${unit ? `<p>${esc(unit['史料名'])} ${esc(unit['卷次'])} ${esc(unit['原纪年'])}${unit['当日条次'] ? ` · 第 ${esc(unit['当日条次'])} 条` : ''}</p>
         <p class="actions">
@@ -601,10 +606,14 @@ function eraPage(slug) {
 
   function claimCard(claim) {
     const pred = predicateLabel(claim['谓词/关系']);
+    const reviewer = String(claim['复核人'] || '').trim();
+    const reviewedAt = String(claim['复核日期'] || '').trim();
+    const reviewLabel = reviewer ? `复核 ${reviewer}${reviewedAt ? ` · ${reviewedAt}` : ''}` : '未具名复核';
     return `
       <article class="claim" id="${esc(claim['Assertion ID'])}">
         <p class="sentence">${personLink(claim['主体 ID'])} ${esc(pred)} ${objectDisplay(claim)}</p>
-        <p class="sub">${esc(claim['原始时间表达'])}${claim['公历下界'] ? ` · ${esc(claim['公历下界'])}` : ''}${claim['冲突组 ID'] ? ' · 两说并存' : ''}</p>
+        <div class="chips">${statusChip(claim['状态'])}${claim['证据强度'] ? `<span class="chip">${esc(claim['证据强度'])}</span>` : ''}</div>
+        <p class="sub">${esc(claim['原始时间表达'])}${claim['公历下界'] ? ` · ${esc(claim['公历下界'])}` : ''}${claim['冲突组 ID'] ? ' · 两说并存' : ''} · ${esc(reviewLabel)}</p>
         <p class="quote">「${esc(claim['支持引文'])}」</p>
         <p class="actions">
           <button class="link" data-claim="${esc(claim['Assertion ID'])}">看依据</button>
@@ -1587,7 +1596,7 @@ function eraPage(slug) {
         <h1>${esc(chapter.title)}</h1>
         <p class="lede">${noOrphan(chapter.lede)}</p>
         ${status ? `<p class="status-chip">${esc(status)}</p>` : ''}
-        <p class="crumb"><a class="link" href="${esc(home)}">${esc(homeLabel)}</a></p>
+        <p class="crumb"><a class="link" href="${esc(home)}">${esc(homeLabel)}</a> · <a class="link" href="chapter/${esc(chapter.slug)}/">可分享链接</a></p>
         ${toc.length ? `<nav class="chapter-toc" aria-label="本章目录">
           <p class="toc-label">本章目录</p>
           <ol>${toc.map((item) => `<li><button type="button" class="link" data-scroll="${esc(item.id)}">${esc(item.title)}</button></li>`).join('')}</ol>
@@ -2014,6 +2023,12 @@ function eraPage(slug) {
     `;
   }
 
+
+  function titleFromHtml(html) {
+    const raw = String(html || '').match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || '';
+    return raw.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+  }
   let renderGen = 0;
   async function render() {
     const gen = ++renderGen;
@@ -2069,12 +2084,15 @@ function eraPage(slug) {
     else html = `<h1>没有这个页面</h1><p><a href="#/">回首页</a></p>`;
     destroyOsdViewers();
     main.innerHTML = html;
+    const pageTitle = titleFromHtml(html);
+    document.title = pageTitle ? `${pageTitle} · 清史读本` : '清史读本';
     const live = document.getElementById('search-status');
     if (live) live.textContent = view === 'search' ? `检索「${query.q || ''}」已更新` : '';
     main.classList.remove('enter');
     void main.offsetWidth;
     main.classList.add('enter');
     window.scrollTo(0, 0);
+    main.focus({ preventScroll: true });
     initOsdViewers();
   }
 

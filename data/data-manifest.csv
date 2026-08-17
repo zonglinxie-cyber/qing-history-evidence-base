@@ -11,9 +11,9 @@ qing-emperor-source-index.csv,qing,,source_index,"index_id;emperor_id;资源名�
 task-queue.csv,qing,,tasks,"task_id;emperor_id;任务;状态;优先级",task_id,
 controlled-vocabularies.csv,shared,,vocab,"scheme_code;term_code;中文标签",,125
 kangxi-source-units.csv,qing,kangxi,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,18
-kangxi-source-claims.csv,qing,kangxi,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态",Assertion ID,120
+kangxi-source-claims.csv,qing,kangxi,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,120
 yongzheng-source-units.csv,qing,yongzheng,source_units,"source_unit_id;source_entity_id;史料名;卷次;证据等级;直接记录网址",source_unit_id,13
-yongzheng-source-claims.csv,qing,yongzheng,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态",Assertion ID,38
+yongzheng-source-claims.csv,qing,yongzheng,source_claims,"Assertion ID;主体 ID;谓词/关系;来源实体 ID;支持引文;公历下界;公历上界;状态;复核日期",Assertion ID,38
 golden-questions.csv,qing,,questions,"question_id;类别;问题;期望行为;路由",question_id,64
 chapters.csv,qing,,chapters,"chapter_id;slug;person_id;era;title;file;lede","chapter_id;slug",31
 side-lanes.csv,qing,,lanes,"lane_id;栏目;标题;通行说法;官书或档案怎么写;差异或读法;证据状态;权利颜色;使用说明",lane_id,
@@ -22,10 +22,10 @@ kangxi-princes.csv,qing,kangxi,princes,"person_id;表序;收录状态;规范名;
 kangxi-princesses.csv,qing,kangxi,princesses,"person_id;表序;规范名;收录状态",person_id,21
 kangxi-heir-chain.csv,qing,kangxi,heir_chain,"event_id;person_id;阶段;事件类型;来源单元;引文;回查状态",event_id,18
 historic-sites.csv,qing,,sites,"site_id;事件;当时;今日;今地说明;边界;卡片钩子;证据状态;权利颜色;文件页",site_id,
-imperial-works.csv,qing,,works,"work_id;emperor_id;文献名称;文献类型;成书年代;卷数;证据状态;open_state",work_id,
+imperial-works.csv,qing,,works,"work_id;emperor_id;文献名称;文献类型;成书年代;卷数;证据状态;open_state;source_unit_ids",work_id,
 emperor-chronicle.csv,qing,kangxi,chronicle,"entry_id;emperor_id;层级;事件类型;标题;原纪年;主张IDs;年号级收录;排序键",entry_id,16
 source-families.csv,qing,,families,"family_id;名称;derives_from;独立性说明",family_id,
 conflict-sets.csv,qing,,conflict_sets,"conflict_set_id;议题;冲突维度;现行编辑判断;判断依据主张;保留意见",conflict_set_id,
 community-corrections.csv,qing,,community_corrections,"correction_id;位置ID;纠错内容;状态",correction_id,
 overviews.csv,qing,,overview,"overview_id;slug;title;file;lede",overview_id,5
-emperor-timeline.csv,qing,,emperor_timeline,"timeline_id;emperor_id;year;reign_year;event;status",timeline_id,92
+emperor-timeline.csv,qing,,emperor_timeline,"timeline_id;emperor_id;year;reign_year;event;status;source_refs;claim_ids",timeline_id,92

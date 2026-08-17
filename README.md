@@ -1,8 +1,8 @@
 # 清史证据库 · Phase 0 项目包
 
-版本：`0.2.0`  
-建立日期：2026-08-12  
-当前状态：**个人零预算版已启动；正在使用公开资料持续扩充**
+版本：`0.3.0`
+建立日期：2026-08-12
+当前状态：**个人零预算版持续扩充；实时覆盖与审核数字见 [`STATUS.md`](STATUS.md)**
 
 手机阅读：https://zonglinxie-cyber.github.io/qing-history-evidence-base/
 
@@ -18,6 +18,7 @@
 
 | 路径 | 用途 |
 |---|---|
+| `STATUS.md` | 由 CSV 自动生成的当前覆盖、审核与文献打开程度 |
 | `docs/01-project-charter.md` | 项目使命、范围、角色、交付物和 Go/No-Go 标准 |
 | `docs/02-information-architecture.md` | 产品信息架构、核心页面和用户任务 |
 | `docs/03-source-and-rights-policy.md` | 史料分级、引用要求、版权三色规则 |
@@ -38,7 +39,7 @@
 | `data/yongzheng-source-units.csv` | 雍正卷来源单元：《清史稿》卷9本纪切片与卷295隆科多、年羹尧传 |
 | `data/yongzheng-source-claims.csv` | 即位、生母、密旨、年隆案、军机处、崩逝拆出的审核中原子主张 |
 | `data/golden-questions.csv` | 64 道黄金问题：事实查询、关系路径、版本冲突、无证据拒答 |
-| `data/chapters.csv` | 可读章节目录（二十一篇）；正文在 `content/emperors/` |
+| `data/chapters.csv` | 可读章节目录；正文在 `content/emperors/`，实时数量见 `STATUS.md` |
 | `data/kangxi-empress-timeline.csv` | 康熙四后时态称号时间轴；七月/九月册后冲突与孝恭非康熙朝皇后均保留 |
 | `data/kangxi-princes.csv` | 康熙皇子全表：卷164入序23人、本卷缺号第四子、早薨未入序11人；表序与长子分栏 |
 | `data/kangxi-princesses.csv` | 康熙皇女全表：卷166亲生20人、抚育1人；未封12、受封8；和硕/固伦按时态；荣宪沿用 QH-P-000021 |
@@ -51,7 +52,8 @@
 | `content/emperors/kangxi/08-princess-table.md` | 皇女、和硕、固伦：卷166二十女加抚育一女 |
 | `content/emperors/yongzheng/01-accession-and-early-reign.md` | 雍正即位、生母、年隆与军机 |
 | `site/` | 本地研究稿工作台。首页只拉 `data/home.json`；人物、康熙、来源、检索按路由再拉对应 JSON。打开前先运行 `npm run build` |
-| `scripts/build-site.mjs` | 把 CSV 编成 `site/data/*.json`（按路由拆分），并直出首页 HTML |
+| `scripts/build-site.mjs` | 把 CSV 编成确定性的 `site/data/*.json`（按路由拆分），并直出首页 HTML |
+| `scripts/build-status.mjs` | 从权威 CSV 重建 `STATUS.md`，防止手工数字漂移 |
 | `data/source-rights-ledger.csv` | 第一版来源与版权台账 |
 | `data/controlled-vocabularies.csv` | 第一版受控词表 |
 | `schema/schema.sql` | PostgreSQL Phase 0 权威主库候选结构；部署前必须在目标 PostgreSQL/扩展版本上跑迁移测试 |
@@ -73,8 +75,9 @@
 ```bash
 npm install
 npm run validate
-npm run build          # 或 node scripts/build-site.mjs
-npm test               # 渲染冒烟测试（在 build 之后运行）
+npm run build          # 构建站点并同步 STATUS.md
+npm run status         # 只刷新 STATUS.md
+npm test               # 渲染冒烟测试（含 64 道黄金问题全量验收）
 npm run watch          # 监视 CSV / 正文变化并重建
 python3 -m http.server 8765 --directory site
 ```
@@ -83,7 +86,8 @@ python3 -m http.server 8765 --directory site
 
 ## 目录关系与部署
 
-- **`site/` 是唯一的前端构建产物源**。`scripts/build-site.mjs` 把 CSV/正文编成 `site/data/*.json`、直出首页 HTML，并注入朝代配置 `#dynasty-config`（前端据此解析数据块与年号专题路由，不硬编码朝代；朝代接入见 `data/dynasties.csv` 说明）。所有前端改动只改 `site/*`（`app.js`/`templates.js`/`search.js`/`styles.css`；清朝专属内容常量在 `site/qing-content.mjs`，新朝代建自己的 `<dynasty>-content.mjs`）。
+- **`site/` 是唯一的前端构建产物源**。`scripts/build-site.mjs` 把 CSV/正文编成 `site/data/*.json`、直出首页 HTML，并生成 `site/chapter/<slug>/` 可分享静态页、`sitemap.xml` 与 `robots.txt`。所有前端改动只改 `site/*`（`app.js`/`templates.js`/`search.js`/`styles.css`；清朝专属内容常量在 `site/qing-content.mjs`）。
+- **不是所有文章都进入搜索引擎**：只有同时绑定 `unit_ids` 且状态含 E1 的章节进入 sitemap；其余静态页自动标记 `noindex`，避免把卷级索引包装成已核内容。部署到其他域名时可用 `SITE_URL=https://example.com/base/ npm run build` 改写 canonical。
   - **站点是单朝代运行时**：`#dynasty-config`、首页直出与 `home/people/catalog.json` 一次只承载一个朝代。切换当前朝代 = 在 `dynasties.csv` 只保留一个 `active=是` 并备齐该朝内容模块与数据。同时启用多个朝代时 `build` 会报错拦截（并非并存）——多朝代并存需要先把数据块前缀化为 `d-<code>`、给前端加朝代切换器，属后续改造而非纯 CSV 操作。
 - **发布由 GitHub Actions 自动完成**：推送 `main` 后，`.github/workflows/deploy.yml` 运行校验、构建与渲染测试，把 `site/` 发布到 `gh-pages` 分支（GitHub Pages 从该分支服务）。无需再手工同步；`npm run deploy` 的根目录镜像方式已废弃。
 - 前置条件：仓库 Settings → Actions → General → Workflow permissions 需选 **Read and write**（GITHUB_TOKEN 要推送 gh-pages）。
