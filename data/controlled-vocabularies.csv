@@ -219,6 +219,7 @@ assertion_predicate,主张谓词,renamed_as,易名,renamed_as,,,,true,910
 assertion_predicate,主张谓词,imprisoned,禁锢,imprisoned,,,,true,920
 assertion_predicate,主张谓词,imprisoned_at,禁锢地点,imprisoned_at,,,,true,930
 assertion_predicate,主张谓词,institution_noted_as_begun,记为始设,institution_noted_as_begun,,,,true,940
+assertion_predicate,主张谓词,institution_renamed_as,记为改称,institution_renamed_as,,,,true,941
 assertion_predicate,主张谓词,maternal_uncle_of_empress,后弟,maternal_uncle_of_empress,,,,true,950
 assertion_predicate,主张谓词,received_deathbed_charge,召受顾命,received_deathbed_charge,,,,true,960
 assertion_predicate,主张谓词,titled_as,记作,titled_as,,,,true,970

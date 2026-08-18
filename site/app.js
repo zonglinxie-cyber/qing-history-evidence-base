@@ -1358,19 +1358,36 @@ function eraPage(slug) {
       </ol>`;
   }
 
+  const YZ_EMPRESS_IDS = ['QH-P-000036', 'QH-P-000037', 'QH-P-000038', 'QH-P-000039', 'QH-P-000040', 'QH-P-000134', 'QH-P-000135'];
+
   function empressesPage(query) {
+    const era = tableEra(query);
+    const yongzheng = era === 'yongzheng';
+    const ids = yongzheng ? YZ_EMPRESS_IDS : EMPRESS_IDS;
     const person = query.person || '全部';
-    const rows = (DATA.empressTimeline || []).filter((row) => person === '全部' || row.person_id === person);
-    const filters = ['全部', ...EMPRESS_IDS];
+    const rows = (DATA.empressTimeline || []).filter((row) => {
+      if (!ids.includes(row.person_id) && !(yongzheng && YZ_EMPRESS_IDS.includes(row.person_id))) return false;
+      if (!ids.includes(row.person_id)) return false;
+      return person === '全部' || row.person_id === person;
+    });
+    const filters = ['全部', ...ids];
     return `
       <p class="kicker">后妃</p>
-      <h1>康熙四后</h1>
-      <p class="lede">活着的时候是妃、是后、是太后。孝诚、孝昭、孝懿、孝恭，是死后才加上去的。孝恭在康熙朝不是皇后。</p>
-      <p class="warn">赫舍里氏册后，后妃传记四年七月，本纪记四年九月辛卯。两说都在，不抹平。</p>
-      <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a></p>
+      <h1>${yongzheng ? '雍正后妃' : '康熙四后'}</h1>
+      <p class="lede">${yongzheng
+        ? '潜邸是嫡福晋、侧福晋、格格。皇后、贵妃、谦妃，是后来的号。'
+        : '活着的时候是妃、是后、是太后。孝诚、孝昭、孝懿、孝恭，是死后才加上去的。孝恭在康熙朝不是皇后。'}</p>
+      <p class="warn">${yongzheng
+        ? '时态称号按后妃传原文。谦妃子作弘適，世表作弘曕，不择一。'
+        : '赫舍里氏册后，后妃传记四年七月，本纪记四年九月辛卯。两说都在，不抹平。'}</p>
+      <p class="crumb"><a class="link" href="#/${yongzheng ? 'yongzheng' : 'kangxi'}">${yongzheng ? '雍正朝' : '康熙朝'}</a></p>
+      <div class="filters">
+        <button type="button" data-empress-era="kangxi" class="${yongzheng ? '' : 'on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">圣祖</button>
+        <button type="button" data-empress-era="yongzheng" class="${yongzheng ? 'on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">世宗</button>
+      </div>
       <div class="filters">
         ${filters.map((item) => {
-          const label = item === '全部' ? '四人全轴' : personName(item);
+          const label = item === '全部' ? (yongzheng ? '全轴' : '四人全轴') : personName(item);
           return `<button type="button" data-empress="${esc(item)}" class="${item === person ? 'on' : ''}" aria-pressed="${item === person}">${esc(label)}</button>`;
         }).join('')}
       </div>
@@ -1379,37 +1396,83 @@ function eraPage(slug) {
     `;
   }
 
+  function tableEra(query) {
+    return query.era === 'yongzheng' ? 'yongzheng' : 'kangxi';
+  }
+
+  function eraHref(base, query, extra) {
+    const params = new URLSearchParams();
+    if (tableEra(query) === 'yongzheng') params.set('era', 'yongzheng');
+    Object.entries(extra || {}).forEach(([key, value]) => {
+      if (value && value !== '全部') params.set(key, value);
+    });
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  }
+
+  function princesForEra(era) {
+    const father = era === 'yongzheng' ? 'QH-P-000002' : 'QH-P-000001';
+    return (DATA.princes || []).filter((row) => row['父亲ID'] === father);
+  }
+
+  function princessesForEra(era) {
+    if (era === 'yongzheng') {
+      return (DATA.princesses || []).filter((row) => (
+        row['父亲ID'] === 'QH-P-000002' || String(row['表序标签'] || '').startsWith('世宗抚')
+      ));
+    }
+    return (DATA.princesses || []).filter((row) => (
+      row['父亲ID'] === 'QH-P-000001' || row.person_id === 'QH-P-000123'
+    ));
+  }
+
   function princeById(id) {
     return (DATA.princes || []).find((row) => row.person_id === id) || null;
   }
 
   function princeCard(id) {
     const row = princeById(id);
-    if (!row && id !== 'QH-P-000001') return '';
+    if (!row && id !== 'QH-P-000001' && id !== 'QH-P-000002') return '';
     if (id === 'QH-P-000001') {
-      const n = (DATA.princes || []).length;
+      const n = princesForEra('kangxi').length;
       return `<h2>皇子</h2>
-        <p class="thread-lead">表序不是玉牒。第四子不在《清史稿》圣祖系这一卷，早殇另列。</p>
+        <p class="thread-lead">表序不是玉牒。第四子不在《清史稿》圣祖系这一卷，早殇另列。现有 ${n} 行。</p>
         <p class="actions"><a class="link" href="#/princes">读全表</a></p>`;
     }
+    if (id === 'QH-P-000002') {
+      return `<h2>皇子</h2>
+        <p class="thread-lead">卷165缺第四子弘历。表序不是玉牒。</p>
+        <p class="actions"><a class="link" href="#/princes?era=yongzheng">读世宗系</a></p>`;
+    }
+    const era = row['父亲ID'] === 'QH-P-000002' ? 'yongzheng' : 'kangxi';
     return `
       <h2>在皇子表里</h2>
       <p class="rel">${esc(row['表序标签'])} · ${esc(row['收录状态'])}${row['冲突组 ID'] ? ' · 两说并存' : ''}</p>
       <p class="quote">「${esc(row['世表摘要'] || row['后妃传子女句'])}」</p>
       <p class="gloss">生母候选：${row['生母人物ID'] ? personLink(row['生母人物ID']) : esc(row['生母候选名'] || '未详')}。</p>
-      <p class="actions"><a class="link" href="#/princes">读全表</a></p>`;
+      <p class="actions"><a class="link" href="${era === 'yongzheng' ? '#/princes?era=yongzheng' : '#/princes'}">读全表</a></p>`;
   }
 
   function princesPage(query) {
+    const era = tableEra(query);
     const status = query.status || '全部';
     const groups = ['全部', '入序正文', '本卷缺号', '早薨附列'];
-    const rows = (DATA.princes || []).filter((row) => status === '全部' || row['收录状态'] === status);
+    const rows = princesForEra(era).filter((row) => status === '全部' || row['收录状态'] === status);
+    const yongzheng = era === 'yongzheng';
     return `
       <p class="kicker">皇子</p>
-      <h1>康熙的儿子</h1>
-      <p class="lede">表上第一子是胤禔。后妃传说承瑞才是长子。第四子胤禛不在这一卷，不是康熙没有这个儿子。</p>
-      <p class="warn">世表以胤禔为第一子；后妃传以承瑞为长子。早殇未入序，仍是儿子。</p>
-      <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a></p>
+      <h1>${yongzheng ? '雍正的儿子' : '康熙的儿子'}</h1>
+      <p class="lede">${yongzheng
+        ? '表上没有第四子这一行。缺号的是弘历。弘时只写早薨。弘曕过继给允礼。'
+        : '表上第一子是胤禔。后妃传说承瑞才是长子。第四子胤禛不在这一卷，不是康熙没有这个儿子。'}</p>
+      <p class="warn">${yongzheng
+        ? '表序不是玉牒。后妃传弘適与世表弘曕是异写，不择一。'
+        : '世表以胤禔为第一子；后妃传以承瑞为长子。早殇未入序，仍是儿子。'}</p>
+      <p class="crumb"><a class="link" href="#/${yongzheng ? 'yongzheng' : 'kangxi'}">${yongzheng ? '雍正朝' : '康熙朝'}</a></p>
+      <div class="filters">
+        <button type="button" data-prince-era="kangxi" class="${yongzheng ? '' : 'on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">圣祖系</button>
+        <button type="button" data-prince-era="yongzheng" class="${yongzheng ? 'on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">世宗系</button>
+      </div>
       <div class="filters">
         ${groups.map((item) => `<button type="button" data-prince="${esc(item)}" class="${item === status ? 'on' : ''}" aria-pressed="${item === status}">${esc(item)}</button>`).join('')}
       </div>
@@ -1429,7 +1492,7 @@ function eraPage(slug) {
           </tbody>
         </table>
       </div>
-      <p class="actions"><a class="link" href="#/empresses">后妃</a> · <a class="link" href="#/princesses">皇女</a> · <a class="link" href="#/succession">储位</a></p>
+      <p class="actions"><a class="link" href="${yongzheng ? '#/empresses?era=yongzheng' : '#/empresses'}">后妃</a> · <a class="link" href="${yongzheng ? '#/princesses?era=yongzheng' : '#/princesses'}">皇女</a> · <a class="link" href="#/succession">储位</a></p>
     `;
   }
 
@@ -1454,15 +1517,25 @@ function eraPage(slug) {
   }
 
   function princessesPage(query) {
+    const era = tableEra(query);
     const status = query.status || '全部';
     const groups = ['全部', '入序受封', '未封', '抚育附列'];
-    const rows = (DATA.princesses || []).filter((row) => status === '全部' || row['收录状态'] === status);
+    const rows = princessesForEra(era).filter((row) => status === '全部' || row['收录状态'] === status);
+    const yongzheng = era === 'yongzheng';
     return `
       <p class="kicker">皇女</p>
-      <h1>康熙的女儿</h1>
-      <p class="lede">亲生二十人，受封八人。固伦若是追进，人已经不在了。常宁之女是抚育，不要算进这二十。</p>
-      <p class="warn">和硕、固伦是当时的封号。追进固伦，人已经薨了。表序不是玉牒。</p>
-      <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a></p>
+      <h1>${yongzheng ? '雍正的女儿' : '康熙的女儿'}</h1>
+      <p class="lede">${yongzheng
+        ? '亲生四女。只有第二女长成，雍正元年追进和硕怀恪。三个抚育女不是亲生。'
+        : '亲生二十人，受封八人。固伦若是追进，人已经不在了。常宁之女是抚育，不要算进这二十。'}</p>
+      <p class="warn">${yongzheng
+        ? '公主表在卷166，不在卷167。追进不是生前进封。表序不是玉牒。'
+        : '和硕、固伦是当时的封号。追进固伦，人已经薨了。表序不是玉牒。'}</p>
+      <p class="crumb"><a class="link" href="#/${yongzheng ? 'yongzheng' : 'kangxi'}">${yongzheng ? '雍正朝' : '康熙朝'}</a></p>
+      <div class="filters">
+        <button type="button" data-princess-era="kangxi" class="${yongzheng ? '' : 'on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">圣祖系</button>
+        <button type="button" data-princess-era="yongzheng" class="${yongzheng ? 'on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">世宗系</button>
+      </div>
       <div class="filters">
         ${groups.map((item) => `<button type="button" data-princess="${esc(item)}" class="${item === status ? 'on' : ''}" aria-pressed="${item === status}">${esc(item)}</button>`).join('')}
       </div>
@@ -1482,7 +1555,7 @@ function eraPage(slug) {
           </tbody>
         </table>
       </div>
-      <p class="actions"><a class="link" href="#/princes">皇子</a> · <a class="link" href="#/empresses">后妃</a> · <a class="link" href="#/chapter/kangxi-08">怎么读这张表</a></p>
+      <p class="actions"><a class="link" href="${yongzheng ? '#/princes?era=yongzheng' : '#/princes'}">皇子</a> · <a class="link" href="${yongzheng ? '#/empresses?era=yongzheng' : '#/empresses'}">后妃</a> · <a class="link" href="${yongzheng ? '#/chapter/yongzheng-05' : '#/chapter/kangxi-08'}">怎么读这张表</a></p>
     `;
   }
 
@@ -2416,22 +2489,43 @@ function eraPage(slug) {
       location.hash = id === '全部' ? '#/lanes' : `#/lanes?lane=${encodeURIComponent(id)}`;
       return;
     }
+    const empressEra = event.target.closest('[data-empress-era]');
+    if (empressEra) {
+      const era = empressEra.getAttribute('data-empress-era');
+      location.hash = era === 'yongzheng' ? '#/empresses?era=yongzheng' : '#/empresses';
+      return;
+    }
     const empressFilter = event.target.closest('[data-empress]');
     if (empressFilter) {
       const id = empressFilter.getAttribute('data-empress');
-      location.hash = id === '全部' ? '#/empresses' : `#/empresses?person=${encodeURIComponent(id)}`;
+      const { query } = parseHash();
+      location.hash = eraHref('#/empresses', query, { person: id });
+      return;
+    }
+    const princeEra = event.target.closest('[data-prince-era]');
+    if (princeEra) {
+      const era = princeEra.getAttribute('data-prince-era');
+      location.hash = era === 'yongzheng' ? '#/princes?era=yongzheng' : '#/princes';
       return;
     }
     const princeFilter = event.target.closest('[data-prince]');
     if (princeFilter) {
       const id = princeFilter.getAttribute('data-prince');
-      location.hash = id === '全部' ? '#/princes' : `#/princes?status=${encodeURIComponent(id)}`;
+      const { query } = parseHash();
+      location.hash = eraHref('#/princes', query, { status: id });
+      return;
+    }
+    const princessEra = event.target.closest('[data-princess-era]');
+    if (princessEra) {
+      const era = princessEra.getAttribute('data-princess-era');
+      location.hash = era === 'yongzheng' ? '#/princesses?era=yongzheng' : '#/princesses';
       return;
     }
     const princessFilter = event.target.closest('[data-princess]');
     if (princessFilter) {
       const id = princessFilter.getAttribute('data-princess');
-      location.hash = id === '全部' ? '#/princesses' : `#/princesses?status=${encodeURIComponent(id)}`;
+      const { query } = parseHash();
+      location.hash = eraHref('#/princesses', query, { status: id });
       return;
     }
     const stageFilter = event.target.closest('[data-stage]');

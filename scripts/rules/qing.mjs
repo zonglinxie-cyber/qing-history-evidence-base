@@ -266,24 +266,33 @@ export function check(ctx) {
     }
   }
 
-  // 皇子卷164
+  // 皇子/皇女按父辈皇帝分组，不用康熙计数套所有帝。
   const princeStatuses = new Set(['入序正文', '早薨附列', '本卷缺号']);
-  const missingFourth = princes.filter((row) => row['收录状态'] === '本卷缺号');
-  if (missingFourth.length !== 1 || missingFourth[0].person_id !== 'QH-P-000002' || missingFourth[0]['表序'] !== '4') {
+  const princessStatuses = new Set(['入序受封', '未封', '抚育附列']);
+  const kxPrinces = princes.filter((row) => row['父亲ID'] === 'QH-P-000001');
+  const yzPrinces = princes.filter((row) => row['父亲ID'] === 'QH-P-000002');
+  const kxPrincesses = princesses.filter((row) => (
+    row['父亲ID'] === 'QH-P-000001' || row.person_id === 'QH-P-000123'
+  ));
+  const yzPrincesses = princesses.filter((row) => (
+    row['父亲ID'] === 'QH-P-000002' || String(row['表序标签'] || '').startsWith('世宗抚')
+  ));
+
+  const kxMissing = kxPrinces.filter((row) => row['收录状态'] === '本卷缺号');
+  if (kxMissing.length !== 1 || kxMissing[0].person_id !== 'QH-P-000002' || kxMissing[0]['表序'] !== '4') {
     errors.push('卷164缺号行必须且只能是第四子胤禛 QH-P-000002');
   }
-  if (princes.filter((row) => row['收录状态'] === '入序正文').length !== 23) {
+  if (kxPrinces.filter((row) => row['收录状态'] === '入序正文').length !== 23) {
     errors.push('卷164入序正文应为23人（第一至二十四子缺第四）');
   }
-  if (princes.filter((row) => row['收录状态'] === '早薨附列').length !== 11) {
+  if (kxPrinces.filter((row) => row['收录状态'] === '早薨附列').length !== 11) {
     errors.push('卷164早薨附列应为11人');
   }
-  const firstSon = princes.find((row) => row['表序'] === '1');
+  const firstSon = kxPrinces.find((row) => row['表序'] === '1');
   if (firstSon?.person_id !== 'QH-P-000003') errors.push('表序第一子必须是胤禔 QH-P-000003');
-  for (const prince of princes) {
+  for (const prince of kxPrinces) {
     if (!knownPersonIds.has(prince.person_id)) errors.push(`${prince.person_id} 皇子表人物未入人物档`);
     if (!princeStatuses.has(prince['收录状态'])) errors.push(`${prince.person_id} 收录状态无效`);
-    if (prince['父亲ID'] !== 'QH-P-000001') errors.push(`${prince.person_id} 父亲必须是玄烨`);
     if (prince['生母人物ID'] && !knownPersonIds.has(prince['生母人物ID'])) {
       errors.push(`${prince.person_id} 生母人物ID未知: ${prince['生母人物ID']}`);
     }
@@ -292,20 +301,41 @@ export function check(ctx) {
     }
   }
 
-  // 皇女卷166
-  const princessStatuses = new Set(['入序受封', '未封', '抚育附列']);
-  if (princesses.filter((row) => row['收录状态'] === '入序受封').length !== 8) {
-    errors.push('卷166入序受封应为8人');
+  if (yzPrinces.length) {
+    const yzMissing = yzPrinces.filter((row) => row['收录状态'] === '本卷缺号');
+    if (yzMissing.length !== 1 || yzMissing[0].person_id !== 'QH-P-000019' || yzMissing[0]['表序'] !== '4') {
+      errors.push('卷165缺号行必须且只能是第四子弘历 QH-P-000019');
+    }
+    if (yzPrinces.filter((row) => row['收录状态'] === '入序正文').length !== 5) {
+      errors.push('卷165入序正文应为5人（第一、二、三、五、六子）');
+    }
+    if (yzPrinces.filter((row) => row['收录状态'] === '早薨附列').length !== 4) {
+      errors.push('卷165早薨附列应为4人（弘昐、福宜、福惠、福沛）');
+    }
+    for (const prince of yzPrinces) {
+      if (!knownPersonIds.has(prince.person_id)) errors.push(`${prince.person_id} 皇子表人物未入人物档`);
+      if (!princeStatuses.has(prince['收录状态'])) errors.push(`${prince.person_id} 收录状态无效`);
+      if (prince['生母人物ID'] && !knownPersonIds.has(prince['生母人物ID'])) {
+        errors.push(`${prince.person_id} 生母人物ID未知: ${prince['生母人物ID']}`);
+      }
+      if (prince['收录状态'] === '入序正文' && prince['表序'] === '4') {
+        errors.push('第四子不得标为卷165入序正文');
+      }
+    }
   }
-  if (princesses.filter((row) => row['收录状态'] === '未封').length !== 12) {
-    errors.push('卷166未封应为12人');
+
+  if (kxPrincesses.filter((row) => row['收录状态'] === '入序受封').length !== 8) {
+    errors.push('卷166圣祖系入序受封应为8人');
   }
-  const foster = princesses.filter((row) => row['收录状态'] === '抚育附列');
-  if (foster.length !== 1 || foster[0].person_id !== 'QH-P-000123' || foster[0]['父亲ID'] === 'QH-P-000001') {
-    errors.push('抚育附列必须且只能是纯禧 QH-P-000123，父亲不得写成玄烨');
+  if (kxPrincesses.filter((row) => row['收录状态'] === '未封').length !== 12) {
+    errors.push('卷166圣祖系未封应为12人');
   }
-  const thirdDaughter = princesses.find((row) => row['表序'] === '3');
-  if (thirdDaughter?.person_id !== 'QH-P-000021') errors.push('表序第三女必须是荣宪 QH-P-000021');
+  const kxFoster = kxPrincesses.filter((row) => row['收录状态'] === '抚育附列');
+  if (kxFoster.length !== 1 || kxFoster[0].person_id !== 'QH-P-000123' || kxFoster[0]['父亲ID'] === 'QH-P-000001') {
+    errors.push('圣祖抚育附列必须且只能是纯禧 QH-P-000123，父亲不得写成玄烨');
+  }
+  const thirdDaughter = kxPrincesses.find((row) => row['表序'] === '3');
+  if (thirdDaughter?.person_id !== 'QH-P-000021') errors.push('圣祖表序第三女必须是荣宪 QH-P-000021');
   if (claimById.get('QH-A-KX-0095')?.['客体 ID 或值'] !== '和硕荣宪公主') {
     errors.push('QH-A-KX-0095 初封必须是和硕荣宪，不得写成固伦');
   }
@@ -315,7 +345,7 @@ export function check(ctx) {
   if (claimById.get('QH-A-KX-0110')?.['谓词/关系'] !== 'posthumously_advanced_as') {
     errors.push('QH-A-KX-0110 纯悫固伦必须标为追进');
   }
-  for (const princess of princesses) {
+  for (const princess of kxPrincesses) {
     if (!knownPersonIds.has(princess.person_id)) errors.push(`${princess.person_id} 皇女表人物未入人物档`);
     if (!princessStatuses.has(princess['收录状态'])) errors.push(`${princess.person_id} 收录状态无效`);
     if (!princess['表序'] || !princess['规范名']) errors.push(`${princess.person_id} 缺少表序或规范名`);
@@ -324,6 +354,35 @@ export function check(ctx) {
     }
     if (princess['生母人物ID'] && !knownPersonIds.has(princess['生母人物ID'])) {
       errors.push(`${princess.person_id} 生母人物ID未知: ${princess['生母人物ID']}`);
+    }
+  }
+
+  if (yzPrincesses.length) {
+    if (yzPrincesses.filter((row) => row['收录状态'] === '入序受封').length !== 1) {
+      errors.push('卷166世宗系入序受封应为1人（第二女怀恪）');
+    }
+    if (yzPrincesses.filter((row) => row['收录状态'] === '未封').length !== 3) {
+      errors.push('卷166世宗系未封应为3人');
+    }
+    const yzFoster = yzPrincesses.filter((row) => row['收录状态'] === '抚育附列');
+    if (yzFoster.length !== 3) {
+      errors.push('卷166世宗抚育附列应为3人');
+    }
+    for (const row of yzFoster) {
+      if (row['父亲ID'] === 'QH-P-000002') {
+        errors.push(`${row.person_id} 抚育女父亲不得写成胤禛`);
+      }
+    }
+    for (const princess of yzPrincesses) {
+      if (!knownPersonIds.has(princess.person_id)) errors.push(`${princess.person_id} 皇女表人物未入人物档`);
+      if (!princessStatuses.has(princess['收录状态'])) errors.push(`${princess.person_id} 收录状态无效`);
+      if (!princess['表序'] || !princess['规范名']) errors.push(`${princess.person_id} 缺少表序或规范名`);
+      if (princess['收录状态'] !== '抚育附列' && princess['父亲ID'] !== 'QH-P-000002') {
+        errors.push(`${princess.person_id} 世宗亲生女父亲必须是胤禛`);
+      }
+      if (princess['生母人物ID'] && !knownPersonIds.has(princess['生母人物ID'])) {
+        errors.push(`${princess.person_id} 生母人物ID未知: ${princess['生母人物ID']}`);
+      }
     }
   }
 
