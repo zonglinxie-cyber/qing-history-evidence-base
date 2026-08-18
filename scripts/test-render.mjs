@@ -124,6 +124,15 @@ const descriptionTags = html.match(/<meta\s+name="description"\s+content="[^"]*"
 check('首页只有一条研究稿 description', descriptionTags.length === 1
   && descriptionTags[0].includes('AI 辅助个人研究稿'));
 check('首页转轴入口', homeHtmlOut.includes('先看这几处转轴') && homeHtmlOut.includes('#/path'));
+const headerNav = html.match(/<nav class="nav" aria-label="主导航">[\s\S]*?<\/nav>/)?.[0] || '';
+check('顶栏是读者词', headerNav.includes('对照') && headerNav.includes('今地')
+  && headerNav.includes('文献') && headerNav.includes('十二帝')
+  && !headerNav.includes('#/path') && !headerNav.includes('#/hands')
+  && !headerNav.includes('#/claims'));
+check('帝卡先给可读章', homeHtmlOut.includes('#/chapter/kangxi-02')
+  && homeHtmlOut.includes('两废太子')
+  && homeHtmlOut.includes('card-reads')
+  && homeHtmlOut.includes('card-vita-line'));
 const pathPage = await go('#/path');
 check('转轴年页', pathPage.includes('这几处转过轴') && pathPage.includes('1912') && pathPage.includes('密储落地'));
 check('内禅转轴接到和珅分日章', pathPage.includes('#/chapter/jiaqing-04'));
@@ -145,6 +154,8 @@ const person = await go('#/person/QH-P-000001');
 check('人物页渲染（含朝代内容模块）', person.includes('两废太子') || person.includes('分日'));
 check('康熙帝页拆栏', person.includes('见诸文书的习惯') && person.includes('当时要解决什么')
   && person.includes('史料说明') && !person.includes('未开') && !person.includes('未拆'));
+check('康熙帝页先给出可读章', person.includes('这一朝可读') && person.includes('还想往下读')
+  && person.includes('#/chapter/kangxi-02'));
 const nurhaci = await go('#/person/QH-P-000051');
 check('努尔哈赤帝页有结构且非康熙腔', nurhaci.includes('当时要解决什么') && nurhaci.includes('吞并女真各部') && !nurhaci.includes('择吉不是册立'));
 const xuantong = await go('#/person/QH-P-000059');
@@ -227,6 +238,8 @@ const searchCn = await go('#/search?q=胤禛');
 check('检索高亮 mark 生效', searchCn.includes('<mark>'));
 const searchPy = await go('#/search?q=yinzhen');
 check('拼音检索 yinzhen 命中胤禛', searchPy.includes('QH-P-000002'));
+const searchJuemilu = await go('#/search?q=觉迷录');
+check('检索觉迷录落到专论章', searchJuemilu.includes('#/chapter/yongzheng-04'));
 const works = await go('#/works');
 check('文献专栏按帝分组且有专论入口', works.includes('大义觉迷录') && works.includes('读专论') && works.includes('乾隆'));
 check('文献可读性徽章', works.includes('可查原文条目') || works.includes('已关联逐条依据'));
@@ -269,6 +282,9 @@ const images = await go('#/images');
 check('画像总览带灯箱属性', images.includes('data-lightbox'));
 const imagePage = await go('#/image/QH-V-E04');
 check('图像详情页主图带灯箱属性', imagePage.includes('data-lightbox'));
+const sitePage = await go('#/site/QH-ST-0013');
+check('今地页主图带灯箱属性', sitePage.includes('data-lightbox'));
+check('今地卡带灯箱属性', homeHtmlOut.includes('data-lightbox="畅春园"') || homeHtmlOut.includes('data-lightbox="畅春园'));
 const unknown = await go('#/no-such-page');
 check('未知路由 404', unknown.includes('没有这个页面'));
 
@@ -318,6 +334,8 @@ check('康熙即位章静态导语不把崩地写成畅春园', !kx01Static.incl
 const yz04Static = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');
 check('觉迷录静态章内联冲突引文', yz04Static.includes('claim-compare') && yz04Static.includes('將「十」字改為「于」字') && !yz04Static.includes('在交互版查看相关异说'));
 check('觉迷录静态交叉引用保留标题', yz04Static.includes('传位十四子与改诏') && !yz04Static.includes('>相关章节<'));
+check('静态章顶栏是读者词', yz04Static.includes('对照') && yz04Static.includes('今地')
+  && !yz04Static.includes('href="./#/path"') && !yz04Static.includes('href="./#/hands"'));
 check(`sitemap 只收证据闭环章节 ${indexableChapters.length} 篇`,
   indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
   && noindexChapters.every((row) => !sitemap.includes(`/chapter/${row.slug}/`)));
@@ -327,6 +345,16 @@ check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
 
 // 公开投影门禁：编辑待办、人员身份与 QA 字段不得进入任何可下载 JSON 或静态正文。
 const publicJsonFiles = ['home.json', 'people.json', `${dynastyConfig.chunk}.json`, 'catalog.json', 'search.json'];
+check('d-qing 章目不含正文', (reignData.chapters || []).every((row) => !row.bodyHtml));
+const chapterJsonDir = path.join(siteDir, 'data', 'chapter');
+const chapterJsonMissing = (reignData.chapters || []).filter((row) => (
+  !fs.existsSync(path.join(chapterJsonDir, `${row.slug}.json`))
+)).map((row) => row.slug);
+check(`章体按 slug 懒加载 ${reignData.chapters?.length || 0} 篇`, chapterJsonMissing.length === 0);
+const homeSuggest = JSON.parse(fs.readFileSync(path.join(siteDir, 'data', 'home.json'), 'utf8')).suggest || [];
+check('建议框含章、今地、书名', ['person', 'chapter', 'site', 'work'].every((type) => homeSuggest.some((row) => row.type === type)));
+const juemiluWork = (reignData.works || []).find((row) => String(row['文献名称'] || '').includes('大义觉迷录'));
+check('文献命中可落到专论章', Boolean(juemiluWork?.dedicated_chapter) && juemiluWork.dedicated_chapter === 'yongzheng-04');
 const privateKeys = new Set([
   '选择理由', '核心待核主张', '责任人', '责任角色', '审核备注', '复核人', '复核日期', '录入人', '编辑备注',
   '获取方式', '待核问题', '备注', '期望行为', '绑定ID', '拒答说明', 'markdown', 'file', 'sourceIndex', 'tasks', '下一动作',
@@ -350,8 +378,15 @@ const staticChapterText = (reignData.chapters || []).map((row) => (
 )).join('\n');
 const privateCopy = /选择理由|核心待核主张|待用户抽查|进入站点前|人工复核|M1\s*AI回查|待H1抽查|\bE1\b|\bIDX-\d+\b|任务队列|上次完成位置|下一步动作|下一步（|待续|第一版产出|项目北极星指标|技术架构组|结构化入库|接入站点|大事记组|task-queue|研究卡|和数据页的关系|全表可接入|尚未建档|见解读组|实录卷次回查状态|原子主张|证据抽屉|深挖版|康雍深挖|历法库|卷级索引|逐次钉入|能钉到|实录卷\d+钉到|不拆原子主张|不拆条|待核权|主张未单拆|打开原文后再建来源单元|尚未钉|分层登记|人物档把他登记为|不假装已回|本库|本轮|未开|未拆|尚无专章|逐款查档/;
 check('公开 JSON 不含内部字段', leakedKeyPaths.length === 0);
-check('公开 JSON 与静态章节不含编辑待办文案', !privateCopy.test(`${publicJsonText}\n${html}\n${staticChapterText}`));
-const publicChapterBodies = (reignData.chapters || []).map((row) => row.bodyHtml).join('\n');
+const chapterJsonText = (reignData.chapters || []).map((row) => {
+  const file = path.join(chapterJsonDir, `${row.slug}.json`);
+  return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+}).join('\n');
+check('公开 JSON 与静态章节不含编辑待办文案', !privateCopy.test(`${publicJsonText}\n${html}\n${staticChapterText}\n${chapterJsonText}`));
+const publicChapterBodies = (reignData.chapters || []).map((row) => {
+  const file = path.join(chapterJsonDir, `${row.slug}.json`);
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).bodyHtml || '' : '';
+}).join('\n');
 const publicChapterText = publicChapterBodies.replace(/<[^>]+>/g, ' ');
 check('章节正文不显示内部编号', !/\bQH-(?:W|CF|P|L|ST|CH|SU)-[A-Z0-9-]+\b/.test(publicChapterText));
 check('章节正文不显示原始路由或骨架标题', !/<code>#\//.test(publicChapterBodies)

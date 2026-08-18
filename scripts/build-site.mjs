@@ -294,9 +294,15 @@ function countBy(rows, field) {
 
 function writeJson(name, payload) {
   const file = path.join(dataOutDir, name);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
   const json = `${JSON.stringify(payload)}\n`;
   fs.writeFileSync(file, json);
   return { name, bytes: json.length };
+}
+
+function firstQuote(html) {
+  const match = String(html || '').match(/<blockquote[^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/);
+  return match ? match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '';
 }
 
 function escHtml(value) {
@@ -650,7 +656,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, cl
   <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#191512" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
   <script type="application/ld+json">${structured}</script>
 </head>
 <body>
@@ -658,7 +664,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, cl
   <header class="masthead static-masthead">
     <a class="brand" href="./">清史读本</a>
     <nav class="nav" aria-label="主导航">
-      <a href="./#/path">转轴</a><a href="./">十二帝</a><a href="./#/hands">手稿</a><a href="./#/sites">今地</a><a href="./#/works">文献</a>
+      <a href="./">十二帝</a><a href="./#/lanes">对照</a><a href="./#/sites">今地</a><a href="./#/works">文献</a>
     </nav>
   </header>
   <main id="main" tabindex="-1">
@@ -942,9 +948,42 @@ function buildDynasty({ dynasty, data }) {
       ...pick(row, ['chapter_id', 'slug', 'person_id', 'era', 'title', 'unit_ids', 'related', 'sort']),
       lede: readerCopy(row.lede),
       bodyHtml: row.bodyHtml,
+      quote: firstQuote(row.bodyHtml),
       indexable: isChapterIndexable(row.status, sourceCount),
     };
   });
+  const eraSlugByLabel = Object.fromEntries((dynasty.reignEras || []).map((era) => [era.label, era.slug]));
+  function pickEmperorReads(personId) {
+    const list = publicChapters
+      .filter((row) => row.person_id === personId)
+      .slice()
+      .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
+    const isTimeline = (row) => /统治年表|年表/.test(row.title || '');
+    const bound = list.filter((row) => String(row.unit_ids || '').trim());
+    const unbound = list.filter((row) => !String(row.unit_ids || '').trim());
+    const picked = [
+      ...bound.filter((row) => !isTimeline(row)),
+      ...bound.filter(isTimeline),
+      ...unbound,
+    ].slice(0, 3);
+    let lane = null;
+    for (const row of [...picked, ...list]) {
+      const match = String(row.related || '').match(/#\/lane\/(QH-L-\d+)/);
+      if (!match) continue;
+      const rec = (publicLanes || []).find((item) => item.lane_id === match[1]);
+      lane = { id: match[1], title: rec?.['标题'] || '对照' };
+      break;
+    }
+    return {
+      chapters: picked.map((row) => ({ slug: row.slug, title: row.title })),
+      lane,
+    };
+  }
+  for (const emperor of emperorRecords) {
+    const era = String(emperor['年号或通称'] || '').split('；')[0];
+    emperor.eraSlug = eraSlugByLabel[era] || '';
+    emperor.reads = pickEmperorReads(emperor.person_id);
+  }
   const publicOverviews = overviews.map((row) => ({
     ...pick(row, ['overview_id', 'slug', 'title', 'sort']),
     lede: readerCopy(row.lede),
@@ -1011,9 +1050,11 @@ function buildDynasty({ dynasty, data }) {
   for (const emperor of emperorRecords) {
     seenPeople.add(emperor.person_id);
     suggest.push({
+      type: 'person',
       id: emperor.person_id,
       label: emperor['年号或通称'].split('；')[0],
       extra: emperor['规范名'],
+      href: `#/person/${emperor.person_id}`,
       hay: [emperor.person_id, emperor.emperor_id, emperor['规范名'], emperor['年号或通称'], emperor['庙号'], emperor['父亲'], emperor['母亲'], py([emperor['规范名'], emperor['年号或通称'], emperor['庙号']].join(''))].join(' '),
     });
   }
@@ -1021,10 +1062,43 @@ function buildDynasty({ dynasty, data }) {
     if (seenPeople.has(person.person_id)) continue;
     const aliases = readerMetadata(person['常用名或异名']);
     suggest.push({
+      type: 'person',
       id: person.person_id,
       label: person['规范名'].replace(/^爱新觉罗·/, ''),
       extra: aliases,
+      href: `#/person/${person.person_id}`,
       hay: [person.person_id, person['规范名'], aliases, person['人物类型'], py([person['规范名'], aliases].join(''))].join(' '),
+    });
+  }
+  for (const row of publicChapters) {
+    suggest.push({
+      type: 'chapter',
+      id: row.slug,
+      label: row.title,
+      extra: row.era,
+      href: `#/chapter/${row.slug}`,
+      hay: [row.slug, row.title, row.lede, row.era, row.quote, py(row.title)].join(' '),
+    });
+  }
+  for (const row of publicSites) {
+    suggest.push({
+      type: 'site',
+      id: row.site_id,
+      label: row['事件'],
+      extra: String(row['今日'] || '').split('。')[0],
+      href: `#/site/${row.site_id}`,
+      hay: [row.site_id, row['事件'], row['当时'], row['今日'], row['卡片钩子'], py(row['事件'])].join(' '),
+    });
+  }
+  for (const row of publicWorks) {
+    const href = row.dedicated_chapter ? `#/chapter/${row.dedicated_chapter}` : '#/works';
+    suggest.push({
+      type: 'work',
+      id: row.work_id,
+      label: row['文献名称'],
+      extra: row['文献类型'],
+      href,
+      hay: [row.work_id, row['文献名称'], row['文献类型'], row['内容概述'], py(row['文献名称'])].join(' '),
     });
   }
 
@@ -1052,7 +1126,7 @@ function buildDynasty({ dynasty, data }) {
       label: row.question,
       extra: row.category,
     })),
-    ...publicChapters.map((row) => searchEntry('chapter', row.slug, [row.title, row.lede, row.era, row.bodyHtml.replace(/<[^>]+>/g, ' ')].join(' '), {
+    ...publicChapters.map((row) => searchEntry('chapter', row.slug, [row.title, row.lede, row.era, row.quote].join(' '), {
       label: row.title,
       extra: row.era,
     })),
@@ -1068,7 +1142,10 @@ function buildDynasty({ dynasty, data }) {
       princes: publicPrinces,
       princesses: publicPrincesses,
       heirChain: publicHeirChain,
-      chapters: publicChapters,
+      chapters: publicChapters.map((row) => {
+        const { bodyHtml, quote, ...meta } = row;
+        return meta;
+      }),
       questions: publicQuestions,
       works: publicWorks,
       conflictSets: publicConflictSets,
@@ -1097,6 +1174,23 @@ function buildDynasty({ dynasty, data }) {
     writeJson('people.json', { people: publicPeople, portraits: publicPortraits, crosswalk: publicCrosswalk, regions: publicRegions, iiif: publicIiif }),
     writeJson('catalog.json', { sources: publicSources }),
   ];
+  const chapterBodyDir = path.join(dataOutDir, 'chapter');
+  fs.rmSync(chapterBodyDir, { recursive: true, force: true });
+  fs.mkdirSync(chapterBodyDir, { recursive: true });
+  for (const row of publicChapters) {
+    written.push(writeJson(`chapter/${row.slug}.json`, {
+      slug: row.slug,
+      title: row.title,
+      lede: row.lede,
+      era: row.era,
+      person_id: row.person_id,
+      unit_ids: row.unit_ids,
+      related: row.related,
+      sort: row.sort,
+      indexable: row.indexable,
+      bodyHtml: row.bodyHtml,
+    }));
+  }
 
   // 首页直出：kicker/h1/lede 取自 dynasty 对象
   const indexPath = path.join(siteDir, 'index.html');
