@@ -46,7 +46,7 @@
 | `data/kangxi-princes.csv` | 康熙皇子全表：卷164入序23人、本卷缺号第四子、早薨未入序11人；表序与长子分栏 |
 | `data/kangxi-princesses.csv` | 康熙皇女全表：卷166亲生20人、抚育1人；未封12、受封8；和硕/固伦按时态；荣宪沿用 QH-P-000021 |
 | `data/kangxi-heir-chain.csv` | 两废太子事件链：立储、拘执、颁废、复立、再废按日拆分；实录卷234/237已回核乙亥、丁丑、丁酉、辛巳；乙丑/丙寅、四十六/四十七年、九月/十月冲突保留 |
-| `data/side-lanes.csv` | 后宫趣事、野史对照、罕读史料三栏；传闻与官书分列，不升格为已核事实 |
+| `data/side-lanes.csv` | 后宫制度、野史对照、罕读史料三栏；官书先出，传闻分列，不升格为已核事实 |
 | `content/emperors/kangxi/01-accession-and-testament.md` | 康熙即位与遗诏的首篇证据型短章 |
 | `content/emperors/kangxi/02-two-depositions.md` | 两废太子：分日记录，不写成九子夺嫡 |
 | `content/emperors/kangxi/03-four-empresses.md` | 康熙四后：生前称号不等于最终谥号 |

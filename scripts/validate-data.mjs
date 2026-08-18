@@ -12,7 +12,7 @@ import {
   activeDynasties,
   reignEraLabels,
 } from './lib/schema.mjs';
-import { checkSkeletonProse } from './rules/common/prose.mjs';
+import { checkSkeletonProse, checkReaderProse } from './rules/common/prose.mjs';
 import { check as checkCommon } from './rules/common/structure.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -179,6 +179,10 @@ async function main() {
     checkSkeletonProse({
       chapters: ctx.chapters,
       contentDir,
+      warnings,
+    });
+    checkReaderProse({
+      questions: ctx.questions,
       warnings,
     });
 
