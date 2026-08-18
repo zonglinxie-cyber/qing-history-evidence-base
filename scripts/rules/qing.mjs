@@ -97,8 +97,19 @@ export function check(ctx) {
   if (/丹药|圆明园|清溪书屋/.test(`${claimById.get('QH-A-YZ-0032')?.['客体 ID 或值'] || ''}${claimById.get('QH-A-YZ-0032')?.['支持引文'] || ''}`)) {
     errors.push('QH-A-YZ-0032 不得把丹药或圆明园写进本纪崩条');
   }
-  if (String(claimById.get('QH-A-YZ-0030')?.['冲突组 ID'] || '').trim()) {
-    errors.push('QH-A-YZ-0030 军机组第二面待补，单面主张不得挂冲突组（见 conflict-sets.csv QH-CF-YZ-JUNJI）');
+  if (claimById.get('QH-A-YZ-0030')?.['冲突组 ID'] !== 'QH-CF-YZ-JUNJI'
+    || claimById.get('QH-A-YZ-0045')?.['冲突组 ID'] !== 'QH-CF-YZ-JUNJI'
+    || claimById.get('QH-A-YZ-0046')?.['冲突组 ID'] !== 'QH-CF-YZ-JUNJI') {
+    errors.push('军机处时点须三面挂 QH-CF-YZ-JUNJI：本纪十年、实录七年密办、年表七年军机房');
+  }
+  if (String(claimById.get('QH-A-YZ-0044')?.['冲突组 ID'] || '').trim()) {
+    errors.push('QH-A-YZ-0044 恤赠条不得挂军机冲突组');
+  }
+  if (/軍機房|军机房/.test(claimById.get('QH-A-YZ-0045')?.['支持引文'] || '')) {
+    errors.push('QH-A-YZ-0045 不得把军机房写入实录引文');
+  }
+  if (!/密為辦理/.test(claimById.get('QH-A-YZ-0045')?.['支持引文'] || '')) {
+    errors.push('QH-A-YZ-0045 必须保留密为办理');
   }
   if (claimById.get('QH-A-YZ-0026')?.['冲突组 ID'] !== 'QH-CF-YZ-NIAN-DEATH'
     || claimById.get('QH-A-YZ-0038')?.['冲突组 ID'] !== 'QH-CF-YZ-NIAN-DEATH') {

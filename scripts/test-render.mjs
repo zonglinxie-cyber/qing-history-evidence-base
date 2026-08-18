@@ -198,6 +198,8 @@ check('雍正即位章冲突并排', yz01.includes('claim-compare') && yz01.incl
 check('雍正即位章读这一句', /<aside class="read-line"[\s\S]*永遠禁錮[\s\S]*不能把四十一款[\s\S]*<\/aside>/.test(yz01));
 const junjiQuote = yz01.match(/<blockquote class="quote source-quote"><p>([^<]*策勒克[^<]*)<\/p><\/blockquote>/);
 check('雍正即位章军机实录不是始设', yz01.includes('data-claim="QH-A-YZ-0044"') && Boolean(junjiQuote) && !/始於此|始于此/.test(junjiQuote[1]));
+const yz7Quote = yz01.match(/<blockquote class="quote source-quote"><p>([^<]*密為辦理[^<]*)<\/p><\/blockquote>/);
+check('雍正即位章七年军需密办不是军机房', yz01.includes('data-claim="QH-A-YZ-0045"') && yz01.includes('data-claim="QH-A-YZ-0046"') && Boolean(yz7Quote) && !/軍機房|军机房/.test(yz7Quote[1]));
 const sevenDays = await go('#/chapter/yongzheng-07');
 check('康雍七日链专题形成证据闭环', sevenDays.includes('七日链')
   && sevenDays.includes('data-claim="QH-A-KX-0037"')
