@@ -232,7 +232,21 @@ check('文献专栏按帝分组且有专论入口', works.includes('大义觉迷
 check('文献可读性徽章', works.includes('可查原文条目') || works.includes('已关联逐条依据'));
 check('起居注不假装可读原文', works.includes('馆藏入口') && works.includes('馆藏／咨询入口'));
 const juemilu = await go('#/chapter/yongzheng-04');
-check('大义觉迷录专论章渲染', juemilu.includes('自辩') && juemilu.includes('禁毁'));
+check('大义觉迷录专论章渲染', juemilu.includes('自辩') && juemilu.includes('缴书'));
+check('觉迷录短引与实录条次入章', juemilu.includes('data-claim="QH-A-YZ-0047"')
+  && juemilu.includes('data-claim="QH-A-YZ-0049"')
+  && juemilu.includes('data-claim="QH-A-YZ-0050"')
+  && juemilu.includes('data-claim="QH-A-YZ-0051"')
+  && juemilu.includes('data-claim="QH-A-QL-0007"')
+  && juemilu.includes('data-claim="QH-A-QL-0008"'));
+check('觉迷录改诏传闻不是曾静原供也不是已证伪', juemilu.includes('耿六格')
+  && juemilu.includes('將「十」字改為「于」字')
+  && juemilu.includes('不是曾静原供')
+  && /不得写[「"]已证伪/.test(juemilu));
+check('觉迷录停讲不是销毁完成', juemilu.includes('停其講解') && juemilu.includes('候朕再降諭旨') && juemilu.includes('不得改写成销毁完成'));
+check('曾静死法不写乾隆元年', juemilu.includes('凌遲處死') && juemilu.includes('雍正十三年十二月') && juemilu.includes('不是乾隆元年十二月'));
+check('觉迷录读这一句', /<aside class="read-line"[\s\S]*將「十」字改為「于」字[\s\S]*不能写成已经证伪[\s\S]*<\/aside>/.test(juemilu)
+  || /<aside class="read-line"[\s\S]*將「十」字改為「于」字[\s\S]*不能写成已证伪[\s\S]*<\/aside>/.test(juemilu));
 check('未完成全章核对的章节显示警示', juemilu.includes('研究草稿｜本章尚未完成全文史料核对'));
 check('纯原文闭环章节不误标为研究草稿', !kx01.includes('研究草稿｜本章尚未完成全文史料核对'));
 const goldenFailures = [];

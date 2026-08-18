@@ -132,6 +132,44 @@ export function check(ctx) {
     errors.push('QH-A-YZ-0044 必须保留办理军机大臣议奏追封策勒克');
   }
 
+  const yz49 = `${claimById.get('QH-A-YZ-0049')?.['支持引文'] || ''}${claimById.get('QH-A-YZ-0049')?.['编辑备注'] || ''}${claimById.get('QH-A-YZ-0049')?.['客体 ID 或值'] || ''}`;
+  const yz50 = `${claimById.get('QH-A-YZ-0050')?.['支持引文'] || ''}${claimById.get('QH-A-YZ-0050')?.['编辑备注'] || ''}`;
+  if (!claimById.get('QH-A-YZ-0049') || !claimById.get('QH-A-YZ-0050')) {
+    errors.push('觉迷录改诏传闻与驳语必须分成 QH-A-YZ-0049、QH-A-YZ-0050');
+  }
+  if (claimById.get('QH-A-YZ-0049')?.['主体 ID'] !== 'QH-P-000002') {
+    errors.push('QH-A-YZ-0049 主体必须是雍正转述，不得改成曾静原供');
+  }
+  if (!/耿六格/.test(yz49) || !/「十」字改為「于」字/.test(claimById.get('QH-A-YZ-0049')?.['支持引文'] || '')) {
+    errors.push('QH-A-YZ-0049 必须保留耿六格供称与「十」改「于」');
+  }
+  if (/已证伪|已證偽/.test(`${claimById.get('QH-A-YZ-0049')?.['支持引文'] || ''}${claimById.get('QH-A-YZ-0049')?.['客体 ID 或值'] || ''}${claimById.get('QH-A-YZ-0050')?.['支持引文'] || ''}${claimById.get('QH-A-YZ-0050')?.['客体 ID 或值'] || ''}`)) {
+    errors.push('觉迷录改诏条不得写已证伪');
+  }
+  if (claimById.get('QH-A-YZ-0049')?.['冲突组 ID'] !== 'QH-CF-YZ-DYJML-GAIZHAO'
+    || claimById.get('QH-A-YZ-0050')?.['冲突组 ID'] !== 'QH-CF-YZ-DYJML-GAIZHAO') {
+    errors.push('改诏传闻与驳语必须挂 QH-CF-YZ-DYJML-GAIZHAO');
+  }
+  if (claimById.get('QH-A-YZ-0048')?.['冲突组 ID'] !== 'QH-CF-YZ-DYJML-SCENE') {
+    errors.push('QH-A-YZ-0048 必须挂传位场面冲突组 QH-CF-YZ-DYJML-SCENE');
+  }
+  if (!/停其講解/.test(claimById.get('QH-A-QL-0007')?.['支持引文'] || '') || !/彙送禮部/.test(claimById.get('QH-A-QL-0007')?.['支持引文'] || '')) {
+    errors.push('QH-A-QL-0007 必须保留停其讲解与彙送礼部');
+  }
+  if (/销毁|銷毀|禁毁/.test(claimById.get('QH-A-QL-0007')?.['客体 ID 或值'] || '')) {
+    errors.push('QH-A-QL-0007 客体不得写成销毁或禁毁');
+  }
+  if (!/凌遲處死/.test(claimById.get('QH-A-QL-0008')?.['支持引文'] || '') || /磔/.test(claimById.get('QH-A-QL-0008')?.['支持引文'] || '')) {
+    errors.push('QH-A-QL-0008 必须保留凌迟处死，不得把本纪磔市写入实录引文');
+  }
+  if (/乾隆元年/.test(`${claimById.get('QH-A-QL-0008')?.['原始时间表达'] || ''}${claimById.get('QH-A-QL-0009')?.['原始时间表达'] || ''}${claimById.get('QH-A-QL-0010')?.['原始时间表达'] || ''}`)) {
+    errors.push('曾静治罪、凌迟、磔市不得写成乾隆元年');
+  }
+  if (claimById.get('QH-A-QL-0008')?.['冲突组 ID'] !== 'QH-CF-QL-ZENGJING-DEATH'
+    || claimById.get('QH-A-QL-0010')?.['冲突组 ID'] !== 'QH-CF-QL-ZENGJING-DEATH') {
+    errors.push('凌迟与磔市必须挂 QH-CF-QL-ZENGJING-DEATH');
+  }
+
   if (!chapters.some((row) => row.slug === 'kangxi-01') || !chapters.some((row) => row.slug === 'yongzheng-01')) {
     errors.push('必须同时有康熙即位章与雍正即位章');
   }
