@@ -20,6 +20,9 @@ side-lanes.csv,qing,,lanes,"lane_id;栏目;标题;通行说法;官书或档案�
 kangxi-empress-timeline.csv,qing,kangxi,empress_timeline,"event_id;person_id;当时称号;事件类型;来源单元;引文;回查状态",event_id,19
 kangxi-princes.csv,qing,kangxi,princes,"person_id;表序;收录状态;规范名;父亲ID",person_id,35
 kangxi-princesses.csv,qing,kangxi,princesses,"person_id;表序;规范名;收录状态",person_id,21
+yongzheng-empress-timeline.csv,qing,yongzheng,empress_timeline,"event_id;person_id;当时称号;事件类型;来源单元;引文;回查状态",event_id,12
+yongzheng-princes.csv,qing,yongzheng,princes,"person_id;表序;收录状态;规范名;父亲ID",person_id,10
+yongzheng-princesses.csv,qing,yongzheng,princesses,"person_id;表序;规范名;收录状态",person_id,7
 kangxi-heir-chain.csv,qing,kangxi,heir_chain,"event_id;person_id;阶段;事件类型;来源单元;引文;回查状态",event_id,18
 historic-sites.csv,qing,,sites,"site_id;事件;当时;今日;今地说明;边界;卡片钩子;证据状态;权利颜色;文件页",site_id,
 imperial-works.csv,qing,,works,"work_id;emperor_id;文献名称;文献类型;成书年代;卷数;证据状态;open_state;source_unit_ids",work_id,64
