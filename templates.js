@@ -143,24 +143,34 @@ export function emperorCard(emperor, opts = {}) {
   const portrait = emperor.portrait;
   const era = emperor['年号或通称'].split('；')[0];
   const alt = portrait?.['对象标题'] || `${era}朝服像`;
+  const { born, died } = yearSpan(emperor);
+  const given = String(emperor['规范名'] || '').replace(/^爱新觉罗·/, '');
+  const eraHref = emperor.eraSlug ? `#/${emperor.eraSlug}` : `#/person/${emperor.person_id}`;
+  const chapters = emperor.reads?.chapters || [];
+  const lane = emperor.reads?.lane;
   const img = canEmbed(portrait)
     ? imgTag(portrait['预览文件'], alt, {
       width: 600,
       height: 800,
-      sizes: '(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px',
+      sizes: '(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px',
       onerror: opts.onerror !== false,
     })
     : '';
   return `
       <article class="card emperor-card">
-        <a class="card-pic" href="#/person/${esc(emperor.person_id)}" aria-label="${esc(alt)}">
+        <a class="card-pic" href="${esc(eraHref)}" aria-label="${esc(alt)}">
           ${img}
         </a>
-        <a class="meta" href="#/person/${esc(emperor.person_id)}">
-          <div class="era">${esc(era)}</div>
-          ${emperorCardVita(emperor)}
-          ${credibilityBadge(emperor.credibility)}
-        </a>
+        <div class="meta">
+          <a class="era-link" href="${esc(eraHref)}">
+            <div class="era">${esc(era)}</div>
+            <p class="card-vita-line">${esc([given, born && died ? `${born}–${died}` : ''].filter(Boolean).join(' · '))}</p>
+          </a>
+          ${chapters.length ? `<ol class="card-reads">${chapters.map((row) => (
+            `<li><a href="#/chapter/${esc(row.slug)}">${esc(row.title)}</a></li>`
+          )).join('')}</ol>` : ''}
+          ${lane ? `<p class="card-lane"><a href="#/lane/${esc(lane.id)}">${esc(lane.title)}</a></p>` : ''}
+        </div>
       </article>`;
 }
 
@@ -174,6 +184,7 @@ export function siteCard(site, opts = {}) {
       height: 540,
       sizes: '(max-width: 600px) 100vw, (max-width: 960px) 45vw, 420px',
       onerror: opts.onerror !== false,
+      lightbox: alt,
     })
     : '<div class="img-fallback">图像权利受限，不嵌入</div>';
   const rawStatus = site['证据状态'] || '';

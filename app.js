@@ -111,6 +111,17 @@ async function ensureView(view) {
   await Promise.all(chunks.map(loadChunk));
 }
 
+async function loadChapterBody(slug) {
+  if (!slug) return;
+  const row = (DATA.chapters || []).find((item) => item.slug === slug);
+  if (row?.bodyHtml) return;
+  const res = await fetch(`data/chapter/${encodeURIComponent(slug)}.json`);
+  if (!res.ok) return;
+  const payload = await res.json();
+  if (row) row.bodyHtml = payload.bodyHtml;
+  else (DATA.chapters ||= []).push(payload);
+}
+
 function eraPage(slug) {
   const page = ERA_PAGES[slug];
   if (page) return page();
@@ -486,6 +497,7 @@ function eraPage(slug) {
       let on = false;
       if (!key) on = !current;
       else if (key === 'path') on = pathViews.has(current);
+      else if (key === 'lanes') on = current === 'lanes' || current === 'lane';
       else if (key === 'sites') on = current === 'sites' || current === 'site';
       else if (key === 'works') on = current === 'works';
       else on = key === current;
@@ -724,13 +736,45 @@ function eraPage(slug) {
     return `<span class="lamp lamp-${esc(lamp)}">${esc(lamp)}</span>`;
   }
 
+  function dynastyReadsBlock(emperor) {
+    if (!emperor) return '';
+    const ready = emperor.reads?.chapters?.length
+      ? emperor.reads.chapters
+      : chaptersForPerson(emperor.person_id).slice(0, 3).map((row) => ({
+        slug: row.slug, title: row.title, lede: row.lede,
+      }));
+    const lane = emperor.reads?.lane || null;
+    if (!ready.length && !lane) return '';
+    return `
+      <h2>这一朝可读</h2>
+      <ol class="threads">
+        ${ready.map((row) => {
+          const full = (DATA.chapters || []).find((item) => item.slug === row.slug);
+          const lede = row.lede || full?.lede || '';
+          return `<li>
+            <a class="thread" href="#/chapter/${esc(row.slug)}">
+              <span class="thread-year">${esc(full?.era || '')}</span>
+              <h2>${esc(row.title)}</h2>
+              ${lede ? `<p>${esc(lede)}</p>` : ''}
+            </a>
+          </li>`;
+        }).join('')}
+      </ol>
+      ${lane ? `<p class="actions"><a class="link" href="#/lane/${esc(lane.id)}">对照：${esc(lane.title)}</a></p>` : ''}`;
+  }
+
   function emperorPack(read, emperor) {
-    if (!read) return '';
+    const readsHtml = dynastyReadsBlock(emperor);
+    if (!read) return readsHtml;
     const hasPack = read.habits || read.policy || read.beats || read.problems;
     if (!hasPack) {
       return `
-        ${read.body ? `<div class="emperor-bio">${read.body.split('\n\n').map((p) => `<p>${esc(p)}</p>`).join('')}</div>` : ''}
-        ${read.evidenceNote ? `<details class="evidence-drawer"><summary>史料说明</summary><p>${esc(read.evidenceNote)}</p></details>` : ''}`;
+        ${readsHtml}
+        <details class="more-read">
+          <summary>还想往下读</summary>
+          ${read.body ? `<div class="emperor-bio">${read.body.split('\n\n').map((p) => `<p>${esc(p)}</p>`).join('')}</div>` : ''}
+          ${read.evidenceNote ? `<details class="evidence-drawer"><summary>史料说明</summary><p>${esc(read.evidenceNote)}</p></details>` : ''}
+        </details>`;
     }
     const eraSlug = String(emperor['年号或通称'] || '').split('；')[0];
     const dirMap = {
@@ -742,6 +786,9 @@ function eraPage(slug) {
     const hasChronicle = chronicleRows(emperor.emperor_id).length > 0;
     const chronicleHref = hasChronicle && dirMap[eraSlug] ? `#/chronicle/${dirMap[eraSlug]}` : '';
     return `
+      ${readsHtml}
+      <details class="more-read">
+        <summary>还想往下读</summary>
       <div class="emperor-bio">${(read.body || '').split('\n\n').map((p) => `<p>${esc(p)}</p>`).join('')}</div>
       ${read.evidenceNote ? `<details class="evidence-drawer"><summary>史料说明</summary><p>${esc(read.evidenceNote)}</p></details>` : ''}
       ${read.problems?.length ? `
@@ -789,6 +836,7 @@ function eraPage(slug) {
         <h2>后人怎么评</h2>
         <ul class="later-list">${read.later.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}
       ${chronicleHref ? `<p class="actions"><a class="link" href="${esc(chronicleHref)}">这一朝大事记</a></p>` : ''}
+      </details>
     `;
   }
 
@@ -974,7 +1022,8 @@ function eraPage(slug) {
   }
 
   function chapterReadBlock(personId) {
-    const chapters = chaptersForPerson(personId);
+    const shown = new Set((emperorByPerson.get(personId)?.reads?.chapters || []).map((row) => row.slug));
+    const chapters = chaptersForPerson(personId).filter((row) => !shown.has(row.slug));
     const extras = {
       'QH-P-000001': [['#/chapter/kangxi-02', '两废太子'], ['#/chapter/kangxi-01', '即位、崩逝与遗诏'], ['#/succession', '储位全链'], ['#/princes', '儿子怎么排'], ['#/princesses', '女儿怎么排']],
       'QH-P-000002': [['#/kangxi', '康熙朝的储位与对照'], ['#/lanes', '改诏、丹药等传闻']],
@@ -989,10 +1038,13 @@ function eraPage(slug) {
       'QH-P-000058': [['#/chapter/guangxu-01', '继文宗为子'], ['#/image/QH-V-E11C', '光绪朱批']],
       'QH-P-000059': [['#/chapter/xuantong-01', '统治权公诸全国'], ['#/hands', '真迹手稿']],
     };
-    const extra = extras[personId] || [];
+    const extra = (extras[personId] || []).filter(([href]) => {
+      const slug = String(href).match(/^#\/chapter\/([^/?#]+)$/)?.[1];
+      return !slug || !shown.has(slug);
+    });
     if (!chapters.length && !extra.length) return '';
     return `
-          <h2>可以接着看</h2>
+          <h2>其余篇目</h2>
           ${chapters.map((row) => `<p class="rel"><a href="#/chapter/${esc(row.slug)}">${esc(row.title)}</a></p>`).join('')}
           ${extra.map(([href, label]) => `<p class="rel"><a href="${esc(href)}">${esc(label)}</a></p>`).join('')}
     `;
@@ -1107,6 +1159,7 @@ function eraPage(slug) {
       height: 540,
       onerror: true,
       sizes: '(max-width: 600px) 100vw, (max-width: 960px) 45vw, 420px',
+      lightbox: alt,
     });
   }
 
@@ -2069,7 +2122,11 @@ function eraPage(slug) {
       ${questionHits.length ? `<h2>这类问题 ${questionHits.length}</h2><ul>${questionHits.map((hit) => `<li><a href="#/question/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : ''}
       ${laneHits.length ? `<h2>传闻对照 ${laneHits.length}</h2>${laneHits.map(laneCard).join('')}` : ''}
       ${sourceHits.length ? `<h2>来源 ${sourceHits.length}</h2><ul>${sourceHits.map((row) => `<li><a href="#/source/${esc(row.source_id)}">${esc(row.source_id)} ${esc(row['机构或资源'])}</a></li>`).join('')}</ul>` : ''}
-      ${workHits.length ? `<h2>文献 ${workHits.length}</h2><ul>${workHits.map((hit) => `<li><a href="#/works">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : ''}
+      ${workHits.length ? `<h2>文献 ${workHits.length}</h2><ul>${workHits.map((hit) => {
+        const work = (DATA.works || []).find((row) => row.work_id === hit.id);
+        const href = work?.dedicated_chapter ? `#/chapter/${work.dedicated_chapter}` : '#/works';
+        return `<li><a href="${esc(href)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`;
+      }).join('')}</ul>` : ''}
     `;
   }
 
@@ -2129,7 +2186,11 @@ function eraPage(slug) {
     else if (view === 'person') html = personPage(parts[1]);
     else if (view === 'claims') html = claimsPage(query);
     else if (view === 'claim') html = claimPage(parts[1]);
-    else if (view === 'chapter') html = chapterPage(parts[1]);
+    else if (view === 'chapter') {
+      await loadChapterBody(parts[1]);
+      if (gen !== renderGen) return;
+      html = chapterPage(parts[1]);
+    }
     else if (view === 'questions') html = questionsPage(query);
     else if (view === 'question') html = questionPage(parts[1]);
     else if (view === 'images') html = imagesPage();
@@ -2186,18 +2247,33 @@ function eraPage(slug) {
     };
   }
 
-  function searchPeople(q) {
+  function searchSuggest(q) {
     const needle = normalize(q);
     if (!needle) return [];
+    const rank = { person: 0, chapter: 1, site: 2, work: 3 };
     const rows = DATA.suggest || [];
     if (rows.length) {
-      return rows.filter((row) => normalize(row.hay).includes(needle)).map((row) => ({
-        id: row.id,
-        label: row.label,
-        extra: row.extra,
-      }));
+      return rows
+        .filter((row) => normalize(row.hay).includes(needle))
+        .sort((a, b) => (rank[a.type] ?? 9) - (rank[b.type] ?? 9))
+        .map((row) => ({
+          type: row.type || 'person',
+          id: row.id,
+          label: row.label,
+          extra: row.extra,
+          href: row.href || `#/person/${row.id}`,
+        }));
     }
-    return lookupIndex(SEARCH, q).filter((row) => row.type === 'person');
+    return lookupIndex(SEARCH, q)
+      .filter((row) => ['person', 'chapter', 'site', 'work'].includes(row.type))
+      .sort((a, b) => (rank[a.type] ?? 9) - (rank[b.type] ?? 9))
+      .map((row) => {
+        const href = row.type === 'chapter' ? `#/chapter/${row.id}`
+          : row.type === 'site' ? `#/site/${row.id}`
+            : row.type === 'work' ? '#/works'
+              : `#/person/${row.id}`;
+        return { type: row.type, id: row.id, label: row.label, extra: row.extra, href };
+      });
   }
 
   function hideSuggest() {
@@ -2209,14 +2285,16 @@ function eraPage(slug) {
   }
 
   function renderSuggest(q) {
-    const hits = searchPeople(q).slice(0, 8);
+    const hits = searchSuggest(q).slice(0, 8);
     suggestItems = hits;
     suggestActive = -1;
+    const kindLabel = { person: '人', chapter: '章', site: '地', work: '书' };
     if (!hits.length) {
-      suggest.innerHTML = '<p class="suggest-empty">无人物命中，回车可检索全站。</p>';
+      suggest.innerHTML = '<p class="suggest-empty">没有直接命中，回车可检索全站。</p>';
     } else {
       suggest.innerHTML = hits.map((hit, index) => `
-        <a class="suggest-item" role="option" id="sug-${index}" href="#/person/${esc(hit.id)}">
+        <a class="suggest-item" role="option" id="sug-${index}" href="${esc(hit.href)}">
+          <span class="kind">${esc(kindLabel[hit.type] || '')}</span>
           <strong>${esc(hit.label)}</strong>
           <span class="muted">${esc(hit.extra || '')}</span>
         </a>`).join('')
@@ -2254,7 +2332,7 @@ function eraPage(slug) {
       event.preventDefault();
       const hit = suggestItems[suggestActive];
       hideSuggest();
-      if (hit) location.hash = `#/person/${encodeURIComponent(hit.id)}`;
+      if (hit?.href) location.hash = hit.href;
     }
   });
   searchInput.addEventListener('blur', () => {
