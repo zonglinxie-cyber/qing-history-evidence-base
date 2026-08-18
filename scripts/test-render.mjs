@@ -306,8 +306,18 @@ for (const chapterRow of reignData.chapters || []) {
 const staticEvidence = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-07', 'index.html'), 'utf8');
 const sitemap = fs.readFileSync(path.join(siteDir, 'sitemap.xml'), 'utf8');
 check(`静态章节全量生成 ${reignData.chapters?.length || 0} 篇`, staticMissing.length === 0);
-check('静态证据页保留可回主张链接', staticEvidence.includes('href="#/claim/QH-A-KX-0037"')
+check('静态证据页保留可回主张链接', staticEvidence.includes('href="./#/claim/QH-A-KX-0037"')
   && !staticEvidence.includes('<button type="button" class="link claim-ref"'));
+const staticBareHash = (reignData.chapters || []).filter((row) => {
+  const page = fs.readFileSync(path.join(siteDir, 'chapter', row.slug, 'index.html'), 'utf8');
+  return /href="#\//.test(page);
+}).map((row) => row.slug);
+check('静态章站内路由带 ./#/', staticBareHash.length === 0);
+const kx01Static = fs.readFileSync(path.join(siteDir, 'chapter', 'kangxi-01', 'index.html'), 'utf8');
+check('康熙即位章静态导语不把崩地写成畅春园', !kx01Static.includes('崩逝那天人在畅春园') && kx01Static.includes('寝宫'));
+const yz04Static = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');
+check('觉迷录静态章内联冲突引文', yz04Static.includes('claim-compare') && yz04Static.includes('將「十」字改為「于」字') && !yz04Static.includes('在交互版查看相关异说'));
+check('觉迷录静态交叉引用保留标题', yz04Static.includes('传位十四子与改诏') && !yz04Static.includes('>相关章节<'));
 check(`sitemap 只收证据闭环章节 ${indexableChapters.length} 篇`,
   indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
   && noindexChapters.every((row) => !sitemap.includes(`/chapter/${row.slug}/`)));
