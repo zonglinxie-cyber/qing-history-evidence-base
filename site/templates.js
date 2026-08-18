@@ -306,7 +306,7 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <div class="grid cards site-cards">${featured.map((row) => siteCard(row, opts)).join('')}</div>
         <p class="actions">
           ${rest > 0 ? `<a class="link" href="#/sites">其余 ${rest} 处今地</a> · ` : ''}
-          <a class="link" href="#/lanes">传闻对照</a>
+          <a class="link" href="#/lanes">对照</a>
         </p>
       </section>`;
 }

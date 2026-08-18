@@ -967,9 +967,10 @@ function buildDynasty({ dynasty, data }) {
       ...unbound,
     ].slice(0, 3);
     let lane = null;
+    const skipHomeLanes = new Set(['QH-L-0007', 'QH-L-0009']);
     for (const row of [...picked, ...list]) {
       const match = String(row.related || '').match(/#\/lane\/(QH-L-\d+)/);
-      if (!match) continue;
+      if (!match || skipHomeLanes.has(match[1])) continue;
       const rec = (publicLanes || []).find((item) => item.lane_id === match[1]);
       lane = { id: match[1], title: rec?.['标题'] || '对照' };
       break;

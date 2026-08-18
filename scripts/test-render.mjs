@@ -133,6 +133,9 @@ check('帝卡先给可读章', homeHtmlOut.includes('#/chapter/kangxi-02')
   && homeHtmlOut.includes('两废太子')
   && homeHtmlOut.includes('card-reads')
   && homeHtmlOut.includes('card-vita-line'));
+check('首页不主推改诏与吕四娘', !homeHtmlOut.includes('#/lane/QH-L-0007')
+  && !homeHtmlOut.includes('#/lane/QH-L-0009')
+  && !homeHtmlOut.includes('吕四娘'));
 const pathPage = await go('#/path');
 check('转轴年页', pathPage.includes('这几处转过轴') && pathPage.includes('1912') && pathPage.includes('密储落地'));
 check('内禅转轴接到和珅分日章', pathPage.includes('#/chapter/jiaqing-04'));
@@ -168,8 +171,14 @@ check('乾隆朝页钉住已打开对照', qlEra.includes('#/lane/QH-L-0033') &&
 const questionsPage = await go('#/questions');
 check('问题页不再自称导读或黄金问题', questionsPage.includes('这类问题，现在停在这里') && !questionsPage.includes('从问题进入清史') && !questionsPage.includes('黄金问题'));
 check('问题页先放三道拒答', questionsPage.includes('八亿两') && questionsPage.includes('抗旨断发') && questionsPage.includes('九子夺嫡是哪一天'));
+check('问题页不把分类做成主筛', !questionsPage.includes('事实查询') && !questionsPage.includes('无证据拒答')
+  && !questionsPage.includes('版本冲突') && !questionsPage.includes('关系路径') && !questionsPage.includes('证据边界'));
 const heshen = await go('#/lane/QH-L-0032');
 check('和珅对照栏', heshen.includes('第五天下狱') && heshen.includes('八亿两'));
+check('对照栏先出官书', heshen.includes('官书怎么写') && heshen.indexOf('官书怎么写') < heshen.indexOf('通行说法'));
+const lanesOut = await go('#/lanes');
+check('后宫栏改称制度', lanesOut.includes('后宫制度') && !lanesOut.includes('后宫趣事')
+  && lanesOut.includes('官书怎么写，传闻怎么说'));
 check('和珅对照栏挂上拒答', heshen.includes('#/question/QH-GQ-0068') || heshen.includes('八亿两吗'));
 const nala = await go('#/lane/QH-L-0033');
 check('继皇后对照栏', nala.includes('那拉氏') && nala.includes('不择一'));

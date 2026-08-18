@@ -469,8 +469,8 @@ function eraPage(slug) {
         </header>
         <p class="muted">${lanePeople(row).map(personLink).join('、')}</p>
         <div class="split">
-          <div class="said unofficial"><h3>通行 / 野史</h3><p>${esc(row['通行说法'])}</p>${row['野史笔记或影视怎么写'] ? `<p class="muted">${esc(row['野史笔记或影视怎么写'])}</p>` : ''}</div>
-          <div class="said official"><h3>官书 / 档案</h3><p>${esc(row['官书或档案怎么写'])}</p></div>
+          <div class="said official"><h3>官书怎么写</h3><p>${esc(row['官书或档案怎么写'])}</p></div>
+          <div class="said unofficial"><h3>通行说法</h3><p>${esc(row['通行说法'])}</p>${row['野史笔记或影视怎么写'] ? `<p class="muted">${esc(row['野史笔记或影视怎么写'])}</p>` : ''}</div>
         </div>
         <p><strong>怎么读</strong>　${esc(row['差异或读法'])}</p>
         <p class="actions">
@@ -683,7 +683,7 @@ function eraPage(slug) {
       '#/empresses': '四后时间轴',
       '#/princes': '皇子表',
       '#/princesses': '皇女表',
-      '#/lanes': '传闻对照',
+      '#/lanes': '对照',
       '#/site/QH-ST-0013': '今地：畅春园',
       '#/site/QH-ST-0021': '景陵',
       '#/site/QH-ST-0022': '泰陵',
@@ -1327,7 +1327,7 @@ function eraPage(slug) {
           <p class="actions"><a class="link" href="#/empresses">读四后全轴</a></p>
         </div>` : ''}
         ${claims.length ? `<details class="claims-drawer"><summary>依据 ${claims.length} 条</summary>${claims.map(claimCard).join('')}</details>` : ''}
-        ${lanesForPerson(id).length ? `<h2>传闻对照</h2>${lanesForPerson(id).map(laneCard).join('')}` : ''}
+        ${lanesForPerson(id).length ? `<h2>对照</h2>${lanesForPerson(id).map(laneCard).join('')}` : ''}
       </div>
     `;
   }
@@ -1375,7 +1375,7 @@ function eraPage(slug) {
         }).join('')}
       </div>
       ${timelineList(rows)}
-      <p class="actions"><a class="link" href="#/claims">打开相关主张</a> · <a class="link" href="#/lanes">后宫侧记</a></p>
+      <p class="actions"><a class="link" href="#/claims">打开相关主张</a> · <a class="link" href="#/lanes">对照</a></p>
     `;
   }
 
@@ -1570,21 +1570,26 @@ function eraPage(slug) {
             ${heirList(rows)}
           </section>`;
       }).join('')}
-      <p class="actions"><a class="link" href="#/person/QH-P-000004">胤礽</a> · <a class="link" href="#/lanes">传闻对照</a> · <a class="link" href="#/princes">皇子</a></p>
+      <p class="actions"><a class="link" href="#/person/QH-P-000004">胤礽</a> · <a class="link" href="#/lanes">对照</a> · <a class="link" href="#/princes">皇子</a></p>
     `;
   }
 
   function lanesPage(query) {
     const lane = query.lane || '全部';
-    const groups = ['全部', '后宫趣事', '野史对照', '罕读史料'];
+    const groups = [
+      { id: '全部', label: '全部' },
+      { id: '后宫制度', label: '后宫制度' },
+      { id: '野史对照', label: '传闻' },
+      { id: '罕读史料', label: '罕读史料' },
+    ];
     const rows = (DATA.lanes || []).filter((row) => lane === '全部' || row['栏目'] === lane);
     return `
       <p class="kicker">对照</p>
-      <h1>传闻怎么说，官书怎么写</h1>
-      <p class="lede">通行说法和影视在这边。对面是已经打开的官书。</p>
+      <h1>官书怎么写，传闻怎么说</h1>
+      <p class="lede">先看已经打开的官书。对面才是通行说法和影视。</p>
       <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a></p>
       <div class="filters">
-        ${groups.map((item) => `<button type="button" data-lane="${esc(item)}" class="${item === lane ? 'on' : ''}" aria-pressed="${item === lane}">${esc(item)}</button>`).join('')}
+        ${groups.map((item) => `<button type="button" data-lane="${esc(item.id)}" class="${item.id === lane ? 'on' : ''}" aria-pressed="${item.id === lane}">${esc(item.label)}</button>`).join('')}
       </div>
       ${rows.map(laneCard).join('')}
     `;
@@ -1597,7 +1602,7 @@ function eraPage(slug) {
     const laneRoute = `#/lane/${id}`;
     const questions = (DATA.questions || []).filter((item) => item.route === laneRoute);
     return `
-      <p class="kicker">${esc(row['栏目'])}</p>
+      <p class="kicker">${esc({ 后宫制度: '后宫制度', 野史对照: '传闻', 罕读史料: '罕读史料' }[row['栏目']] || row['栏目'])}</p>
       <h1>${esc(row['标题'])}</h1>
       ${laneCard(row)}
       ${questions.length ? `<h2>这类问题</h2>${questions.map((item) => questionCard(item)).join('')}` : ''}
@@ -1773,7 +1778,7 @@ function eraPage(slug) {
   function questionCard(row, opts = {}) {
     return `
       <article class="claim" id="${esc(row.question_id)}">
-        <p class="sub">${esc(row.category)}</p>
+        <p class="sub">${esc(row.evidenceGap ? '现有材料不够' : '能对到日子')}</p>
         <p class="sentence"><a href="#/question/${esc(row.question_id)}">${esc(row.question)}</a></p>
         ${opts.hideBound ? '' : (row.evidenceGap
           ? `<p class="bound">${esc(row.explanation)}</p>`
@@ -1788,8 +1793,16 @@ function eraPage(slug) {
 
   function questionsPage(query) {
     const group = query.type || '全部';
-    const types = ['全部', ...new Set((DATA.questions || []).map((row) => row.category).filter(Boolean))];
-    const rows = (DATA.questions || []).filter((row) => group === '全部' || row.category === group);
+    const types = [
+      { id: '全部', label: '全部' },
+      { id: '能对到日子', label: '能对到日子' },
+      { id: '现有材料不够', label: '现有材料不够' },
+    ];
+    const rows = (DATA.questions || []).filter((row) => {
+      if (group === '现有材料不够') return Boolean(row.evidenceGap);
+      if (group === '能对到日子') return !row.evidenceGap;
+      return true;
+    });
     const pinnedIds = ['QH-GQ-0068', 'QH-GQ-0071', 'QH-GQ-0053'];
     const pinned = group === '全部'
       ? pinnedIds.map((id) => rows.find((row) => row.question_id === id)).filter(Boolean)
@@ -1802,7 +1815,7 @@ function eraPage(slug) {
         <p class="lede">有的能对到卷和日子。有的只能说：现有材料不够，不能写成事实。</p>
       </div>
       <div class="filters">
-        ${types.map((item) => `<button type="button" data-qtype="${esc(item)}" class="${item === group ? 'on' : ''}" aria-pressed="${item === group}">${esc(item)}</button>`).join('')}
+        ${types.map((item) => `<button type="button" data-qtype="${esc(item.id)}" class="${item.id === group ? 'on' : ''}" aria-pressed="${item.id === group}">${esc(item.label)}</button>`).join('')}
       </div>
       ${pinned.length ? `<h2>先看这三问</h2>${pinned.map((row) => questionCard(row)).join('')}` : ''}
       ${rest.map(questionCard).join('')}
@@ -1813,7 +1826,7 @@ function eraPage(slug) {
     const row = (DATA.questions || []).find((item) => item.question_id === id);
     if (!row) return `<h1>未找到问题 ${esc(id)}</h1><p><a href="#/questions">回这类问题</a></p>`;
     return `
-      <p class="kicker">${esc(row.category)}</p>
+      <p class="kicker">${esc(row.evidenceGap ? '现有材料不够' : '能对到日子')}</p>
       <h1>${esc(row.question)}</h1>
       ${row.evidenceGap ? noEvidenceBanner('现有材料不足以下结论', row.explanation) : ''}
       ${questionCard(row, { hideBound: row.evidenceGap })}
@@ -2120,7 +2133,7 @@ function eraPage(slug) {
       ${siteHits.length ? `<h2>今地 ${siteHits.length}</h2><div class="grid cards site-cards">${siteHits.map(siteCard).join('')}</div>` : ''}
       ${chapterHits.length ? `<h2>章节 ${chapterHits.length}</h2><ul>${chapterHits.map((hit) => `<li><a href="#/chapter/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : ''}
       ${questionHits.length ? `<h2>这类问题 ${questionHits.length}</h2><ul>${questionHits.map((hit) => `<li><a href="#/question/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : ''}
-      ${laneHits.length ? `<h2>传闻对照 ${laneHits.length}</h2>${laneHits.map(laneCard).join('')}` : ''}
+      ${laneHits.length ? `<h2>对照 ${laneHits.length}</h2>${laneHits.map(laneCard).join('')}` : ''}
       ${sourceHits.length ? `<h2>来源 ${sourceHits.length}</h2><ul>${sourceHits.map((row) => `<li><a href="#/source/${esc(row.source_id)}">${esc(row.source_id)} ${esc(row['机构或资源'])}</a></li>`).join('')}</ul>` : ''}
       ${workHits.length ? `<h2>文献 ${workHits.length}</h2><ul>${workHits.map((hit) => {
         const work = (DATA.works || []).find((row) => row.work_id === hit.id);
