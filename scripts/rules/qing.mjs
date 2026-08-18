@@ -235,6 +235,21 @@ export function check(ctx) {
   if (/暴毙|猝死/.test(yongzhengTimelineChapter?.lede || '') || !/崩逝|薨/.test(yongzhengTimelineChapter?.lede || '')) {
     errors.push('雍正年表导语只能写有据的崩逝/薨，不得写暴毙或猝死');
   }
+  const kangxiAccession = chapters.find((row) => row.slug === 'kangxi-01');
+  if (/崩逝那天人在畅春园/.test(kangxiAccession?.lede || '')) {
+    errors.push('kangxi-01 导语不得把寝宫改写成畅春园崩地');
+  }
+  const juemiluChapter = chapters.find((row) => row.slug === 'yongzheng-04');
+  if (/禁毁/.test(juemiluChapter?.title || '')) {
+    errors.push('yongzheng-04 标题不得用禁毁定性停讲缴书');
+  }
+  const qianlongTimeline = chapters.find((row) => row.slug === 'qianlong-03');
+  if (/败中求胜|劳而无功/.test(qianlongTimeline?.lede || '')) {
+    errors.push('qianlong-03 导语不得预判安南败中求胜或缅甸劳而无功');
+  }
+  if (/孝恭册立皇后/.test(ctx.conflictSets?.find((row) => row.conflict_set_id === 'QH-CF-KX-EMPRESS-DATE')?.['议题'] || '')) {
+    errors.push('QH-CF-KX-EMPRESS-DATE 议题必须是孝诚，不得写成孝恭');
+  }
 
   const familyById = new Map((families || []).map((row) => [row.family_id, row]));
   for (const id of ['QH-SF-QSL-QL', 'QH-SF-QSL-JQ']) {

@@ -97,10 +97,10 @@
 
 ## 交叉引用
 
-- `#/chapter/yongzheng-03` 文字狱、《大义觉迷录》与御制文献
-- `#/chapter/yongzheng-01` 即位与本纪、实录分层
-- `#/lane/QH-L-0007` 对照栏：传位十四子与改诏
-- `#/works` 文献专栏（QH-W-024）
+- [文字狱与御制文献](#/chapter/yongzheng-03)
+- [即位与本纪、实录分层](#/chapter/yongzheng-01)
+- [传位十四子与改诏](#/lane/QH-L-0007)
+- [文献专栏](#/works)
 
 ## 待用户抽查
 

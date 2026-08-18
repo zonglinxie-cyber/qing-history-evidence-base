@@ -483,7 +483,7 @@ function wrapDrawers(html) {
   return wrapTeach(out);
 }
 
-function publicBodyHtml(html) {
+function publicBodyHtml(html, refs = {}) {
   let out = String(html || '');
   // 统治年表的首段原本混入了“大事记组／task-queue／深挖”等生产便笺。
   // 公开页只保留对读者有用的纪年口径，不保留编辑进度。
@@ -544,12 +544,25 @@ function publicBodyHtml(html) {
     .replace(/<code>QH-CF-[^<]+<\/code>/g, '相关异说')
     .replace(/<code>QH-A-[^<]+<\/code>/g, '相关依据')
     .replace(/<code>QH-SU-[^<]+<\/code>/g, '相关原文')
-    .replace(/<code>#\/chapter\/([^<]+)<\/code>/g, '<a class="link" href="#/chapter/$1">相关章节</a>')
-    .replace(/<code>#\/site\/([^<]+)<\/code>/g, '<a class="link" href="#/site/$1">相关今地</a>')
-    .replace(/<code>#\/lane\/([^<]+)<\/code>/g, '<a class="link" href="#/lane/$1">相关对照</a>')
-    .replace(/<code>#\/person\/([^<]+)<\/code>/g, '<a class="link" href="#/person/$1">相关人物</a>')
-    .replace(/<code>#\/question\/([^<]+)<\/code>/g, '<a class="link" href="#/question/$1">相关问题</a>')
-    .replace(/<code>#\/(works|claims|lanes|sources)<\/code>/g, '<a class="link" href="#/$1">查看相关页</a>');
+    .replace(/<code>#\/chapter\/([^<]+)<\/code>/g, (_, slug) => (
+      `<a class="link" href="#/chapter/${escHtml(slug)}">${escHtml(refs.chapter?.[slug] || slug)}</a>`
+    ))
+    .replace(/<code>#\/site\/([^<]+)<\/code>/g, (_, id) => (
+      `<a class="link" href="#/site/${escHtml(id)}">${escHtml(refs.site?.[id] || '今地')}</a>`
+    ))
+    .replace(/<code>#\/lane\/([^<]+)<\/code>/g, (_, id) => (
+      `<a class="link" href="#/lane/${escHtml(id)}">${escHtml(refs.lane?.[id] || '对照')}</a>`
+    ))
+    .replace(/<code>#\/person\/([^<]+)<\/code>/g, (_, id) => (
+      `<a class="link" href="#/person/${escHtml(id)}">${escHtml(refs.person?.[id] || '人物')}</a>`
+    ))
+    .replace(/<code>#\/question\/([^<]+)<\/code>/g, (_, id) => (
+      `<a class="link" href="#/question/${escHtml(id)}">这个问题</a>`
+    ))
+    .replace(/<code>#\/(works|claims|lanes|sources)<\/code>/g, (_, page) => {
+      const labels = { works: '文献专栏', claims: '依据', lanes: '对照', sources: '来源' };
+      return `<a class="link" href="#/${page}">${labels[page] || page}</a>`;
+    });
   out = out.replace(/<(ul|ol)>\s*<\/\1>/g, '');
   return out;
 }
@@ -560,19 +573,38 @@ function wrapTeach(html) {
     '$1<div class="teach">$2</div>',
   );
 }
-function staticChapterBody(html) {
+function withSpaHash(html) {
+  return String(html || '').replace(/\bhref="#\//g, 'href="./#/');
+}
+
+function staticConflictHtml(id, label, claims, conflictSets) {
+  const rows = (claims || []).filter((row) => String(row['冲突组 ID'] || '').trim() === id);
+  const set = (conflictSets || []).find((row) => row.conflict_set_id === id);
+  const heading = label || set?.['议题'] || '同组异说';
+  if (!rows.length) {
+    return `<section class="claim-compare"><h3>${escHtml(heading)}</h3><p class="muted">本组主张尚未载入。</p></section>`;
+  }
+  const cards = rows.map((row) => {
+    const quote = row['支持引文'] || row['客体 ID 或值'] || '';
+    const loc = row['卷页/档号/图像定位'] || '';
+    return `<blockquote class="quote source-quote"><p>${escHtml(quote)}</p>${loc ? `<p class="muted">${escHtml(loc)}</p>` : ''}</blockquote>`;
+  }).join('');
+  return `<section class="claim-compare"><h3>${escHtml(heading)}</h3>${cards}</section>`;
+}
+
+function staticChapterBody(html, { claims, conflictSets } = {}) {
   return String(html || '')
     .replace(
       /<button type="button" class="link claim-ref" data-claim="([A-Za-z0-9-]+)">看依据<\/button>/g,
       (_, id) => `<a class="link claim-ref" href="#/claim/${escHtml(id)}">看依据</a>`,
     )
     .replace(
-      /<div class="claim-compare conflict-embed" data-conflict="([A-Za-z0-9-]+)"(?: data-label="[^"]*")?><\/div>/g,
-      () => '<aside class="read-line"><h4>同组异说</h4><p><a class="link" href="#/claims">在交互版查看相关异说</a></p></aside>',
+      /<div class="claim-compare conflict-embed" data-conflict="([A-Za-z0-9-]+)"(?: data-label="([^"]*)")?><\/div>/g,
+      (_, id, label) => staticConflictHtml(id, label || '', claims, conflictSets),
     );
 }
 
-function staticChapterHtml({ chapter, units, portrait, prev, next, indexable }) {
+function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, claims, conflictSets }) {
   const canonical = new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href;
   const image = portrait?.['预览文件'] ? new URL(portrait['预览文件'], siteBaseUrl).href : '';
   const robots = indexable ? 'index,follow' : 'noindex,follow';
@@ -598,7 +630,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable }) 
       ${prev ? `<a class="link" href="chapter/${escHtml(prev.slug)}/">上一篇 ${escHtml(prev.title)}</a>` : '<span></span>'}
       ${next ? `<a class="link" href="chapter/${escHtml(next.slug)}/">下一篇 ${escHtml(next.title)}</a>` : '<span></span>'}
     </nav>` : '';
-  return `<!DOCTYPE html>
+  const page = `<!DOCTYPE html>
 <html lang="zh-Hans">
 <head>
   <meta charset="utf-8">
@@ -635,9 +667,9 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable }) 
         <p class="kicker">${escHtml(chapter.era)}</p>
         <h1>${escHtml(chapter.title)}</h1>
         <p class="lede">${escHtml(chapter.lede)}</p>
-${indexable ? '' : `        ${researchDraftBanner('chapter')}\n`}        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版与主张抽屉</a></p>
+${indexable ? '' : `        ${researchDraftBanner('chapter')}\n`}        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
       </div>
-      <div class="md">${staticChapterBody(chapter.bodyHtml)}</div>
+      <div class="md">${staticChapterBody(chapter.bodyHtml, { claims, conflictSets })}</div>
       ${evidence}
       ${nav}
     </article>
@@ -650,9 +682,10 @@ ${indexable ? '' : `        ${researchDraftBanner('chapter')}\n`}        <p clas
 </body>
 </html>
 `;
+  return withSpaHash(page);
 }
 
-function writeStaticChapterPages({ chapters, units, portraits, emperors }) {
+function writeStaticChapterPages({ chapters, units, portraits, emperors, claims, conflictSets }) {
   const chapterDir = path.join(siteDir, 'chapter');
   fs.rmSync(chapterDir, { recursive: true, force: true });
   fs.mkdirSync(chapterDir, { recursive: true });
@@ -678,6 +711,8 @@ function writeStaticChapterPages({ chapters, units, portraits, emperors }) {
       prev: at > 0 ? siblings[at - 1] : null,
       next: at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null,
       indexable: canIndex,
+      claims,
+      conflictSets,
     });
     const out = path.join(chapterDir, chapter.slug);
     fs.mkdirSync(out, { recursive: true });
@@ -800,17 +835,23 @@ function buildDynasty({ dynasty, data }) {
     return `<figure class="fig-inline"><a href="#/image/${escHtml(id)}"><img src="${escHtml(src)}" alt="${escHtml(title)}" loading="lazy" decoding="async"></a><figcaption><strong>${escHtml(caption)}</strong>${license ? ` · ${escHtml(license)}` : ''}${fileUrl ? ` · <a href="${escHtml(fileUrl)}" target="_blank" rel="noopener">文件页</a>` : ''}</figcaption></figure>`;
   }
 
+  const routeTitles = {
+    chapter: Object.fromEntries(chapterRows.map((row) => [row.slug, row.title])),
+    lane: Object.fromEntries((lanes || []).map((row) => [row.lane_id, row['标题']])),
+    site: Object.fromEntries((historicSites || []).map((row) => [row.site_id, row['事件']])),
+    person: Object.fromEntries((people || []).map((row) => [row.person_id, row['规范名']])),
+  };
   const chapters = chapterRows.map((row) => {
     const file = path.join(contentDir, row.file);
     const markdown = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
     const status = (markdown.match(/^状态：\s*(.+)$/m)?.[1] || '').replace(/`/g, '').trim();
-    return { ...row, markdown, bodyHtml: publicBodyHtml(mdToHtml(markdown, chapterFig)), status };
+    return { ...row, markdown, bodyHtml: publicBodyHtml(mdToHtml(markdown, chapterFig), routeTitles), status };
   });
 
   const overviews = (overviewRows || []).map((row) => {
     const file = path.join(contentDir, row.file);
     const markdown = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-    return { ...row, markdown, bodyHtml: publicBodyHtml(mdToHtml(markdown, chapterFig)) };
+    return { ...row, markdown, bodyHtml: publicBodyHtml(mdToHtml(markdown, chapterFig), routeTitles) };
   });
 
   const unitById = new Map(units.map((row) => [row.source_unit_id, row]));
@@ -1106,7 +1147,9 @@ function buildDynasty({ dynasty, data }) {
     : indexHtml.replace('</head>', `${discoveryMeta}\n</head>`);
   fs.writeFileSync(indexPath, indexHtml);
 
-  const staticPages = writeStaticChapterPages({ chapters, units, portraits, emperors: emperorRecords });
+  const staticPages = writeStaticChapterPages({
+    chapters, units, portraits, emperors: emperorRecords, claims, conflictSets,
+  });
   return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length, staticPages };
 }
 
