@@ -197,7 +197,6 @@ function eraPage(slug) {
 
   const main = document.getElementById('main');
   const drawer = document.getElementById('drawer');
-  const scrim = document.getElementById('scrim');
   const searchForm = document.getElementById('search-form');
   const searchInput = document.getElementById('q');
 
@@ -515,41 +514,61 @@ function eraPage(slug) {
 
   let drawerTrigger = null;
 
+  function isModalOpen(el) {
+    return Boolean(el && (el.open || (typeof el.showModal !== 'function' && !el.hidden)));
+  }
+
+  function openModal(el) {
+    if (!el) return;
+    if (typeof el.showModal === 'function') {
+      if (!el.open) el.showModal();
+    } else {
+      el.hidden = false;
+    }
+  }
+
+  function closeModal(el) {
+    if (!el) return;
+    if (typeof el.close === 'function' && el.open) el.close();
+    else el.hidden = true;
+  }
+
   function closeDrawer() {
-    if (drawer.hidden) return;
-    drawer.hidden = true;
-    scrim.hidden = true;
+    if (!isModalOpen(drawer)) return;
+    closeModal(drawer);
     drawer.innerHTML = '';
-    document.removeEventListener('keydown', onDrawerKeydown);
     const trigger = drawerTrigger;
     drawerTrigger = null;
     if (trigger && document.contains(trigger)) trigger.focus();
   }
 
-  function onDrawerKeydown(event) {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeDrawer();
-    }
-  }
-
   function openDrawer(html, trigger) {
     drawerTrigger = trigger || null;
     drawer.innerHTML = `<button class="close" type="button" data-close>关闭</button>${html}`;
-    drawer.hidden = false;
-    scrim.hidden = false;
-    document.addEventListener('keydown', onDrawerKeydown);
+    openModal(drawer);
     requestAnimationFrame(() => drawer.querySelector('.close')?.focus());
   }
 
+  drawer?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeDrawer();
+  });
+  drawer?.addEventListener('click', (event) => {
+    if (!isModalOpen(drawer) || typeof drawer.getBoundingClientRect !== 'function') return;
+    const rect = drawer.getBoundingClientRect();
+    const inside = event.clientX >= rect.left && event.clientX <= rect.right
+      && event.clientY >= rect.top && event.clientY <= rect.bottom;
+    if (!inside) closeDrawer();
+  });
+
   // 灯箱：img[data-lightbox] 点击放大预览，不打断卡片导航
   let lightboxTrigger = null;
+  const lightbox = document.getElementById('lightbox');
 
   function openLightbox(img, trigger) {
-    const box = document.getElementById('lightbox');
     const boxImg = document.getElementById('lightbox-img');
     const boxCap = document.getElementById('lightbox-cap');
-    if (!box || !boxImg) return;
+    if (!lightbox || !boxImg) return;
     lightboxTrigger = trigger || null;
     const caption = img.getAttribute('data-lightbox') || img.alt || '';
     const base = img.getAttribute('data-src') || img.getAttribute('src') || img.currentSrc || img.src;
@@ -560,27 +579,22 @@ function eraPage(slug) {
     boxImg.src = localHi || largestVariant(base);
     boxImg.alt = caption;
     if (boxCap) boxCap.textContent = caption;
-    box.hidden = false;
-    document.addEventListener('keydown', onLightboxKeydown);
+    openModal(lightbox);
     requestAnimationFrame(() => document.getElementById('lightbox-close')?.focus());
   }
 
   function closeLightbox() {
-    const box = document.getElementById('lightbox');
-    if (!box || box.hidden) return;
-    box.hidden = true;
-    document.removeEventListener('keydown', onLightboxKeydown);
+    if (!isModalOpen(lightbox)) return;
+    closeModal(lightbox);
     const trigger = lightboxTrigger;
     lightboxTrigger = null;
     if (trigger && document.contains(trigger)) trigger.focus();
   }
 
-  function onLightboxKeydown(event) {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeLightbox();
-    }
-  }
+  lightbox?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeLightbox();
+  });
 
   document.addEventListener('click', (event) => {
     const img = event.target.closest ? event.target.closest('img[data-lightbox]') : null;
@@ -1248,8 +1262,8 @@ function eraPage(slug) {
           <thead><tr><th>名</th><th>也称为</th><th>身份</th></tr></thead>
           <tbody>
             ${rows.map((row) => `
-              <tr data-href="#/person/${esc(row.person_id)}" tabindex="0" role="link" aria-label="查看 ${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}">
-                <td>${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</td>
+              <tr data-href="#/person/${esc(row.person_id)}">
+                <td><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</a></td>
                 <td>${esc(row['常用名或异名'])}</td>
                 <td>${esc(row['人物类型'])}</td>
               </tr>`).join('')}
@@ -1487,8 +1501,8 @@ function eraPage(slug) {
           <thead><tr><th>表序</th><th>规范名</th><th>世表用名</th><th>收录</th><th>生母候选</th><th>世表摘要</th></tr></thead>
           <tbody>
             ${rows.map((row) => `
-              <tr data-href="#/person/${esc(row.person_id)}" tabindex="0" role="link" aria-label="查看 ${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}">
-                <td>${esc(row['表序'] || '—')}</td>
+              <tr data-href="#/person/${esc(row.person_id)}">
+                <td><a href="#/person/${esc(row.person_id)}">${esc(row['表序'] || '—')}</a></td>
                 <td>${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</td>
                 <td>${esc(row['世表用名'] || '本卷无行')}</td>
                 <td>${esc(row['收录状态'])}</td>
@@ -1550,8 +1564,8 @@ function eraPage(slug) {
           <thead><tr><th>表序</th><th>规范名</th><th>收录</th><th>生母候选</th><th>封号</th><th>下嫁</th></tr></thead>
           <tbody>
             ${rows.map((row) => `
-              <tr data-href="#/person/${esc(row.person_id)}" tabindex="0" role="link" aria-label="查看 ${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}">
-                <td>${esc(row['表序'] || '—')}</td>
+              <tr data-href="#/person/${esc(row.person_id)}">
+                <td><a href="#/person/${esc(row.person_id)}">${esc(row['表序'] || '—')}</a></td>
                 <td>${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}</td>
                 <td>${esc(row['收录状态'])}</td>
                 <td>${esc(row['生母候选名'] || (row['收录状态'] === '抚育附列' ? '表未记生母' : '未详'))}</td>
@@ -2595,18 +2609,8 @@ function eraPage(slug) {
       return;
     }
     const row = event.target.closest('tr[data-href]');
-    if (row) location.hash = row.getAttribute('data-href');
+    if (row && !event.target.closest('a, button')) location.hash = row.getAttribute('data-href');
   });
-
-  document.body.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-    const row = event.target.closest('tr[data-href]');
-    if (!row) return;
-    event.preventDefault();
-    location.hash = row.getAttribute('data-href');
-  });
-
-  scrim.addEventListener('click', closeDrawer);
 
   const toTop = document.getElementById('to-top');
   window.addEventListener('scroll', () => {

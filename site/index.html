@@ -419,13 +419,12 @@
         </p>
       </section>
   </main>
-  <aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-label="依据" hidden></aside>
-  <div id="scrim" class="scrim" hidden></div>
-  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="图像预览" hidden>
+  <dialog id="drawer" class="drawer" aria-label="依据"></dialog>
+  <dialog id="lightbox" class="lightbox" aria-label="图像预览">
     <button id="lightbox-close" class="lightbox-close" type="button" aria-label="关闭预览">✕</button>
     <img id="lightbox-img" alt="">
     <p id="lightbox-cap" class="lightbox-cap"></p>
-  </div>
+  </dialog>
   <button id="to-top" class="to-top" type="button" aria-label="回到顶部" title="回到顶部">顶</button>
   <footer class="foot">
     <p class="foot-links"><a href="#/how">怎么读</a> · <a href="#/kangxi">康熙</a> · <a href="#/lanes">对照</a> · <a href="#/questions">现有材料答不了</a> · <a href="#/works">文献</a></p>
