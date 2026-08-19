@@ -312,7 +312,10 @@ check('未知路由 404', unknown.includes('没有这个页面'));
 const { largestVariant, noOrphan } = await import(path.join(siteDir, 'templates.js'));
 const thumb = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Example.jpg/960px-Example.jpg';
 check('largestVariant 取最大档', largestVariant(thumb).includes('/1280px-Example.jpg'));
-check('largestVariant 本地图原样', largestVariant('media/QH-V-E04.jpg') === 'media/QH-V-E04.jpg');
+check('largestVariant 本地图取 1280 档', largestVariant('media/QH-V-E04.jpg') === 'media/QH-V-E04@2x.jpg');
+check('本地图 srcset 含 480/960/1280', html.includes('media/QH-V-E04-480.jpg 480w')
+  && html.includes('media/QH-V-E04-960.jpg 960w')
+  && html.includes('media/QH-V-E04@2x.jpg 1280w'));
 check('句末不孤字', noOrphan('以官书原文为底本，逐条整理。').includes('class="nobr">整理。'));
 const homeOut = await go('#/');
 check('首页导语句末不孤字', homeOut.includes('class="nobr"') && homeOut.includes('整理。'));
