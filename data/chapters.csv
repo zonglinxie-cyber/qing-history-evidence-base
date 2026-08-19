@@ -1,5 +1,5 @@
 chapter_id,slug,person_id,era,title,lede,file,unit_ids,related,sort
-QH-CH-NH-01,nurhaci-01,QH-P-000051,天命,从十三副遗甲到宁远,1616 年称汗，国号后金，不是后来的「皇帝」。统一女真、创制满文、整编八旗，萨尔浒一仗挡住明军，晚年在宁远城下受挫。,emperors/nurhaci/01-from-13-armors-to-ningyuan.md,QH-SU-NH-QSG-0001A；QH-SU-NH-QSG-0001B；QH-SU-NH-QSG-0001C,#/site/QH-ST-0001；#/site/QH-ST-0002；#/site/QH-ST-0006；#/site/QH-ST-0007；#/hands,1
+QH-CH-NH-01,nurhaci-01,QH-P-000051,天命,从十三副遗甲到宁远,1616 年称汗，国号后金，不是后来的「皇帝」。统一女真、创制满文、整编八旗，萨尔浒一仗挡住明军，天命十年迁都沈阳，次年攻宁远受挫。,emperors/nurhaci/01-from-13-armors-to-ningyuan.md,QH-SU-NH-QSG-0001A；QH-SU-NH-QSG-0001B；QH-SU-NH-QSG-0001C,#/site/QH-ST-0001；#/site/QH-ST-0002；#/site/QH-ST-0006；#/site/QH-ST-0007；#/hands,1
 QH-CH-HT-01,huangtaiji-01,QH-P-000052,天聪,汗位与帝位：1626 到 1636,1626年继汗位，翌年1627改元天聪。1636年称帝，改国号大清，年号崇德。汗位、改元和帝位是三层时间节点，不能写成一次即位。,emperors/huangtaiji/01-khan-and-emperor.md,QH-SU-HT-QSG-0002A；QH-SU-HT-QSG-0003A,#/site/QH-ST-0006；#/site/QH-ST-0015；#/site/QH-ST-0003；#/hands,2
 QH-CH-SZ-01,shunzhi-01,QH-P-000053,顺治,六岁即位，翌年改元后入关,1643年福临在盛京即位并定翌年改元顺治；1644年入北京后再次行登极礼。幼年由济尔哈朗、多尔衮辅政，亲政后追罪多尔衮。,emperors/shunzhi/01-entering-the-pass.md,QH-SU-SZ-QSG-0004A；QH-SU-SZ-QSG-0004B；QH-SU-SZ-QSG-0004C,#/site/QH-ST-0008；#/lane/QH-L-0010；#/image/QH-V-E03C；#/hands,3
 QH-CH-KX-01,kangxi-01,QH-P-000001,康熙,即位、崩逝与遗诏,顺治十八年正月初九即位，次年才改元康熙。崩日实录写寝宫；本纪另写畅春园不豫。御榻口谕和遗诏是两条记录。,emperors/kangxi/01-accession-and-testament.md,QH-SU-KX-0001；QH-SU-KX-0300A；QH-SU-KX-0300；QH-SU-KX-0300C；QH-SU-YZ-QSG-0009A；QH-SU-YZ-QSL-0001C,#/site/QH-ST-0013；#/site/QH-ST-0021；#/person/QH-P-000002；#/lane/QH-L-0007；#/claims；#/chapter/yongzheng-01,10
@@ -45,7 +45,7 @@ QH-CH-HT-03,huangtaiji-03,QH-P-000052,天聪,统治年表,1626继汗位、翌年
 QH-CH-SZ-03,shunzhi-03,QH-P-000053,顺治,统治年表,1643六岁在盛京即位并由济尔哈朗、多尔衮辅政、1644入关迁都并再次登极、1651亲政追罪、1661崩。入关是后事，出家说不作事实。,emperors/shunzhi/03-reign-timeline.md,,#/chapter/shunzhi-01,9
 QH-CH-JQ-03,jiaqing-03,QH-P-000054,嘉庆,统治年表,1796内禅即位、前三年太上皇训政、1799诛和珅、白莲教、1813天理教攻宫。在位年数不等于掌权年数。,emperors/jiaqing/03-reign-timeline.md,,#/chapter/jiaqing-01,76
 QH-CH-DG-03,daoguang-03,QH-P-000055,道光,统治年表,1820即位、1839虎门销烟、1840鸦片战争、1842南京条约、1850崩。禁烟立场摇摆，南京条约是近代第一个不平等条约。,emperors/daoguang/03-reign-timeline.md,,#/chapter/daoguang-01,86
-QH-CH-XF-03,xianfeng-03,QH-P-000056,咸丰,统治年表,1850即位、1851太平天国起、1856二次鸦片战争、1860圆明园被焚、1861赞襄八大臣。顾命与辛酉政变两步。,emperors/xianfeng/03-reign-timeline.md,,#/chapter/xianfeng-01,96
+QH-CH-XF-03,xianfeng-03,QH-P-000056,咸丰,统治年表,1850即位、1851太平天国起、1856二次鸦片战争、1860避走热河与圆明园被焚、1861崩与赞襄八大臣。顾命与辛酉政变两步。,emperors/xianfeng/03-reign-timeline.md,,#/chapter/xianfeng-01,96
 QH-CH-TZ-03,tongzhi-03,QH-P-000057,同治,统治年表,1861即位、辛酉政变两宫垂帘、1873亲政、1875崩。祺祥仅拟用，官方记天花梅毒说晚出。,emperors/tongzhi/03-reign-timeline.md,,#/chapter/tongzhi-01,106
 QH-CH-GX-03,guangxu-03,QH-P-000058,光绪,统治年表,1875过继即位、中法战争、甲午、戊戌变法政变、庚子辛丑、清末新政、1908崩。砷中毒属现代层下毒者未知。,emperors/guangxu/03-reign-timeline.md,,#/chapter/guangxu-01,116
 QH-CH-XT-03,xuantong-03,QH-P-000059,宣统,统治年表,1908即位、1909改元、载沣摄政、1911武昌起义、1912退位。四条日期不是一件事，宣统政纪非实录。,emperors/xuantong/03-reign-timeline.md,,#/chapter/xuantong-01,126
