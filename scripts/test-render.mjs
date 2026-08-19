@@ -210,6 +210,7 @@ check('即位章目录与怎么读', kx01.includes('chapter-toc') && kx01.includ
 check('即位章冲突并排', kx01.includes('claim-compare') && kx01.includes('口谕、遗诏、本纪九'));
 check('即位章上下篇', kx01.includes('chapter-nav') && kx01.includes('下一篇'));
 check('即位章读这一句', /<aside class="read-line"[\s\S]*不能把「深肖朕躬」写成[\s\S]*<\/aside>/.test(kx01));
+check('即位章先讲故事再折材料', kx01.includes('八岁的玄烨即皇帝位') && kx01.includes('本章依据哪些材料') && kx01.includes('已有条目可回查到实录或本纪原文') && !kx01.includes('这不是一条叫'));
 const yz01 = await go('#/chapter/yongzheng-01');
 check('雍正即位章原文块', yz01.includes('source-quote') && yz01.includes('即皇帝位') && yz01.includes('子刻'));
 check('雍正即位章行内主张', yz01.includes('data-claim="QH-A-YZ-0039"') && yz01.includes('data-claim="QH-A-YZ-0041"') && yz01.includes('data-claim="QH-A-YZ-0043"'));
