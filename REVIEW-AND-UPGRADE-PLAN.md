@@ -156,7 +156,7 @@
 4. 排序给标题命中加权；单字查询限返回前 50。
 - 验收：搜「康熙」首屏 <1s 出结果且不卡顿。
 
-### P1-8 无障碍补课 ⚠️ skip 配色、触控高度；drawer 焦点陷阱与 tr[role=link] 未做
+### P1-8 无障碍补课 ✅
 1. drawer/lightbox 换 `<dialog>.showModal()` 或补焦点陷阱（现在 Tab 会穿出 aria-modal 弹层）；
 2. 暗色下 skip link 配色（`background: var(--panel); color: var(--ink)`）；
 3. `tr[role="link"]` 首列改真实 `<a>`；

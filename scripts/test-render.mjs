@@ -39,6 +39,10 @@ function fakeEl(id) {
     querySelectorAll() { return []; },
     focus() {},
     blur() {},
+    open: false,
+    showModal() { this.open = true; this.hidden = false; },
+    close() { this.open = false; this.hidden = true; },
+    getBoundingClientRect() { return { top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 }; },
   };
 }
 function el(id) {
@@ -385,6 +389,15 @@ check('进站即恢复手选主题', html.includes("localStorage.getItem('theme'
 const nh03Static = fs.readFileSync(path.join(siteDir, 'chapter', 'nurhaci-03', 'index.html'), 'utf8');
 check('静态章末篇下一篇接到下一朝', nh03Static.includes('chapter/huangtaiji-01/') && nh03Static.includes('下一篇'));
 check('首页前几张帝像优先加载', html.includes('fetchpriority="high"'));
+check('依据抽屉与灯箱使用 dialog', html.includes('<dialog id="drawer"')
+  && html.includes('<dialog id="lightbox"')
+  && !html.includes('id="scrim"'));
+const peopleTable = await go('#/people');
+check('人物表首列是真实链接', peopleTable.includes('<a href="#/person/')
+  && !peopleTable.includes('role="link"'));
+const princesTable = await go('#/princes');
+check('皇子表首列是真实链接', princesTable.includes('<a href="#/person/')
+  && !princesTable.includes('role="link"'));
 
 // 公开投影门禁：编辑待办、人员身份与 QA 字段不得进入任何可下载 JSON 或静态正文。
 const publicJsonFiles = ['home.json', 'people.json', `${dynastyConfig.chunk}.json`, 'catalog.json', 'search.json'];
