@@ -299,8 +299,8 @@ function eraPage(slug) {
     { role: '默认朝服像', title: '朝服像', hint: '' },
     { role: '其他真迹', title: '其他真迹', hint: '' },
     { role: '相关史迹', title: '相关史迹', hint: '今貌不能倒推当时战场。' },
-    { role: '御笔书法', title: '御笔书法', hint: '碑是刻出来的。纸上才是手写。' },
-    { role: '奏折朱批', title: '奏折与朱批', hint: '红笔是皇帝批的。黑字是臣工写的。' },
+    { role: '御笔书法', title: '御笔书法', hint: '碑是刻出来的，纸上才是手写。' },
+    { role: '奏折朱批', title: '奏折与朱批', hint: '红笔是皇帝批的，黑字是臣工写的。' },
   ];
 
   function mediaImg(src, alt, lightbox = '') {
@@ -913,7 +913,7 @@ function eraPage(slug) {
         <div class="reading">
           <p class="kicker">饷和兵</p>
           <h1>税从哪来，兵谁养</h1>
-          <p class="lede">三藩靠藩饷。河工写在遗诏里。耗羡后来归公。湘军是就地筹的。条次没打开的，只当入口。</p>
+          <p class="lede">从三藩的藩饷、康熙遗诏中的河工岁费，到雍正的耗羡归公和咸丰朝湘军就地筹饷——这几条财政线索，条次没打开的，只当入口。</p>
         </div>
         <ol class="threads">
           ${SPINE_MONEY.map((row) => `
@@ -935,7 +935,7 @@ function eraPage(slug) {
       <div class="reading">
         <p class="kicker">继承与拍板</p>
         <h1>谁坐龙椅，不等于谁拍板</h1>
-        <p class="lede">明立太子失败过。密旨后来才写成办法。禅了位，太上皇还批折子。幼帝那几年，拍板的人另有其人。</p>
+        <p class="lede">明立太子失败过，密旨后来才写成办法。禅了位，太上皇还在批折子，幼帝那几年，拍板的人另有其人。</p>
       </div>
       <ol class="threads">
         ${SPINE_POWER.map((row) => `
@@ -1056,13 +1056,13 @@ function eraPage(slug) {
     const pinned = [
       { slug: 'kangxi-02', year: '1675–1712', href: '#/chapter/kangxi-02' },
       { slug: 'kangxi-01', year: '1661 · 1722', href: '#/chapter/kangxi-01' },
-      { slug: '', year: '分日', href: '#/succession', title: '太子怎样立，怎样废', lede: '从择吉到再废，一天一天排下来。拘执那天还没颁诏。放出来，也不等于又立回去。' },
+      { slug: '', year: '分日', href: '#/succession', title: '太子怎样立，怎样废', lede: '从择吉到再废，一天一天排下来。拘执那天还没颁诏，放出来也不等于又立回去。' },
       { slug: '', year: '胤礽', href: '#/person/QH-P-000004', title: '胤礽', lede: '两岁被立，三十五岁再废。中间废过一次，又立过一次。' },
     ];
     const satellites = [
-      { href: '#/empresses', year: '后妃', title: '康熙四后', lede: '活着的时候是妃、是后、是太后。孝恭两个字，是她死后才有的。' },
-      { href: '#/princes', year: '皇子', title: '康熙的儿子', lede: '表上第一子是胤禔。后妃传说承瑞才是长子。第四子胤禛，这一卷里没有他的行。' },
-      { href: '#/princesses', year: '皇女', title: '康熙的女儿', lede: '亲生二十人，受封八人。固伦若是追进，人已经不在了。' },
+      { href: '#/empresses', year: '后妃', title: '康熙四后', lede: '活着的时候是妃、是后、是太后，孝恭两个字是死后才有的。' },
+      { href: '#/princes', year: '皇子', title: '康熙的儿子', lede: '表上第一子是胤禔，但后妃传说承瑞才是长子。第四子胤禛在这一卷里没有单独的行，但并非康熙没有这个儿子。' },
+      { href: '#/princesses', year: '皇女', title: '康熙的女儿', lede: '亲生二十人，受封八人；固伦若是追进，人已经不在了。' },
     ];
     const used = new Set(['kangxi-01', 'kangxi-02']);
     const rest = chapters.filter((row) => !used.has(row.slug));
@@ -1080,7 +1080,7 @@ function eraPage(slug) {
       <div class="reading">
         <p class="kicker">康熙</p>
         <h1>康熙朝</h1>
-        <p class="lede">在位六十一年。太子立过、废过、又立、再废。日子对得上的留下，对不上的也留下。</p>
+        <p class="lede">康熙在位六十一年，太子经历了立、废、复立、再废，日子对得上的留下，对不上的也留下。</p>
         <p class="actions"><a class="link" href="#/chronicle/kangxi">大事记十六件</a> · <a class="link" href="#/path">276年转轴</a> · <a class="link" href="#/spine/power">谁拍板</a></p>
       </div>
       <ol class="threads">
@@ -1308,7 +1308,7 @@ function eraPage(slug) {
       <h1>${esc(person['规范名'].replace(/^爱新觉罗·/, ''))}</h1>
       <p class="lede">${esc(person['常用名或异名'] || '')}</p>
       <div class="reading">
-        ${yinreng ? `<p class="lede">嫡子。两岁立为太子，做了三十三年。废过，立过，又废。拘执、颁诏、告祭，不是同一天。</p>
+        ${yinreng ? `<p class="lede">嫡子，两岁立为太子，做了三十三年。经历了废黜、复立、再废，而拘执、颁诏、告祭都不是同一天。</p>
         <details class="evidence-drawer"><summary>史料说明</summary><p>实录在再废当日记拘执与废黜；咸安宫地名见于后出的本纪和列传，不应把不同层次的记载合成同一日的现场纪录。</p></details>
         <p class="actions"><a class="link" href="#/chapter/kangxi-02">读两废太子</a> · <a class="link" href="#/succession">看分日全链</a></p>` : ''}
         ${heshen ? `<p class="lede">太上皇崩后第五天下狱，第十五日赐死。二十条是上谕列罪，不是抄家清册。</p>
@@ -1376,7 +1376,7 @@ function eraPage(slug) {
       <h1>${yongzheng ? '雍正后妃' : '康熙四后'}</h1>
       <p class="lede">${yongzheng
         ? '潜邸是嫡福晋、侧福晋、格格。皇后、贵妃、谦妃，是后来的号。'
-        : '活着的时候是妃、是后、是太后。孝诚、孝昭、孝懿、孝恭，是死后才加上去的。孝恭在康熙朝不是皇后。'}</p>
+        : '活着的时候是妃、是后、是太后，孝诚、孝昭、孝懿、孝恭都是死后才加上去的。孝恭在康熙朝不是皇后。'}</p>
       <p class="warn">${yongzheng
         ? '时态称号按后妃传原文。谦妃子作弘適，世表作弘曕，不择一。'
         : '赫舍里氏册后，后妃传记四年七月，本纪记四年九月辛卯。两说都在，不抹平。'}</p>
@@ -1436,7 +1436,7 @@ function eraPage(slug) {
     if (id === 'QH-P-000001') {
       const n = princesForEra('kangxi').length;
       return `<h2>皇子</h2>
-        <p class="thread-lead">表序不是玉牒。第四子不在《清史稿》圣祖系这一卷，早殇另列。现有 ${n} 行。</p>
+        <p class="thread-lead">表序不是玉牒，第四子不在《清史稿》圣祖系这一卷，早殇另列。现有 ${n} 行。</p>
         <p class="actions"><a class="link" href="#/princes">读全表</a></p>`;
     }
     if (id === 'QH-P-000002') {
@@ -1463,8 +1463,8 @@ function eraPage(slug) {
       <p class="kicker">皇子</p>
       <h1>${yongzheng ? '雍正的儿子' : '康熙的儿子'}</h1>
       <p class="lede">${yongzheng
-        ? '表上没有第四子这一行。缺号的是弘历。弘时只写早薨。弘曕过继给允礼。'
-        : '表上第一子是胤禔。后妃传说承瑞才是长子。第四子胤禛不在这一卷，不是康熙没有这个儿子。'}</p>
+        ? '表上没有第四子这一行，缺号的是弘历，弘时只写早薨，弘曕过继给了允礼。'
+        : '表上第一子是胤禔，但后妃传说承瑞才是长子。第四子胤禛不在这一卷，但并非康熙没有这个儿子。'}</p>
       <p class="warn">${yongzheng
         ? '表序不是玉牒。后妃传弘適与世表弘曕是异写，不择一。'
         : '世表以胤禔为第一子；后妃传以承瑞为长子。早殇未入序，仍是儿子。'}</p>
@@ -1505,7 +1505,7 @@ function eraPage(slug) {
     if (!row && id !== 'QH-P-000001') return '';
     if (id === 'QH-P-000001') {
       return `<h2>皇女</h2>
-        <p class="thread-lead">表序不是玉牒。和硕、固伦会改。常宁之女是抚育，不是亲生第二十一女。</p>
+        <p class="thread-lead">表序不是玉牒，和硕、固伦的封号会变，常宁之女是抚育而非亲生第二十一女。</p>
         <p class="actions"><a class="link" href="#/princesses">读全表</a></p>`;
     }
     return `
@@ -1526,11 +1526,11 @@ function eraPage(slug) {
       <p class="kicker">皇女</p>
       <h1>${yongzheng ? '雍正的女儿' : '康熙的女儿'}</h1>
       <p class="lede">${yongzheng
-        ? '亲生四女。只有第二女长成，雍正元年追进和硕怀恪。三个抚育女不是亲生。'
-        : '亲生二十人，受封八人。固伦若是追进，人已经不在了。常宁之女是抚育，不要算进这二十。'}</p>
+        ? '亲生四女，只有第二女长成，雍正元年追进和硕怀恪。三个抚育女不是亲生。'
+        : '亲生二十人，受封八人。固伦若是追进，人已经不在了，常宁之女是抚育，不要算进这二十。'}</p>
       <p class="warn">${yongzheng
-        ? '公主表在卷166，不在卷167。追进不是生前进封。表序不是玉牒。'
-        : '和硕、固伦是当时的封号。追进固伦，人已经薨了。表序不是玉牒。'}</p>
+        ? '公主表在卷166，不在卷167；追进不是生前进封，表序也不是玉牒。'
+        : '和硕、固伦是当时的封号，追进固伦时人已经薨了，表序也不是玉牒。'}</p>
       <p class="crumb"><a class="link" href="#/${yongzheng ? 'yongzheng' : 'kangxi'}">${yongzheng ? '雍正朝' : '康熙朝'}</a></p>
       <div class="filters">
         <button type="button" data-princess-era="kangxi" class="${yongzheng ? '' : 'on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">圣祖系</button>
@@ -1619,7 +1619,7 @@ function eraPage(slug) {
       <div class="reading">
         <p class="kicker">储位</p>
         <h1>太子怎样立，怎样废</h1>
-        <p class="lede">六月先择吉，十二月才册立。四十七年九月，驻跸、拘执、颁诏，隔了二十天。放出来不是又立回去。五十一年再废，实录写成两天。</p>
+        <p class="lede">六月先择吉，十二月才册立。四十七年九月，驻跸、拘执、颁诏，隔了二十天，放出来不等于又立回去。五十一年再废，实录写成两天。</p>
         <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a> · <a class="link" href="#/chapter/kangxi-02">两废太子</a></p>
       </div>
       <aside class="gap-card">
@@ -1909,15 +1909,15 @@ function eraPage(slug) {
 
   function handsPage() {
     const roles = [
-      { role: '奏折朱批', title: '朱批与诏书', hint: '红笔是皇帝批的。黑字是臣工写的。黄标只给外链。' },
-      { role: '御笔书法', title: '御笔', hint: '碑是刻出来的。纸上才是这一笔。' },
+      { role: '奏折朱批', title: '朱批与诏书', hint: '红笔是皇帝批的，黑字是臣工写的，黄标只给外链。' },
+      { role: '御笔书法', title: '御笔', hint: '碑是刻出来的，纸上才是这一笔。' },
     ];
     const emperors = DATA.emperors || [];
     return `
       <div class="reading">
         <p class="kicker">真迹</p>
         <h1>纸上的字，才是这一笔</h1>
-        <p class="lede">朝服是定妆。红笔是批折。匾额是每天抬头看见的。刻本《朱批谕旨》不是原折。</p>
+        <p class="lede">朝服是定妆，红笔是批折，匾额是每天抬头看见的，但刻本《朱批谕旨》不是原折。</p>
       </div>
       ${roles.map(({ role, title, hint }) => {
         const cards = emperors.flatMap((emperor) => {
@@ -1951,7 +1951,7 @@ function eraPage(slug) {
       <div class="page-head">
         <h1>画像</h1>
       </div>
-      <p class="lede">朝服是定妆。朱批和御笔在 <a class="link" href="#/hands">真迹手稿</a>。</p>
+      <p class="lede">朝服是定妆，朱批和御笔见 <a class="link" href="#/hands">真迹手稿</a>。</p>
       ${DATA.emperors.map((emperor) => {
         const list = emperor.portraits || portraitsByEmperor.get(emperor.emperor_id) || [];
         const primary = list.find((row) => row['展示角色'] === '默认朝服像') || list[0];
@@ -2224,11 +2224,11 @@ function eraPage(slug) {
         <p class="lede">实录写到哪一天，就停在哪一天。后出的本纪、列传、世表若不一样，两说都在，不抹平。</p>
         <div class="md">
           <h2>实录、本纪、列传、世表</h2>
-          <p>实录能对到卷和条次，仍是官修，不是原档。本纪后出，有时多写实录当天没有的话。列传可以跟本纪差一天。世表常把几年收成一句。后出的那一层，不拿来改前面一层。</p>
+          <p>实录能对到卷和条次，但仍是官修，不是原档。本纪后出，有时会多写实录当天没有的话；列传可以跟本纪差一天，世表常把几年收成一句。后出的那一层，不拿来改前面一层。</p>
           <h2>怎么看核对状态</h2>
           <p>「已核对」表示页面所引文字与所列出处已对应；它不等于学界已对事件的所有解释形成定论。</p>
           <h2>空白的图</h2>
-          <p>只有绿标能嵌进来。黄的只给说明和外链。网上看得见，不等于能放进这个站。</p>
+          <p>只有绿标能嵌进来，黄的只给说明和外链。网上看得见，不等于能放进这个站。</p>
           <h2>咸安宫</h2>
           <p>本纪和列传写他关在这里，实录在再废当日没有这个地名。因此，「再废当日即拘于咸安宫」不应只凭后出本纪与列传写成现场纪录。</p>
         </div>
