@@ -76,6 +76,14 @@ export function mediaSrcset(url) {
       srcset: WIDTHS.map((width) => `${base}/${width}px-${file} ${width}w`).join(', '),
     };
   }
+  const local = src.match(/^(media\/[A-Za-z0-9-]+?)(?:-\d+|@2x)?(\.(?:jpe?g|png|webp))$/i);
+  if (local) {
+    const [, stem, ext] = local;
+    return {
+      src: `${stem}${ext}`,
+      srcset: `${stem}-480${ext} 480w, ${stem}-960${ext} 960w, ${stem}@2x${ext} 1280w`,
+    };
+  }
   return { src, srcset: '' };
 }
 

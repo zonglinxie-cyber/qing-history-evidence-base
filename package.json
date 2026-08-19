@@ -8,7 +8,8 @@
     "status": "node scripts/build-status.mjs",
     "validate": "node scripts/validate-data.mjs",
     "test": "node scripts/test-render.mjs",
-    "cache-media": "node scripts/cache-media.mjs"
+    "cache-media": "node scripts/cache-media.mjs",
+    "optimize-media": "node scripts/optimize-media.mjs"
   },
   "dependencies": {
     "csv-parse": "^5.6.0",

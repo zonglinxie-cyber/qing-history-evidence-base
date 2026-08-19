@@ -127,6 +127,7 @@ async function main() {
     }
   }
   console.log(`cached ${ok}, skipped ${skip}, failed ${fail}, total ${items.length}${hires ? ' (hires 1280px)' : ''}`);
+  if (ok) console.log('接着运行 npm run optimize-media，生成本地 480/960 宽度档');
   if (fail) process.exitCode = 1;
 }
 

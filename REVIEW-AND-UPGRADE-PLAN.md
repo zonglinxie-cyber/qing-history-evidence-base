@@ -122,7 +122,7 @@
 - 改法：优先给「数据已拆好、正文没埋锚」的章补锚（kangxi-03/04/08、yongzheng-05/06 等）；每章至少给「先说结论」中的可核断言埋 2–3 个锚点。无对应主张的断言不硬造，保持红线。
 - 验收：零锚点章数从 37 降到 ≤20；每个新锚点 ID 在 claims CSV 中存在（validate 已有此检查）。
 
-### P1-3 首屏与图片性能 ⚠️ 首页前 3 张 eager + 资源哈希；本地 srcset/压缩未做
+### P1-3 首屏与图片性能 ✅ 本地 480/960/1280 srcset 已接；页内档压到 600KB 内，@2x 灯箱原图仍偏大
 1. **LCP**：首页前 2–3 张帝像输出 `loading="eager" fetchpriority="high"`（`scripts/build-site.mjs` 首页卡片模板 + `templates.js` `imgTag` 已有 eager 参数，构建期按序号传入）；
 2. **本地图片 srcset**：现状 `sizes` 有而 `srcset` 无（等于没做响应式），`@2x` 档 48MB 基本闲置。构建期（或扩展 `scripts/cache-media.mjs`）为 `site/media/*` 生成 480/960/1280 宽度档，`templates.js` `mediaSrcset()` 对 `media/` 路径输出本地 srcset；
 3. **压缩离群图**：>600KB 的 jpg（QH-V-E06I 等 8 张 @2x 超 1MB）重压缩或转 webp（现仅 6/152 张 webp）；
