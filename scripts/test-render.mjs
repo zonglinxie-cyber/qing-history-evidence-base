@@ -343,6 +343,12 @@ const staticSkipBroken = (reignData.chapters || []).filter((row) => {
   return !page.includes(`href="chapter/${row.slug}/#main"`) || /href="#main"/.test(page);
 }).map((row) => row.slug);
 check('静态章 skip link 不被 base 拆掉', staticSkipBroken.length === 0);
+const deadConflictCopy = (reignData.chapters || []).filter((row) => {
+  const page = fs.readFileSync(path.join(siteDir, 'chapter', row.slug, 'index.html'), 'utf8');
+  const json = fs.readFileSync(path.join(siteDir, 'data', 'chapter', `${row.slug}.json`), 'utf8');
+  return page.includes('同组异说 相关异说') || json.includes('同组异说 相关异说');
+}).map((row) => row.slug);
+check('静态章无同组异说相关异说死文本', deadConflictCopy.length === 0);
 const kx01Static = fs.readFileSync(path.join(siteDir, 'chapter', 'kangxi-01', 'index.html'), 'utf8');
 check('康熙即位章静态导语不把崩地写成畅春园', !kx01Static.includes('崩逝那天人在畅春园') && kx01Static.includes('寝宫'));
 const yz04Static = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');

@@ -544,10 +544,10 @@ function publicBodyHtml(html, refs = {}) {
     .replace(/<th>状态<\/th>/g, '<th>依据</th>')
     .replace(/<td>卷级索引<\/td>/g, '<td>参考线索</td>')
     .replace(/<td>卷次尚待更多材料确认<\/td>/g, '<td>原文位置待确认</td>')
-    .replace(/(?:冲突组|同组异说)\s*QH-CF-[A-Z0-9-]+/g, '存在异说')
+    .replace(/(?:冲突组|同组异说)\s*(?:<code>)?QH-CF-[A-Z0-9-]+(?:<\/code>)?/g, '此处有两说并存')
     .replace(/\bQH-W-\d+\b/g, '相关文献条目')
     .replace(/<code>相关文献条目<\/code>/g, '相关文献条目')
-    .replace(/<code>QH-CF-[^<]+<\/code>/g, '相关异说')
+    .replace(/<code>QH-CF-[^<]+<\/code>/g, '此处有两说并存')
     .replace(/<code>QH-A-[^<]+<\/code>/g, '相关依据')
     .replace(/<code>QH-SU-[^<]+<\/code>/g, '相关原文')
     .replace(/<code>#\/chapter\/([^<]+)<\/code>/g, (_, slug) => (
