@@ -353,6 +353,18 @@ function inlineMd(text) {
 
 const MD_BLOCK = /^(#{1,3} |\- |\d+\. |\||>|\{\{fig:|\{\{conflict:)/;
 
+function readerStatusBlock(raw) {
+  const text = String(raw || '').replace(/`/g, '').trim();
+  const bits = [];
+  if (/\bE1\b/.test(text)) bits.push('已有条目可回查到实录或本纪原文');
+  if (/\bS\b|二手/.test(text)) bits.push('其余叙述仍依据后出史书或通行记载');
+  if (/\bC\b|来源已拆|来源冲突/.test(text)) bits.push('互异说法并列保存');
+  if (/M1/.test(text)) bits.push('由 AI 辅助整理');
+  if (/H1|抽查/.test(text)) bits.push('尚未经清史学者审校');
+  const summary = bits.length ? bits.join('；') : '本章仍是研究草稿';
+  return `<details class="evidence-drawer status"><summary>${escHtml(summary)}</summary><p>以上说明本章材料核对到哪一步。具体卷次和引文见正文中的「看依据」。</p></details>`;
+}
+
 function mdToHtml(src, fig) {
   const text = String(src || '').replace(/\r\n/g, '\n').replace(/^# .+\n+/, '');
   const lines = text.split('\n');
@@ -365,8 +377,8 @@ function mdToHtml(src, fig) {
       i += 1;
       continue;
     }
-    // 内部复核信息不进阅读正文：状态行与「待用户抽查」清单只在研究稿与 CSV 里保留
     if (/^状态：/.test(line.trim())) {
+      html.push(readerStatusBlock(line.replace(/^状态：\s*/, '')));
       i += 1;
       continue;
     }
@@ -478,7 +490,7 @@ function mdToHtml(src, fig) {
     const paraText = para.join(' ');
     const paraHtml = `<p>${inlineMd(paraText)}</p>`;
     html.push(paraText.startsWith('范围：')
-      ? `<details class="evidence-drawer scope"><summary>本章范围</summary>${paraHtml}</details>`
+      ? `<details class="evidence-drawer scope"><summary>本章依据哪些材料</summary><p>${inlineMd(paraText.replace(/^范围：\s*/, ''))}</p></details>`
       : paraHtml);
   }
   return wrapDrawers(html.join('\n'));
@@ -524,7 +536,6 @@ function publicBodyHtml(html, refs = {}) {
     privateChecklist.test(block.replace(/<[^>]+>/g, '')) ? '' : block
   ));
   out = out.replace(/人物档沿用\s*<a\b[^>]*>[\s\S]*?<\/a>\s*，不另编号。?/g, '');
-  out = out.replace(/<details class="evidence-drawer scope">[\s\S]*?<\/details>/g, '');
   // 把必要的证据不足改成读者口径，而不是工作队列口径。
   out = readerCopy(out)
     .replace(/本库的做法/g, '本页的处理方式')
