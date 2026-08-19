@@ -279,6 +279,9 @@ export function check(ctx) {
   const chapterPersons = new Set();
   for (const row of chapters) {
     if (!row.title || !row.lede || !row.file) errors.push(`${row.chapter_id} 缺少标题、导语或文件`);
+    if (!['是', '否'].includes(String(row['收录'] || '').trim())) {
+      errors.push(`${row.chapter_id} 收录必须为「是」或「否」`);
+    }
     if (!row.person_id) errors.push(`${row.chapter_id} 缺少 person_id`);
     else if (!emperorPersonIds.has(row.person_id)) errors.push(`${row.chapter_id} 引用了未知皇帝人物 ${row.person_id}`);
     else chapterPersons.add(row.person_id);

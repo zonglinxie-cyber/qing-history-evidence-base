@@ -19,14 +19,21 @@ export function noOrphan(text) {
 }
 
 /**
- * 章节只有在绑定来源单元、达到 E1，且没有同时声明 S 级混合内容时，
- * 才能作为整章进入索引。混合章不能用少数已核段落替整章背书。
+ * 整章证据是否已闭环：绑定来源单元、达到 E1，且没有同时声明 S 级混合内容。
+ * 只决定研究草稿横幅，不再决定 robots / sitemap。
  */
-export function isChapterIndexable(status, unitCount) {
+export function isChapterEvidenceClosed(status, unitCount) {
   const value = String(status ?? '').trim();
   const hasE1 = /(?:^|[/；])\s*E1\s*单源回查/.test(value);
   const hasSecondaryDraft = /(?:^|[/；])\s*S\s*二手/.test(value);
   return Number(unitCount) > 0 && hasE1 && !hasSecondaryDraft;
+}
+
+/**
+ * 搜索引擎收录由 chapters.csv「收录」列单独决定，与证据等级解耦。
+ */
+export function isChapterIndexable(chapter) {
+  return String(chapter?.['收录'] || '').trim() === '是';
 }
 
 export function canEmbed(portrait) {

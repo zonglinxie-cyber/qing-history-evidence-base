@@ -313,7 +313,7 @@ check('句末不孤字', noOrphan('以官书原文为底本，逐条整理。').
 const homeOut = await go('#/');
 check('首页导语句末不孤字', homeOut.includes('class="nobr"') && homeOut.includes('整理。'));
 
-// 可分享静态页：全部章节可打开，只有来源闭环章节进入 sitemap。
+// 可分享静态页：全部章节可打开；sitemap / robots 读收录列，草稿横幅仍跟证据闭环走。
 const staticMissing = [];
 const indexableChapters = [];
 const noindexChapters = [];
@@ -322,17 +322,21 @@ for (const chapterRow of reignData.chapters || []) {
   if (!fs.existsSync(file)) { staticMissing.push(chapterRow.slug); continue; }
   const page = fs.readFileSync(file, 'utf8');
   const indexable = Boolean(chapterRow.indexable);
+  const draft = Boolean(chapterRow.draft);
   if (indexable) indexableChapters.push(chapterRow);
   else noindexChapters.push(chapterRow);
   if (!page.includes(`<meta name="robots" content="${indexable ? 'index,follow' : 'noindex,follow'}">`)
     || !page.includes('<link rel="canonical"') || !page.includes('application/ld+json')) {
     staticMissing.push(`${chapterRow.slug}:meta`);
   }
-  if (!indexable && !page.includes('研究草稿｜本章尚未完成全文史料核对')) {
+  if (draft && !page.includes('研究草稿｜本章尚未完成全文史料核对')) {
     staticMissing.push(`${chapterRow.slug}:draft-banner`);
   }
-  if (!indexable && !page.includes('研究草稿（未完成整章史料核对）：')) {
+  if (draft && !page.includes('研究草稿（未完成整章史料核对）：')) {
     staticMissing.push(`${chapterRow.slug}:draft-description`);
+  }
+  if (!draft && page.includes('研究草稿｜本章尚未完成全文史料核对')) {
+    staticMissing.push(`${chapterRow.slug}:unexpected-draft`);
   }
 }
 const staticEvidence = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-07', 'index.html'), 'utf8');
@@ -363,9 +367,15 @@ check('觉迷录静态章内联冲突引文', yz04Static.includes('claim-compare
 check('觉迷录静态交叉引用保留标题', yz04Static.includes('传位十四子与改诏') && !yz04Static.includes('>相关章节<'));
 check('静态章顶栏是读者词', yz04Static.includes('对照') && yz04Static.includes('今地')
   && !yz04Static.includes('href="./#/path"') && !yz04Static.includes('href="./#/hands"'));
-check(`sitemap 只收证据闭环章节 ${indexableChapters.length} 篇`,
-  indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
+check(`sitemap 只收收录列为是的章节 ${indexableChapters.length} 篇`,
+  indexableChapters.length >= 30
+  && indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
   && noindexChapters.every((row) => !sitemap.includes(`/chapter/${row.slug}/`)));
+const xf01Static = fs.readFileSync(path.join(siteDir, 'chapter', 'xianfeng-01', 'index.html'), 'utf8');
+check('放行章即使未闭环也是 index', xf01Static.includes('name="robots" content="index,follow"')
+  && xf01Static.includes('研究草稿｜本章尚未完成全文史料核对'));
+const nh02Static = fs.readFileSync(path.join(siteDir, 'chapter', 'nurhaci-02', 'index.html'), 'utf8');
+check('未放行章保持 noindex', nh02Static.includes('name="robots" content="noindex,follow"'));
 check('robots.txt 指向 sitemap', fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8').includes('/sitemap.xml'));
 check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
   && html.includes('"@type":"WebSite"') && html.includes('property="og:url"'));

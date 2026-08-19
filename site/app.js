@@ -1804,13 +1804,12 @@ function eraPage(slug) {
       : (chapter.era || '人物');
     const body = expandConflicts(chapter.bodyHtml || '');
     const toc = chapterToc(body);
-    const indexable = Boolean(chapter.indexable);
     return `
       <div class="reading">
         <p class="kicker">${esc(chapter.era)}</p>
         <h1>${esc(chapter.title)}</h1>
         <p class="lede">${noOrphan(chapter.lede)}</p>
-        ${indexable ? '' : researchDraftBanner('chapter')}
+        ${chapter.draft ? researchDraftBanner('chapter') : ''}
         <p class="crumb"><a class="link" href="${esc(home)}">${esc(homeLabel)}</a> · <a class="link" href="chapter/${esc(chapter.slug)}/">可分享链接</a></p>
         ${toc.length ? `<nav class="chapter-toc" aria-label="本章目录">
           <p class="toc-label">本章目录</p>

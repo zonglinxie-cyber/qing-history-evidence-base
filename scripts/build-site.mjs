@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
 import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
 import { buildIndex } from '../site/search.js';
-import { homeHtml, isChapterIndexable, researchDraftBanner } from '../site/templates.js';
+import { homeHtml, isChapterIndexable, isChapterEvidenceClosed, researchDraftBanner } from '../site/templates.js';
 import { pinyin } from 'pinyin-pro';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -638,11 +638,11 @@ function staticChapterBody(html, { claims, conflictSets } = {}) {
     );
 }
 
-function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, claims, conflictSets, assetStamp = '11' }) {
+function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, draft, claims, conflictSets, assetStamp = '11' }) {
   const canonical = new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href;
   const image = portrait?.['预览文件'] ? new URL(portrait['预览文件'], siteBaseUrl).href : '';
   const robots = indexable ? 'index,follow' : 'noindex,follow';
-  const description = indexable ? chapter.lede : `研究草稿（未完成整章史料核对）：${chapter.lede}`;
+  const description = draft ? `研究草稿（未完成整章史料核对）：${chapter.lede}` : chapter.lede;
   const structured = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -703,7 +703,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, cl
         <p class="kicker">${escHtml(chapter.era)}</p>
         <h1>${escHtml(chapter.title)}</h1>
         <p class="lede">${escHtml(chapter.lede)}</p>
-${indexable ? '' : `        ${researchDraftBanner('chapter')}\n`}        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
+${draft ? `        ${researchDraftBanner('chapter')}\n` : ''}        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
       </div>
       <div class="md">${staticChapterBody(chapter.bodyHtml, { claims, conflictSets })}</div>
       ${evidence}
@@ -742,7 +742,8 @@ function writeStaticChapterPages({ chapters, units, portraits, emperors, claims,
   for (const chapter of chapters) {
     if (!/^[a-z0-9-]+$/.test(chapter.slug)) throw new Error(`静态章节 slug 非法: ${chapter.slug}`);
     const sourceUnits = String(chapter.unit_ids || '').split(/[；;]/).map((id) => unitById.get(id.trim())).filter(Boolean);
-    const canIndex = isChapterIndexable(chapter.status, sourceUnits.length);
+    const canIndex = isChapterIndexable(chapter);
+    const draft = !isChapterEvidenceClosed(chapter.status, sourceUnits.length);
     const at = book.findIndex((row) => row.slug === chapter.slug);
     const emperor = emperorByPerson.get(chapter.person_id);
     const page = staticChapterHtml({
@@ -752,6 +753,7 @@ function writeStaticChapterPages({ chapters, units, portraits, emperors, claims,
       prev: at > 0 ? book[at - 1] : null,
       next: at >= 0 && at < book.length - 1 ? book[at + 1] : null,
       indexable: canIndex,
+      draft,
       claims,
       conflictSets,
       assetStamp,
@@ -985,7 +987,8 @@ function buildDynasty({ dynasty, data }) {
       lede: readerCopy(row.lede),
       bodyHtml: row.bodyHtml,
       quote: firstQuote(row.bodyHtml),
-      indexable: isChapterIndexable(row.status, sourceCount),
+      indexable: isChapterIndexable(row),
+      draft: !isChapterEvidenceClosed(row.status, sourceCount),
     };
   });
   const personOrder = new Map(emperorRecords.map((row) => [row.person_id, Number(row['顺序'] || 99)]));
@@ -1242,6 +1245,7 @@ function buildDynasty({ dynasty, data }) {
       related: row.related,
       sort: row.sort,
       indexable: row.indexable,
+      draft: row.draft,
       bodyHtml: row.bodyHtml,
     }));
   }
