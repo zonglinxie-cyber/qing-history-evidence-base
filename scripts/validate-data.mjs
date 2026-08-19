@@ -16,7 +16,7 @@ import { checkSkeletonProse, checkReaderProse } from './rules/common/prose.mjs';
 import { check as checkCommon } from './rules/common/structure.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(scriptDir, '..'); // phase-0/
+const root = path.resolve(scriptDir, '..');
 const dataDir = path.join(root, 'data');
 const contentDir = path.join(root, 'content');
 

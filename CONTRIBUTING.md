@@ -30,12 +30,11 @@
 
 ## PR 流程
 
-1. Fork 本仓库，在 `phase-0/` 目录工作。
+1. Fork 本仓库，在仓库根目录工作。
 2. 修改对应的 CSV / content/ 正文。新增主张请沿用现有 ID 段与列结构，状态从 `审核中` 起步，**不要自行改成「已采纳」**——采纳需要维护者抽查，并同时填写具名复核人和 `YYYY-MM-DD` 复核日期。
 3. 本地验证：
 
    ```bash
-   cd phase-0
    npm install
    npm run validate   # 必须全绿（0 errors / 0 warnings）
    npm run build      # 重建 site/data/*.json 与 STATUS.md
