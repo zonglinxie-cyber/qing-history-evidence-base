@@ -230,34 +230,34 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <div class="page-head story">
           <h2>先看这几处转轴</h2>
         </div>
-        <p class="lede">称汗、称帝、入关、密储、内禅、条约、热河、退位。走完这一页，再点皇帝。</p>
+        <p class="lede">从称汗到退位，其间有称帝、入关、密储、内禅、条约与热河等转轴。走完这一页，再点皇帝。</p>
         <p class="actions"><a class="link" href="#/path">276年转轴</a> · <a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/spine/money">饷从哪来，兵谁养</a></p>
       </section>
       <section class="now-read">
         <div class="page-head story">
           <h2>康熙这一段</h2>
         </div>
-        <p class="lede">太子废了两次。即位和驾崩，官书都写到了日子。</p>
+        <p class="lede">太子废了两次，即位和驾崩的日子，官书都写到了。</p>
         <ol class="threads now-read-list">
           <li>
             <a class="thread" href="#/chapter/kangxi-02">
               <span class="thread-year">1675–1712</span>
               <h2>两废太子</h2>
-              <p>立过，废过，又立，再废。日子对得上的留下，对不上的也留下。</p>
+              <p>立、废、复立、再废，日子对得上的留下，对不上的也留下。</p>
             </a>
           </li>
           <li>
             <a class="thread" href="#/chapter/kangxi-01">
               <span class="thread-year">1661 · 1722</span>
               <h2>即位、崩逝与遗诏</h2>
-              <p>那年即位，次年才改元。口谕是口谕，遗诏是遗诏。实录写的是寝宫。</p>
+              <p>那年即位，次年才改元。口谕和遗诏是两份不同的文件，实录写的是寝宫。</p>
             </a>
           </li>
           <li>
             <a class="thread" href="#/kangxi">
               <span class="thread-year">康熙朝</span>
               <h2>储位、四后、儿女</h2>
-              <p>胤礽怎样一天一天被废。皇后当时叫什么。儿子怎么排。</p>
+              <p>胤礽怎样一天一天被废，皇后当时叫什么，儿子怎么排。</p>
             </a>
           </li>
         </ol>
@@ -266,20 +266,20 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <div class="page-head story">
           <h2>已经对上日子的几处</h2>
         </div>
-        <p class="lede">和珅不是第五天处死。继后那拉氏，官书没有写成抗旨宫斗。十三日崩，二十日才即位礼。</p>
+        <p class="lede">和珅不是第五天处死的，继后那拉氏在官书里也没有被写成抗旨宫斗，十三日崩逝到二十日才举行即位礼。</p>
         <ol class="threads now-read-list">
           <li>
             <a class="thread" href="#/chapter/jiaqing-04">
               <span class="thread-year">1796–99</span>
               <h2>内禅之后：太上皇崩与和珅案</h2>
-              <p>第五天下狱，十五日后赐死。二十条是上谕列罪，不是抄家清册。</p>
+              <p>第五天下狱，十五日后赐死；二十条是上谕中的列罪，不是抄家清册。</p>
             </a>
           </li>
           <li>
             <a class="thread" href="#/lane/QH-L-0033">
               <span class="thread-year">继后</span>
               <h2>继皇后那拉氏</h2>
-              <p>官书有断发叙述。没有写成抗旨宫斗。姓氏两说，不择一。</p>
+              <p>官书有断发的叙述，但没有写成抗旨宫斗。姓氏有两说，不择其一。</p>
             </a>
           </li>
           <li>
@@ -295,7 +295,7 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <div class="page-head story">
           <h2>纸上的字</h2>
         </div>
-        <p class="lede">朱批是红笔。御笔是纸本。令旨不是幼帝亲批。黄标只给外链。</p>
+        <p class="lede">朱批是红笔写的，御笔是纸本，令旨不是幼帝亲批，黄标只给外链。</p>
         <p class="actions"><a class="link" href="#/hands">真迹手稿</a> · <a class="link" href="#/image/QH-V-E05I">雍正朱批</a> · <a class="link" href="#/image/QH-V-E10C">入承大统诏</a></p>
       </section>
       <section class="sites-home">
