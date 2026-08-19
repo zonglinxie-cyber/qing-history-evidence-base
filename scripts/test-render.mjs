@@ -362,6 +362,9 @@ check(`sitemap 只收证据闭环章节 ${indexableChapters.length} 篇`,
 check('robots.txt 指向 sitemap', fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8').includes('/sitemap.xml'));
 check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
   && html.includes('"@type":"WebSite"') && html.includes('property="og:url"'));
+check('进站即恢复手选主题', html.includes("localStorage.getItem('theme')")
+  && kx01Static.includes("localStorage.getItem('theme')")
+  && html.indexOf("localStorage.getItem('theme')") < html.indexOf('styles.css'));
 
 // 公开投影门禁：编辑待办、人员身份与 QA 字段不得进入任何可下载 JSON 或静态正文。
 const publicJsonFiles = ['home.json', 'people.json', `${dynastyConfig.chunk}.json`, 'catalog.json', 'search.json'];

@@ -16,6 +16,17 @@ const contentDir = path.join(root, 'content');
 const siteBaseUrl = new URL(process.env.SITE_URL || 'https://zonglinxie-cyber.github.io/qing-history-evidence-base/');
 if (!siteBaseUrl.pathname.endsWith('/')) siteBaseUrl.pathname += '/';
 
+// 手选主题必须在 CSS 前挂上，否则暗色用户每次进站先闪白。类名与 app.js applyTheme 一致。
+const THEME_BOOT = "try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.classList.add(t)}catch(e){}";
+const THEME_BOOT_TAG = `  <script>${THEME_BOOT}</script>\n`;
+const THEME_BOOT_RE = /[ \t]*<script>try\{var t=localStorage\.getItem\('theme'\);[\s\S]*?<\/script>\n?/;
+
+function withThemeBoot(html) {
+  return THEME_BOOT_RE.test(html)
+    ? html.replace(THEME_BOOT_RE, THEME_BOOT_TAG)
+    : html.replace('</head>', `${THEME_BOOT_TAG}</head>`);
+}
+
 function load(file) {
   return loadCsv(path.join(dataDir, file), {
     name: file,
@@ -661,6 +672,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, cl
   <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#191512" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+  <script>${THEME_BOOT}</script>
   <link rel="stylesheet" href="styles.css?v=11">
   <script type="application/ld+json">${structured}</script>
 </head>
@@ -1245,6 +1257,7 @@ function buildDynasty({ dynasty, data }) {
   indexHtml = discoveryMetaRe.test(indexHtml)
     ? indexHtml.replace(discoveryMetaRe, discoveryMeta)
     : indexHtml.replace('</head>', `${discoveryMeta}\n</head>`);
+  indexHtml = withThemeBoot(indexHtml);
   fs.writeFileSync(indexPath, indexHtml);
 
   const staticPages = writeStaticChapterPages({
