@@ -338,6 +338,11 @@ const staticBareHash = (reignData.chapters || []).filter((row) => {
   return /href="#\//.test(page);
 }).map((row) => row.slug);
 check('静态章站内路由带 ./#/', staticBareHash.length === 0);
+const staticSkipBroken = (reignData.chapters || []).filter((row) => {
+  const page = fs.readFileSync(path.join(siteDir, 'chapter', row.slug, 'index.html'), 'utf8');
+  return !page.includes(`href="chapter/${row.slug}/#main"`) || /href="#main"/.test(page);
+}).map((row) => row.slug);
+check('静态章 skip link 不被 base 拆掉', staticSkipBroken.length === 0);
 const kx01Static = fs.readFileSync(path.join(siteDir, 'chapter', 'kangxi-01', 'index.html'), 'utf8');
 check('康熙即位章静态导语不把崩地写成畅春园', !kx01Static.includes('崩逝那天人在畅春园') && kx01Static.includes('寝宫'));
 const yz04Static = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');

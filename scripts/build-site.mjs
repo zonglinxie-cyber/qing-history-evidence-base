@@ -583,6 +583,11 @@ function withSpaHash(html) {
   return String(html || '').replace(/\bhref="#\//g, 'href="./#/');
 }
 
+// <base href="../../"> 会把 href="#main" 解析到站点根。同页锚点必须带本章路径。
+function withInPageHash(html, slug) {
+  return String(html || '').replace(/\bhref="#(?!\/)/g, `href="chapter/${slug}/#`);
+}
+
 function staticConflictHtml(id, label, claims, conflictSets) {
   const rows = (claims || []).filter((row) => String(row['冲突组 ID'] || '').trim() === id);
   const set = (conflictSets || []).find((row) => row.conflict_set_id === id);
@@ -688,7 +693,7 @@ ${indexable ? '' : `        ${researchDraftBanner('chapter')}\n`}        <p clas
 </body>
 </html>
 `;
-  return withSpaHash(page);
+  return withSpaHash(withInPageHash(page, chapter.slug));
 }
 
 function writeStaticChapterPages({ chapters, units, portraits, emperors, claims, conflictSets }) {
