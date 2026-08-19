@@ -21,8 +21,9 @@
   <meta name="theme-color" content="#191512" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
   <script>try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.classList.add(t)}catch(e){}</script>
-  <link rel="stylesheet" href="styles.css?v=11">
-  <script type="application/json" id="dynasty-config">{"code":"qing","label":"清","chunk":"d-qing","eras":{"tianming":"天命","tiancong":"天聪","shunzhi":"顺治","kangxi":"康熙","yongzheng":"雍正","qianlong":"乾隆","jiaqing":"嘉庆","daoguang":"道光","xianfeng":"咸丰","tongzhi":"同治","guangxu":"光绪","xuantong":"宣统"}}</script>
+  <script>try{var f=localStorage.getItem('fs');if(f==='s'||f==='l')document.documentElement.classList.add('fs-'+f)}catch(e){}</script>
+  <link rel="stylesheet" href="styles.css?v=9d35680be7f6">
+  <script type="application/json" id="dynasty-config">{"code":"qing","label":"清","chunk":"d-qing","eras":{"tianming":"天命","tiancong":"天聪","shunzhi":"顺治","kangxi":"康熙","yongzheng":"雍正","qianlong":"乾隆","jiaqing":"嘉庆","daoguang":"道光","xianfeng":"咸丰","tongzhi":"同治","guangxu":"光绪","xuantong":"宣统"},"v":"9d35680be7f6"}</script>
 </head>
 <body>
   <a class="skip" href="#main">跳到正文</a>
@@ -42,7 +43,10 @@
       <div id="suggest" class="suggest" role="listbox" hidden></div>
     </form>
     <div id="search-status" class="sr" aria-live="polite" aria-atomic="true"></div>
-    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换明暗模式">自动</button>
+    <div class="toggles">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换明暗模式">自动</button>
+      <button id="fs-toggle" class="theme-toggle" type="button" aria-label="调节字号">中</button>
+    </div>
   </header>
   <main id="main" tabindex="-1" data-ssr="home">
       <div class="reading">
@@ -57,7 +61,7 @@
       <div class="grid cards">
       <article class="card emperor-card">
         <a class="card-pic" href="#/tianming" aria-label="清太祖天命皇帝朝服像">
-          <img src="media/QH-V-E01.jpg" sizes="(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px" alt="清太祖天命皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
+          <img src="media/QH-V-E01.jpg" sizes="(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px" alt="清太祖天命皇帝朝服像" width="600" height="800" loading="eager" decoding="async" fetchpriority="high">
         </a>
         <div class="meta">
           <a class="era-link" href="#/tianming">
@@ -70,7 +74,7 @@
       </article>
       <article class="card emperor-card">
         <a class="card-pic" href="#/tiancong" aria-label="清太宗崇德皇帝朝服像">
-          <img src="media/QH-V-E02.jpg" sizes="(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px" alt="清太宗崇德皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
+          <img src="media/QH-V-E02.jpg" sizes="(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px" alt="清太宗崇德皇帝朝服像" width="600" height="800" loading="eager" decoding="async" fetchpriority="high">
         </a>
         <div class="meta">
           <a class="era-link" href="#/tiancong">
@@ -83,7 +87,7 @@
       </article>
       <article class="card emperor-card">
         <a class="card-pic" href="#/shunzhi" aria-label="清世祖顺治皇帝朝服像">
-          <img src="media/QH-V-E03.jpg" sizes="(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px" alt="清世祖顺治皇帝朝服像" width="600" height="800" loading="lazy" decoding="async">
+          <img src="media/QH-V-E03.jpg" sizes="(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px" alt="清世祖顺治皇帝朝服像" width="600" height="800" loading="eager" decoding="async" fetchpriority="high">
         </a>
         <div class="meta">
           <a class="era-link" href="#/shunzhi">
@@ -440,6 +444,6 @@
       }
     })();
   </script>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=9d35680be7f6"></script>
 </body>
 </html>

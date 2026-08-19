@@ -88,13 +88,14 @@ export function imgTag(url, alt, opts = {}) {
   const height = opts.height || 800;
   const sizes = opts.sizes || '(max-width: 600px) 45vw, (max-width: 960px) 30vw, 280px';
   const loading = opts.eager ? 'eager' : 'lazy';
+  const priority = opts.eager ? ' fetchpriority="high"' : '';
   const srcsetAttr = srcset ? ` srcset="${esc(srcset)}"` : '';
   const lightboxAttr = opts.lightbox ? ` data-lightbox="${esc(opts.lightbox)}"` : '';
   const referrer = /^https:\/\//.test(src) ? ' referrerpolicy="no-referrer"' : '';
   const onerror = opts.onerror
     ? ` onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'img-fallback',textContent:'图像暂时无法加载'}))"`
     : '';
-  return `<img src="${esc(src)}"${srcsetAttr} sizes="${esc(sizes)}" alt="${esc(alt)}" width="${width}" height="${height}" loading="${loading}" decoding="async"${referrer}${onerror}${lightboxAttr}>`;
+  return `<img src="${esc(src)}"${srcsetAttr} sizes="${esc(sizes)}" alt="${esc(alt)}" width="${width}" height="${height}" loading="${loading}" decoding="async"${priority}${referrer}${onerror}${lightboxAttr}>`;
 }
 
 export function emperorCardVita(emperor) {
@@ -154,6 +155,7 @@ export function emperorCard(emperor, opts = {}) {
       height: 800,
       sizes: '(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px',
       onerror: opts.onerror !== false,
+      eager: opts.eager,
     })
     : '';
   return `
@@ -225,7 +227,7 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <p class="lede">${noOrphan(dynasty?.lede || '')}</p>
       </div>
       ${researchDraftBanner('site')}
-      <div class="grid cards">${emperors.map((row) => emperorCard(row, opts)).join('')}</div>
+      <div class="grid cards">${emperors.map((row, i) => emperorCard(row, { ...opts, eager: i < 3 })).join('')}</div>
       <section class="now-read">
         <div class="page-head story">
           <h2>先看这几处转轴</h2>

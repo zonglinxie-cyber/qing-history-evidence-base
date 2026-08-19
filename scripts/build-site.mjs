@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
 import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
@@ -637,7 +638,7 @@ function staticChapterBody(html, { claims, conflictSets } = {}) {
     );
 }
 
-function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, claims, conflictSets }) {
+function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, claims, conflictSets, assetStamp = '11' }) {
   const canonical = new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href;
   const image = portrait?.['预览文件'] ? new URL(portrait['预览文件'], siteBaseUrl).href : '';
   const robots = indexable ? 'index,follow' : 'noindex,follow';
@@ -684,7 +685,8 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, cl
   <meta name="theme-color" content="#191512" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
   <script>${THEME_BOOT}</script>
-  <link rel="stylesheet" href="styles.css?v=11">
+  <script>try{var f=localStorage.getItem('fs');if(f==='s'||f==='l')document.documentElement.classList.add('fs-'+f)}catch(e){}</script>
+  <link rel="stylesheet" href="styles.css?v=${assetStamp || '11'}">
   <script type="application/ld+json">${structured}</script>
 </head>
 <body>
@@ -719,7 +721,7 @@ ${indexable ? '' : `        ${researchDraftBanner('chapter')}\n`}        <p clas
   return withSpaHash(withInPageHash(page, chapter.slug));
 }
 
-function writeStaticChapterPages({ chapters, units, portraits, emperors, claims, conflictSets }) {
+function writeStaticChapterPages({ chapters, units, portraits, emperors, claims, conflictSets, assetStamp = '11' }) {
   const chapterDir = path.join(siteDir, 'chapter');
   fs.rmSync(chapterDir, { recursive: true, force: true });
   fs.mkdirSync(chapterDir, { recursive: true });
@@ -730,23 +732,29 @@ function writeStaticChapterPages({ chapters, units, portraits, emperors, claims,
     if (portrait['展示角色'] === '默认朝服像') primaryByEmperor.set(portrait.emperor_id, portrait);
   }
   const indexable = [];
+  const emperorOrder = new Map(emperors.map((row) => [row.person_id, Number(row['顺序'] || 99)]));
+  const book = chapters.slice().sort((a, b) => {
+    const ea = emperorOrder.get(a.person_id) ?? 99;
+    const eb = emperorOrder.get(b.person_id) ?? 99;
+    if (ea !== eb) return ea - eb;
+    return Number(a.sort || 0) - Number(b.sort || 0);
+  });
   for (const chapter of chapters) {
     if (!/^[a-z0-9-]+$/.test(chapter.slug)) throw new Error(`静态章节 slug 非法: ${chapter.slug}`);
     const sourceUnits = String(chapter.unit_ids || '').split(/[；;]/).map((id) => unitById.get(id.trim())).filter(Boolean);
     const canIndex = isChapterIndexable(chapter.status, sourceUnits.length);
-    const siblings = chapters.filter((row) => row.person_id === chapter.person_id)
-      .slice().sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
-    const at = siblings.findIndex((row) => row.slug === chapter.slug);
+    const at = book.findIndex((row) => row.slug === chapter.slug);
     const emperor = emperorByPerson.get(chapter.person_id);
     const page = staticChapterHtml({
       chapter,
       units: sourceUnits,
       portrait: emperor ? primaryByEmperor.get(emperor.emperor_id) : null,
-      prev: at > 0 ? siblings[at - 1] : null,
-      next: at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null,
+      prev: at > 0 ? book[at - 1] : null,
+      next: at >= 0 && at < book.length - 1 ? book[at + 1] : null,
       indexable: canIndex,
       claims,
       conflictSets,
+      assetStamp,
     });
     const out = path.join(chapterDir, chapter.slug);
     fs.mkdirSync(out, { recursive: true });
@@ -980,6 +988,23 @@ function buildDynasty({ dynasty, data }) {
       indexable: isChapterIndexable(row.status, sourceCount),
     };
   });
+  const personOrder = new Map(emperorRecords.map((row) => [row.person_id, Number(row['顺序'] || 99)]));
+  const bookOrder = publicChapters.slice().sort((a, b) => {
+    const ea = personOrder.get(a.person_id) ?? 99;
+    const eb = personOrder.get(b.person_id) ?? 99;
+    if (ea !== eb) return ea - eb;
+    return Number(a.sort || 0) - Number(b.sort || 0);
+  });
+  const bookAt = new Map(bookOrder.map((row, i) => [row.slug, i]));
+  for (const row of publicChapters) {
+    const i = bookAt.get(row.slug);
+    const prev = i > 0 ? bookOrder[i - 1] : null;
+    const next = i < bookOrder.length - 1 ? bookOrder[i + 1] : null;
+    row.prev_slug = prev?.slug || '';
+    row.prev_title = prev?.title || '';
+    row.next_slug = next?.slug || '';
+    row.next_title = next?.title || '';
+  }
   const eraSlugByLabel = Object.fromEntries((dynasty.reignEras || []).map((era) => [era.label, era.slug]));
   function pickEmperorReads(personId) {
     const list = publicChapters
@@ -1232,11 +1257,17 @@ function buildDynasty({ dynasty, data }) {
     console.warn('WARN: index.html 未找到 <main id="main">，跳过直出。');
   }
   // 注入朝代配置：app.js 启动时同步读取 #dynasty-config，决定数据块与专题路由
+  const assetStamp = createHash('sha256')
+    .update(fs.readFileSync(path.join(dataOutDir, 'home.json')))
+    .update(fs.readFileSync(path.join(dataOutDir, `d-${dynasty.code}.json`)))
+    .digest('hex')
+    .slice(0, 12);
   const dynastyConfig = {
     code: dynasty.code,
     label: dynasty.label,
     chunk: `d-${dynasty.code}`,
     eras: slim.eras,
+    v: assetStamp,
   };
   const configTag = `  <script type="application/json" id="dynasty-config">${JSON.stringify(dynastyConfig)}</script>\n`;
   const configRe = /[ \t]*<script type="application\/json" id="dynasty-config">[\s\S]*?<\/script>\n?/;
@@ -1269,10 +1300,12 @@ function buildDynasty({ dynasty, data }) {
     ? indexHtml.replace(discoveryMetaRe, discoveryMeta)
     : indexHtml.replace('</head>', `${discoveryMeta}\n</head>`);
   indexHtml = withThemeBoot(indexHtml);
+  indexHtml = indexHtml.replace(/href="styles\.css\?v=[^"]+"/, `href="styles.css?v=${assetStamp}"`);
+  indexHtml = indexHtml.replace(/src="app\.js(?:\?v=[^"]*)?"/, `src="app.js?v=${assetStamp}"`);
   fs.writeFileSync(indexPath, indexHtml);
 
   const staticPages = writeStaticChapterPages({
-    chapters, units, portraits, emperors: emperorRecords, claims, conflictSets,
+    chapters, units, portraits, emperors: emperorRecords, claims, conflictSets, assetStamp,
   });
   return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length, staticPages };
 }
@@ -1303,7 +1336,7 @@ function build() {
     reports.push(report);
   }
 
-  const searchWritten = writeJson('search.json', buildIndex(allSearchEntries));
+  const searchWritten = writeJson('search.json', { entries: allSearchEntries });
   reports.push({ dynasty: 'search', written: [searchWritten] });
 
   // 清理已被 d-${code}.json 取代的旧产物

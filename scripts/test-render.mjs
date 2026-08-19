@@ -68,6 +68,12 @@ globalThis.localStorage = {
   setItem: (key, value) => { memoryStore[key] = String(value); },
   removeItem: (key) => { delete memoryStore[key]; },
 };
+globalThis.sessionStorage = globalThis.localStorage;
+globalThis.history = { scrollRestoration: 'auto' };
+globalThis.IntersectionObserver = class {
+  observe() {}
+  disconnect() {}
+};
 globalThis.addEventListener = (name, fn) => { (listeners[name] ||= []).push(fn); };
 globalThis.removeEventListener = () => {};
 globalThis.scrollY = 0;
@@ -75,7 +81,7 @@ globalThis.scrollTo = () => {};
 globalThis.location = { hash: '' };
 globalThis.matchMedia = () => ({ matches: false, addEventListener() {} });
 globalThis.fetch = (url) => {
-  const file = path.join(siteDir, url.replace(/^\//, ''));
+  const file = path.join(siteDir, url.replace(/^\//, '').split('?')[0]);
   if (!fs.existsSync(file)) return Promise.resolve({ ok: false, status: 404, json: async () => ({}) });
   return Promise.resolve({ ok: true, json: async () => JSON.parse(fs.readFileSync(file, 'utf8')) });
 };
@@ -366,6 +372,9 @@ check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
 check('进站即恢复手选主题', html.includes("localStorage.getItem('theme')")
   && kx01Static.includes("localStorage.getItem('theme')")
   && html.indexOf("localStorage.getItem('theme')") < html.indexOf('styles.css'));
+const nh03Static = fs.readFileSync(path.join(siteDir, 'chapter', 'nurhaci-03', 'index.html'), 'utf8');
+check('静态章末篇下一篇接到下一朝', nh03Static.includes('chapter/huangtaiji-01/') && nh03Static.includes('下一篇'));
+check('首页前几张帝像优先加载', html.includes('fetchpriority="high"'));
 
 // 公开投影门禁：编辑待办、人员身份与 QA 字段不得进入任何可下载 JSON 或静态正文。
 const publicJsonFiles = ['home.json', 'people.json', `${dynastyConfig.chunk}.json`, 'catalog.json', 'search.json'];
