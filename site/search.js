@@ -46,7 +46,17 @@ export function lookup(index, query) {
     }
     return hits;
   };
-  if (needle.length < 2 || !index.postings) return take(index.entries);
+  const rank = (list) => {
+    const hits = take(list);
+    hits.sort((a, b) => {
+      const aTitle = normalize(a.label || '').includes(needle) ? 0 : 1;
+      const bTitle = normalize(b.label || '').includes(needle) ? 0 : 1;
+      return aTitle - bTitle;
+    });
+    if (needle.length < 2) return hits.slice(0, 50);
+    return hits;
+  };
+  if (needle.length < 2 || !index.postings) return rank(index.entries);
   const tokens = grams(needle);
   let ids = null;
   for (const token of tokens) {
@@ -55,5 +65,5 @@ export function lookup(index, query) {
     ids = ids ? intersect(ids, post) : post.slice();
     if (!ids.length) return [];
   }
-  return take((ids || []).map((id) => index.entries[id]));
+  return rank((ids || []).map((id) => index.entries[id]));
 }

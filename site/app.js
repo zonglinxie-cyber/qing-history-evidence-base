@@ -12,7 +12,7 @@ import {
   featuredSites as pickFeaturedSites,
   sortedSites as sortSites,
 } from './templates.js';
-import { normalize, lookup as lookupIndex } from './search.js';
+import { normalize, lookup as lookupIndex, buildIndex } from './search.js';
 import { EMPEROR_READS, EMPRESS_IDS, HEIR_THREADS, SOURCE_GROUPS, PATH_NODES, SPINE_POWER, SPINE_MONEY, ERA_PINNED } from './qing-content.mjs';
 
 const DATA = {
@@ -52,6 +52,7 @@ let SEARCH = { entries: [], postings: {} };
 // 多朝代并存需先把数据块前缀化为 d-<code> 并给前端加朝代切换器（见 build-site.mjs 的多 active 拦截守卫）。
 const DYNASTY = JSON.parse(document.getElementById('dynasty-config').textContent);
 const REIGN_CHUNK = DYNASTY.chunk;
+const ASSET_V = DYNASTY.v ? `?v=${encodeURIComponent(DYNASTY.v)}` : '';
 // 朝代专题页注册表：清代为 kangxi/yongzheng；新朝代在此注册自己的专题页函数。
 const ERA_PAGES = { kangxi: kangxiPage, yongzheng: yongzhengPage };
 const VIEW_CHUNKS = {
@@ -89,13 +90,13 @@ const VIEW_CHUNKS = {
 async function loadChunk(name) {
   if (loadedChunks.has(name)) return;
   if (inflightChunks.has(name)) return inflightChunks.get(name);
-  const pending = fetch(`data/${name}.json`)
+  const pending = fetch(`data/${name}.json${ASSET_V}`)
     .then((res) => {
       if (!res.ok) throw new Error(`无法载入 data/${name}.json`);
       return res.json();
     })
     .then((payload) => {
-      if (name === 'search') SEARCH = payload;
+      if (name === 'search') SEARCH = payload.postings ? payload : buildIndex(payload.entries || []);
       else Object.assign(DATA, payload);
       loadedChunks.add(name);
       reindex();
@@ -115,8 +116,13 @@ async function loadChapterBody(slug) {
   if (!slug) return;
   const row = (DATA.chapters || []).find((item) => item.slug === slug);
   if (row?.bodyHtml) return;
-  const res = await fetch(`data/chapter/${encodeURIComponent(slug)}.json`);
-  if (!res.ok) return;
+  const res = await fetch(`data/chapter/${encodeURIComponent(slug)}.json${ASSET_V}`);
+  if (!res.ok) {
+    if (row) {
+      row.bodyHtml = `<p class="warn">正文加载失败，<button type="button" class="link" data-retry-chapter="${esc(slug)}">点此重试</button></p>`;
+    }
+    return;
+  }
   const payload = await res.json();
   if (row) row.bodyHtml = payload.bodyHtml;
   else (DATA.chapters ||= []).push(payload);
@@ -1759,13 +1765,17 @@ function eraPage(slug) {
   }
 
   function chapterNav(chapter, list) {
-    const siblings = list
-      .filter((row) => row.person_id === chapter.person_id)
-      .slice()
-      .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
-    const idx = siblings.findIndex((row) => row.slug === chapter.slug);
-    const prev = idx > 0 ? siblings[idx - 1] : null;
-    const next = idx >= 0 && idx < siblings.length - 1 ? siblings[idx + 1] : null;
+    let prev = chapter.prev_slug ? { slug: chapter.prev_slug, title: chapter.prev_title } : null;
+    let next = chapter.next_slug ? { slug: chapter.next_slug, title: chapter.next_title } : null;
+    if (!prev && !next) {
+      const siblings = list
+        .filter((row) => row.person_id === chapter.person_id)
+        .slice()
+        .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
+      const idx = siblings.findIndex((row) => row.slug === chapter.slug);
+      prev = idx > 0 ? siblings[idx - 1] : null;
+      next = idx >= 0 && idx < siblings.length - 1 ? siblings[idx + 1] : null;
+    }
     if (!prev && !next) return '';
     return `<nav class="chapter-nav" aria-label="上下篇">
       ${prev ? `<a class="link" href="#/chapter/${esc(prev.slug)}">上一篇 ${esc(prev.title)}</a>` : '<span></span>'}
@@ -2175,6 +2185,14 @@ function eraPage(slug) {
     }
   }
 
+  function clipBlock(items, renderOne, limit = 8) {
+    if (!items.length) return '';
+    if (items.length <= limit) return items.map(renderOne).join('');
+    const head = items.slice(0, limit).map(renderOne).join('');
+    const rest = items.slice(limit).map(renderOne).join('');
+    return `${head}<details class="search-more"><summary>展开全部 ${items.length} 条</summary>${rest}</details>`;
+  }
+
   function searchPage(q) {
     const needle = normalize(q);
     if (!needle) return `<h1>检索</h1><p>输入年号、庙号、本名、异名或 ID。</p>`;
@@ -2197,14 +2215,14 @@ function eraPage(slug) {
       <h1>「${esc(q)}」</h1>
       <p class="muted">共 ${total} 条命中</p>
       <h2>人物 ${peopleHits.length}</h2>
-      ${peopleHits.length ? `<ul>${peopleHits.map((hit) => `<li><a href="#/person/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : '<p class="empty">无人物命中。</p>'}
-      ${claimHits.length ? `<h2>依据 ${claimHits.length}</h2>${claimHits.map(claimCard).join('')}` : ''}
+      ${peopleHits.length ? `<ul>${clipBlock(peopleHits, (hit) => `<li><a href="#/person/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`)}</ul>` : '<p class="empty">无人物命中。</p>'}
+      ${claimHits.length ? `<h2>依据 ${claimHits.length}</h2>${clipBlock(claimHits, claimCard)}` : ''}
       ${empressHits.length ? `<h2>后妃 ${empressHits.length}</h2>${timelineList(empressHits)}` : ''}
       ${princeHits.length ? `<h2>皇子 ${princeHits.length}</h2><ul>${princeHits.map((row) => `<li><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : ''}
       ${princessHits.length ? `<h2>皇女 ${princessHits.length}</h2><ul>${princessHits.map((row) => `<li><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : ''}
       ${heirHits.length ? `<h2>储位 ${heirHits.length}</h2>${heirList(heirHits)}` : ''}
       ${siteHits.length ? `<h2>今地 ${siteHits.length}</h2><div class="grid cards site-cards">${siteHits.map(siteCard).join('')}</div>` : ''}
-      ${chapterHits.length ? `<h2>章节 ${chapterHits.length}</h2><ul>${chapterHits.map((hit) => `<li><a href="#/chapter/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : ''}
+      ${chapterHits.length ? `<h2>章节 ${chapterHits.length}</h2><ul>${clipBlock(chapterHits, (hit) => `<li><a href="#/chapter/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`)}</ul>` : ''}
       ${questionHits.length ? `<h2>这类问题 ${questionHits.length}</h2><ul>${questionHits.map((hit) => `<li><a href="#/question/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : ''}
       ${laneHits.length ? `<h2>对照 ${laneHits.length}</h2>${laneHits.map(laneCard).join('')}` : ''}
       ${sourceHits.length ? `<h2>来源 ${sourceHits.length}</h2><ul>${sourceHits.map((row) => `<li><a href="#/source/${esc(row.source_id)}">${esc(row.source_id)} ${esc(row['机构或资源'])}</a></li>`).join('')}</ul>` : ''}
@@ -2227,6 +2245,7 @@ function eraPage(slug) {
           <p>实录能对到卷和条次，但仍是官修，不是原档。本纪后出，有时会多写实录当天没有的话；列传可以跟本纪差一天，世表常把几年收成一句。后出的那一层，不拿来改前面一层。</p>
           <h2>怎么看核对状态</h2>
           <p>「已核对」表示页面所引文字与所列出处已对应；它不等于学界已对事件的所有解释形成定论。</p>
+          <p>页内常见标记：<strong>已列原文</strong>＝能回到实录或本纪的具体条目；<strong>参考线索</strong>＝后出史书或通行叙述；<strong>存在异说</strong>＝同一件事有两种以上写法，并列保存。</p>
           <h2>空白的图</h2>
           <p>只有绿标能嵌进来，黄的只给说明和外链。网上看得见，不等于能放进这个站。</p>
           <h2>咸安宫</h2>
@@ -2255,6 +2274,9 @@ function eraPage(slug) {
       delete main.dataset.ssr;
       ensureView('').catch(() => {});
       return;
+    }
+    if (view === 'search' && !loadedChunks.has('search')) {
+      main.innerHTML = '<p class="kicker">检索</p><h1>检索中…</h1>';
     }
     try {
       await ensureView(view);
@@ -2309,9 +2331,40 @@ function eraPage(slug) {
     main.classList.remove('enter');
     void main.offsetWidth;
     main.classList.add('enter');
-    window.scrollTo(0, 0);
+    const routeKey = location.hash || '#/';
+    const skipTop = /[?&](unit|qtype|era)=/.test(routeKey);
+    let saved = 0;
+    try { saved = Number(sessionStorage.getItem(`scroll:${routeKey}`) || 0); } catch (err) { saved = 0; }
+    if (skipTop) {
+      /* keep current offset for filter-only routes */
+    } else if (saved > 0) {
+      window.scrollTo(0, saved);
+    } else {
+      window.scrollTo(0, 0);
+    }
     main.focus({ preventScroll: true });
     initOsdViewers();
+    highlightToc();
+  }
+
+  let tocObserver = null;
+  function highlightToc() {
+    if (tocObserver) {
+      tocObserver.disconnect();
+      tocObserver = null;
+    }
+    const toc = main.querySelector('.chapter-toc');
+    if (!toc || typeof IntersectionObserver !== 'function') return;
+    const buttons = [...toc.querySelectorAll('[data-scroll]')];
+    const heads = buttons.map((btn) => document.getElementById(btn.getAttribute('data-scroll'))).filter(Boolean);
+    if (!heads.length) return;
+    tocObserver = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+      if (!visible) return;
+      buttons.forEach((btn) => btn.classList.toggle('on', btn.getAttribute('data-scroll') === visible.target.id));
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+    heads.forEach((head) => tocObserver.observe(head));
   }
 
   searchForm.addEventListener('submit', (event) => {
@@ -2459,6 +2512,14 @@ function eraPage(slug) {
       }
       return;
     }
+    const retryChapter = event.target.closest('[data-retry-chapter]');
+    if (retryChapter) {
+      const slug = retryChapter.getAttribute('data-retry-chapter');
+      const row = (DATA.chapters || []).find((item) => item.slug === slug);
+      if (row) delete row.bodyHtml;
+      render();
+      return;
+    }
     const claimBtn = event.target.closest('[data-claim]');
     if (claimBtn) {
       const claim = claimById.get(claimBtn.getAttribute('data-claim'));
@@ -2561,17 +2622,40 @@ function eraPage(slug) {
     document.documentElement.classList.remove('dark', 'light');
     if (mode === 'dark') document.documentElement.classList.add('dark');
     else if (mode === 'light') document.documentElement.classList.add('light');
-    themeBtn.textContent = THEME_LABEL[mode];
+    if (themeBtn) themeBtn.textContent = THEME_LABEL[mode];
   }
   let currentTheme = localStorage.getItem('theme') || 'auto';
   if (!THEME_CYCLE.includes(currentTheme)) currentTheme = 'auto';
   applyTheme(currentTheme);
-  themeBtn.addEventListener('click', () => {
+  themeBtn?.addEventListener('click', () => {
     const idx = THEME_CYCLE.indexOf(currentTheme);
     currentTheme = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
     localStorage.setItem('theme', currentTheme);
     applyTheme(currentTheme);
   });
 
-  window.addEventListener('hashchange', () => { render(); });
+  const fsBtn = document.getElementById('fs-toggle');
+  const FS_CYCLE = ['m', 'l', 's'];
+  const FS_LABEL = { s: '小', m: '中', l: '大' };
+  function applyFont(size) {
+    document.documentElement.classList.remove('fs-s', 'fs-l');
+    if (size === 's' || size === 'l') document.documentElement.classList.add(`fs-${size}`);
+    if (fsBtn) fsBtn.textContent = FS_LABEL[size] || '中';
+  }
+  let currentFs = localStorage.getItem('fs') || 'm';
+  if (!FS_CYCLE.includes(currentFs)) currentFs = 'm';
+  applyFont(currentFs);
+  fsBtn?.addEventListener('click', () => {
+    currentFs = FS_CYCLE[(FS_CYCLE.indexOf(currentFs) + 1) % FS_CYCLE.length];
+    localStorage.setItem('fs', currentFs);
+    applyFont(currentFs);
+  });
+
+  history.scrollRestoration = 'manual';
+  let lastHash = location.hash || '#/';
+  window.addEventListener('hashchange', () => {
+    try { sessionStorage.setItem(`scroll:${lastHash}`, String(window.scrollY)); } catch (err) { /* ignore */ }
+    lastHash = location.hash || '#/';
+    render();
+  });
   render();
