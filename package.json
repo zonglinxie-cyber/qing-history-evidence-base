@@ -7,9 +7,12 @@
     "watch": "node scripts/build-site.mjs --watch",
     "status": "node scripts/build-status.mjs",
     "validate": "node scripts/validate-data.mjs",
-    "test": "node scripts/test-render.mjs",
+    "test": "node scripts/test-reader.mjs && node scripts/test-validate-fixtures.mjs && node scripts/test-render.mjs",
     "cache-media": "node scripts/cache-media.mjs",
     "optimize-media": "node scripts/optimize-media.mjs"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "csv-parse": "^5.6.0",

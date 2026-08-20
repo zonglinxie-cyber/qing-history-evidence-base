@@ -244,6 +244,7 @@ export function sortedSites(sites) {
 export function homeHtml(dynasty, emperors, sites, opts = {}) {
   const featured = featuredSites(sites);
   const rest = sortedSites(sites).length - featured.length;
+  const lanes = (opts.lanes || []).slice(0, 3);
   return `      <div class="reading">
         <p class="kicker">${esc(dynasty?.kicker || '')}</p>
         <h1>${esc(dynasty?.headline || '')}</h1>
@@ -316,6 +317,23 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
           </li>
         </ol>
       </section>
+      ${lanes.length ? `<section class="now-read">
+        <div class="page-head story">
+          <h2>官书和传闻怎么对不上</h2>
+        </div>
+        <p class="lede">对照栏把通行说法、官书原文和野史分栏，不把好看的故事升格成事实。</p>
+        <ol class="threads now-read-list">
+          ${lanes.map((row) => `
+          <li>
+            <a class="thread" href="#/lane/${esc(row.lane_id)}">
+              <span class="thread-year">${esc(row['栏目'] || '对照')}</span>
+              <h2>${esc(row['标题'])}</h2>
+              <p>${esc((row['差异或读法'] || row['通行说法'] || '').split('。')[0])}。</p>
+            </a>
+          </li>`).join('')}
+        </ol>
+        <p class="actions"><a class="link" href="#/lanes">全部对照</a></p>
+      </section>` : ''}
       <section class="now-read">
         <div class="page-head story">
           <h2>纸上的字</h2>

@@ -47,6 +47,7 @@ export function check(ctx) {
     emperors, portraits, crosswalk, people, sources, sourceIndex, tasks, vocab,
     units, claims, questions, chapters, lanes, empressTimeline,
     heirChain, historicSites, works, conflictSets, emperorTimeline,
+    imageRegions, iiifManifests,
   } = ctx;
 
   const emperorIds = new Set(emperors.map((r) => r.emperor_id));
@@ -442,6 +443,27 @@ export function check(ctx) {
     }
     if (row.status === 'C来源冲突' && boundClaims.length < 2) {
       errors.push(`${row.timeline_id} 标为冲突但不足两条 claim_ids`);
+    }
+  }
+
+  const visualIds = new Set(portraits.map((row) => row.visual_id));
+  for (const row of imageRegions || []) {
+    if (row.visual_id && !visualIds.has(row.visual_id)) {
+      errors.push(`${row.region_id} 引用了未知画像 ${row.visual_id}`);
+    }
+    if (row.assertion_id && !claimById.has(row.assertion_id)) {
+      errors.push(`${row.region_id} 引用了未知主张 ${row.assertion_id}`);
+    }
+  }
+  for (const row of iiifManifests || []) {
+    if (row.visual_id && !visualIds.has(row.visual_id)) {
+      errors.push(`iiif ${row.visual_id} 引用了未知画像`);
+    }
+  }
+  const taskIds = new Set((tasks || []).map((row) => row.task_id));
+  for (const row of tasks || []) {
+    for (const id of splitIds(row['前置任务'])) {
+      if (!taskIds.has(id)) errors.push(`${row.task_id} 前置任务未知: ${id}`);
     }
   }
 
