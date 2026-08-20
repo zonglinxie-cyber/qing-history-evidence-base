@@ -23,8 +23,7 @@
 | `docs/02-information-architecture.md` | 产品信息架构、核心页面和用户任务 |
 | `docs/03-source-and-rights-policy.md` | 史料分级、引用要求、版权三色规则 |
 | `docs/04-editorial-and-review-manual.md` | 录文、主张、关系、日期、画像及 AI 使用规范 |
-| `docs/05-six-week-execution-plan.md` | 零预算六批次执行计划、依赖与验收 |
-| `docs/06-risk-register.md` | 风险登记、触发条件、责任人和应对方案 |
+| `docs/archive/` | 已归档的过期规划：SQL schema 候选、六周计划、专家团队、风险登记全表、审查方案；现役警戒线见章程第 11 节 |
 | `docs/07-zero-budget-production-method.md` | 免费资料边界、证据状态和持续生产循环 |
 | `data/phase0-people.csv` | 人物候选权威档；从康雍样本扩至皇子女、大臣与跨朝人物，实时数量见 `STATUS.md` |
 | `data/qing-emperors.csv` | 十二帝统一骨架与本纪、实录、故宫入口 |
@@ -58,9 +57,7 @@
 | `scripts/build-status.mjs` | 从权威 CSV 重建 `STATUS.md`，防止手工数字漂移 |
 | `data/source-rights-ledger.csv` | 第一版来源与版权台账 |
 | `data/controlled-vocabularies.csv` | 第一版受控词表 |
-| `schema/schema.sql` | PostgreSQL Phase 0 权威主库候选结构；部署前必须在目标 PostgreSQL/扩展版本上跑迁移测试 |
-| `schema/002-zero-budget-import-readiness.sql` | 零预算导入补丁：来源定位单元、远程链接资产、导入批次和公开 ID |
-| `schema/data-dictionary.md` | 表、字段、约束及标准映射说明 |
+| `schema/data-dictionary.md` | 表、字段、约束及标准映射说明（CSV 权威源的字典） |
 | `data/import/README.md` | CSV 到数据库的身份合并、`ALL` 范围值及失败回滚规则 |
 | `examples/assertion-example.json` | 一条完整的“关系主张—证据—审核”样例 |
 | `scripts/validate-data.mjs` | CSV schema（必填列）、身份、卷次、许可、引用与证据等级门禁检查 |
@@ -70,7 +67,6 @@
 | `CONTRIBUTING.md` / `CODE_OF_CONDUCT.md` | 社区共建的证据规则、PR 流程与行为准则 |
 | `.github/ISSUE_TEMPLATE/` | 内容纠错、图像与权利、站点 Bug 三类报错模板 |
 | `.github/workflows/` | PR 校验（validate+build+渲染测试）与 main 推送自动发布 gh-pages |
-| `outputs/qing-history-phase0/清史证据库_Phase0_工作台.xlsx` | 可直接分工、筛选和更新的工作簿 |
 
 ## 如何打开本地工作台
 
@@ -100,9 +96,8 @@ python3 -m http.server 8765 --directory site
 1. 项目章程；
 2. 来源与版权规范；
 3. 编辑审核规范；
-4. 零预算生产方法与六批次计划；
-5. 打开工作簿开始分派任务；
-6. 技术团队再阅读数据字典和 SQL。
+4. 零预算生产方法；
+5. 技术团队再阅读数据字典。
 
 ## 已锁定的五项原则
 
