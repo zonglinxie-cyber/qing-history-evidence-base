@@ -625,6 +625,8 @@ tr[data-href] { cursor: pointer; }
 .cred-badge.cred-none { color: var(--muted); }
 .cred-badge.cred-site { color: var(--indigo); border-color: var(--indigo); }
 .cred-badge.cred-conflict { color: var(--red); border-color: var(--red); }
+.cred-badge[title],
+.mark[title] { cursor: help; }
 
 .callout {
   margin: 16px 0;

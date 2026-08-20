@@ -593,6 +593,7 @@ function publicBodyHtml(html, refs = {}) {
       return `<a class="link" href="#/${page}">${labels[page] || page}</a>`;
     });
   out = out.replace(/<(ul|ol)>\s*<\/\1>/g, '');
+  out = out.replace(/<h2 id="说明">说明<\/h2>\s*/g, '');
   return out;
 }
 

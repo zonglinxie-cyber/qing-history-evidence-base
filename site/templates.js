@@ -207,7 +207,15 @@ export function siteCard(site, opts = {}) {
   const rawStatus = site['证据状态'] || '';
   const publicStatus = site['公开证据状态'] || EVIDENCE_LABEL[rawStatus[0]] || '';
   const evCls = rawStatus ? (EVIDENCE_CLASS[rawStatus[0]] || 'site') : (publicStatus === '存在异说' ? 'conflict' : 'medium');
-  const siteBadge = publicStatus ? `<span class="cred-badge cred-${evCls}">${esc(publicStatus)}</span>` : '';
+  const badgeHint = {
+    '已列原文': '能回到实录或本纪的具体条目',
+    '参考线索': '依据后出史书或通行叙述，尚未对到日级原文',
+    '存在异说': '同一件事有两种以上写法，并列保存',
+    '尚不确定': '现有材料还不足以判定',
+  }[publicStatus] || '';
+  const siteBadge = publicStatus
+    ? `<span class="cred-badge cred-${evCls}"${badgeHint ? ` title="${esc(badgeHint)}"` : ''}>${esc(publicStatus)}</span>`
+    : '';
   return `
       <article class="card emperor-card site-card">
         <a class="card-pic" href="#/site/${esc(site.site_id)}" aria-label="${esc(site['事件'])}">
