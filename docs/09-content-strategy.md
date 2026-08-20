@@ -3,7 +3,7 @@
 版本：0.1.0
 制定日期：2026-08-15
 定位：给「清史证据库」项目设计一套零预算、证据派、可持续的内容生产—分发—沉淀体系
-配套文档：`docs/01-project-charter.md`、`docs/05-six-week-execution-plan.md`、`README.md`
+配套文档：`docs/01-project-charter.md`、`README.md`（六周批次计划已归档至 `docs/archive/05-six-week-execution-plan.md`）
 
 ---
 
@@ -133,7 +133,7 @@
 
 ## 6. 编辑日历（12 周示例，对齐六批次生产）
 
-日历与 `docs/05-six-week-execution-plan.md` 的批次一一对齐——**生产什么证据，就 surface 什么内容**，保证内容永远有真实数据支撑。
+日历与 `docs/archive/05-six-week-execution-plan.md` 的批次一一对齐——**生产什么证据，就 surface 什么内容**，保证内容永远有真实数据支撑。
 
 | 周次 | 关联批次 | 支柱 | 主题示例 | 形式 / 平台 |
 |---|---|---|---|---|
@@ -230,6 +230,6 @@ AI 生成候选（录文/实体/主张/叙事草稿）
 ## 附：本策略与项目文档的衔接
 
 - 选题全部锚定已有 CSV / 文档，确保"内容有真实证据撑腰"；
-- 生产节奏对齐 `docs/05-six-week-execution-plan.md`，内容不与生产脱节；
+- 生产节奏对齐 `docs/archive/05-six-week-execution-plan.md`，内容不与生产脱节；
 - 红线对齐 `docs/01-project-charter.md` 决策原则与排除范围；
 - 工作流对齐 `docs/04-editorial-and-review-manual.md` 的人工复核规范。
