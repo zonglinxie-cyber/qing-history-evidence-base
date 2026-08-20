@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
 import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
+import { EDITORIAL_COPY, readerCopy, readerProse, readerMetadata, stripInternalComments } from './lib/reader.mjs';
 import { buildIndex } from '../site/search.js';
 import { homeHtml, isChapterIndexable, isChapterEvidenceClosed, researchDraftBanner } from '../site/templates.js';
 import { pinyin } from 'pinyin-pro';
@@ -64,177 +66,6 @@ function pick(row, fields) {
   return Object.fromEntries(fields
     .filter((field) => Object.hasOwn(row || {}, field))
     .map((field) => [field, row[field]]));
-}
-
-// 公共站点只发布读者层。CSV 中的编辑状态、责任人和待办记录不得随 JSON 打包。
-const EDITORIAL_COPY = /本库|本表|本轮|未开|尚未开|未拆|待核|待查|待回|待补|待用户|抽查|审核|复核人|录入人|责任人|工作流|任务队列|尚无专章|条次未|索引未|仅登记|H1|E1|S\s*二手/;
-
-function readerCopy(value) {
-  return String(value || '').trim()
-    .replace(/入口见\s*IDX-\d+/g, '可从文献目录查看访问入口')
-    .replace(/\bIDX-\d+\b/g, '相关目录条目')
-    .replace(/当前项目深挖的核心史料/g, '理解该朝的重要史料')
-    .replace(/项目尚未逐件打开，不拆主张/g, '目前尚无逐件原文定位')
-    .replace(/十二帝研究卡已写/g, '现有资料记载')
-    .replace(/人物档沿用\s*QH-P-[A-Z0-9-]+\s*，不另编号。?/g, '')
-    .replace(/人物档常用/g, '本页采用')
-    .replace(/人物档见/g, '另见人物条目：')
-    .replace(/见人物档/g, '另见人物条目')
-    .replace(/不自动合成一个人/g, '不能仅凭同姓视为同一人')
-    .replace(/额驸同名不合并/g, '同名额驸不能因此视为同一人')
-    .replace(/朱天保尚未建档。?/g, '')
-    .replace(/和数据页的关系/g, '延伸阅读')
-    .replace(/全表可接入/g, '完整表格见')
-    .replace(/分日事件链见站点/g, '分日事件链见')
-    .replace(/主张见/g, '相关依据见')
-    .replace(/人物见/g, '相关人物见')
-    .replace(/见解读组，不入正文/g, '此处不作定论')
-    .replace(/康雍样本把她登记为/g, '现有资料将她视为')
-    .replace(/这是本页后宫栏最有用的一条/g, '关键在于分清三种母职')
-    .replace(/本页已收一道装开页为其他真迹，许可公版。?/g, '现存道装册页可供对照。')
-    .replace(/默认头像仍用朝服像。?/g, '')
-    .replace(/野史可以登记，但不能覆盖已列原文的实录文本/g, '野史传说不能覆盖现有《实录》文本')
-    .replace(/本页未见到可定位的\s*A1\/A2\s*材料/g, '目前没有可定位的一手材料')
-    .replace(/A1\/A2\s*材料/g, '一手材料')
-    .replace(/本栏目前只列出冲突/g, '现有材料存在冲突')
-    .replace(/本页尚未为孝庄建立人物档。?/g, '')
-    .replace(/没有人物档、没有打开的原始诏旨之前，目前只列出传说，不建婚姻关系边/g, '在缺少可直接回查的原始诏旨时，只能把它列为传说，不能认定婚姻关系')
-    .replace(/本页只给入口和制度说明/g, '这里仅说明访问条件与材料层级')
-    .replace(/本页把一史馆原档默认黄色\/红色：只存档号、短引文、外链/g, '一史馆原档宜只保存档号、短引文和外链，未经授权不复制图像')
-    .replace(/本页康熙即位、崩逝、初废拘执、颁废、复立条都链到该站的具体条次/g, '这里所列康熙即位、崩逝、初废拘执、颁废与复立均可回到该站的具体条目')
-    .replace(/另有人物档/g, '两人有不同记录')
-    .replace(/本页禁止用/g, '不宜用')
-    .replace(/先登记入口/g, '现阶段仅提供访问入口')
-    .replace(/目前只列出入口/g, '现阶段仅提供访问入口')
-    .replace(/原文原文/g, '原文')
-    .replace(/已确认卷次锚点/g, '可直接回查的卷次')
-    .replace(/尚待更多材料确认项/g, '待定位事件')
-    .replace(/卷次状态/g, '原文位置')
-    .replace(/卷\s*(\d+)\s*待条次复核/g, '卷 $1 的具体条目待确认')
-    .replace(/约卷\s*([^,，；;<]+)(?:前后)?，尚待更多材料确认/g, '可能在卷 $1 附近，具体位置待确认')
-    .replace(/研究卡列为骨架，未回原文/g, '现有页面尚未提供相应原文定位')
-    .replace(/研究卡列为骨架/g, '现有资料列为重要事件')
-    .replace(/研究卡记/g, '现有资料记')
-    .replace(/研究卡里的另一组骨架/g, '另一组重要议题')
-    .replace(/研究卡/g, '现有资料')
-    .replace(/康雍深挖卷|康雍深挖/g, '康雍专题')
-    .replace(/深挖版统治年表/g, '专题统治年表')
-    .replace(/深挖核心/g, '重点议题')
-    .replace(/原子主张/g, '逐条结论')
-    .replace(/证据抽屉/g, '依据说明')
-    .replace(/卷页回链/g, '原文定位')
-    .replace(/冲突组/g, '同组异说')
-    .replace(/\bE1\b/g, '原文可回查')
-    .replace(/原文可回查《清史稿》层/g, '《清史稿》可回查')
-    .replace(/骨架年份已回查/g, '关键年份已核对')
-    .replace(/已回查/g, '已核对')
-    .replace(/这段的骨架/g, '这一时期的关键事件')
-    .replace(/能钉到卷、日、条次/g, '能够定位到卷、日期和条目')
-    .replace(/实录卷(\d+)钉到/g, '《实录》卷$1记于')
-    .replace(/仍待逐次钉入实录/g, '仍需逐次核对《实录》原文')
-    .replace(/钉入实录/g, '核对《实录》原文')
-    .replace(/钉到/g, '定位到')
-    .replace(/未回原文/g, '现有页面尚未提供原文定位')
-    .replace(/未回实录条次/g, '现有页面尚未提供《实录》条目定位')
-    .replace(/主张未单拆，见该来源单元。/g, '相关记载见所列原文。')
-    .replace(/打开原文后再建来源单元。/g, '目前没有足以支持结论的可回查原文。')
-    .replace(/本页均为索引，不拆原子主张|本章只做登记和入口，不拆原子主张|本页目前只列出书名与版本层次，不拆条/g, '本页介绍文献范围与版本差异；具体引文请从文献链接查看')
-    .replace(/只做登记和入口/g, '只介绍文献范围与阅读入口')
-    .replace(/不拆原子主张|不拆条/g, '暂不逐条列出依据')
-    .replace(/公历只作对照，换算依通行年表，待独立历法库复核。/g, '公历日期暂采用通行年表换算。')
-    .replace(/公历日期采用通行年表对照，仍须历法库复核。/g, '公历日期暂采用通行年表换算。')
-    .replace(/待独立历法库复核|仍须历法库复核/g, '换算尚待核对')
-    .replace(/独立历法库|历法库/g, '历法资料')
-    .replace(/本库的做法/g, '本页的处理方式')
-    .replace(/本库/g, '本页')
-    .replace(/本页尚未为孝庄建立人物档。?/g, '')
-    .replace(/没有人物档、没有打开的原始诏旨之前，(?:目前)?只列出传说，不建婚姻关系边/g, '在缺少可直接回查的原始诏旨时，只能把它列为传说，不能认定婚姻关系')
-    .replace(/本页禁止用/g, '不宜用')
-    .replace(/本表/g, '此表')
-    .replace(/本轮/g, '目前')
-    .replace(/尚未打开|未打开|还没打开|原文未开|尚未开|未开/g, '尚无可直接回查的原文')
-    .replace(/尚未回查|未回查|待回核|待回查/g, '尚待更多材料核对')
-    .replace(/尚未逐条比对|未逐条比对/g, '尚待逐条比对')
-    .replace(/尚未拆成主张|未拆成主张|尚未拆出主张|未拆出主张/g, '尚未列出逐条依据')
-    .replace(/尚未拆入|未拆入|尚未拆|未拆/g, '尚未列出逐条依据')
-    .replace(/待核实|待核/g, '尚待更多材料确认')
-    .replace(/待查/g, '尚待查证')
-    .replace(/只登记/g, '目前只列出')
-    .replace(/已登记/g, '已列出')
-    .replace(/尚未登记/g, '尚未列出')
-    .replace(/登记书名/g, '列出书名')
-    .replace(/人物档把他登记为/g, '现有材料将他列为')
-    .replace(/分层登记/g, '应分层理解')
-    .replace(/实录条次尚未钉|条次尚未钉/g, '尚无可直接回查的实录条目')
-    .replace(/对应条次尚未钉/g, '对应实录条目尚无可直接回查的定位')
-    .replace(/(?:本页)?尚未钉到/g, '目前尚无可直接回查的')
-    .replace(/不假装已回条次/g, '因此不据此作定论')
-    .replace(/本页尚未完成这条链/g, '现有材料还不足以呈现完整决策链')
-    .replace(/已打开/g, '已列原文')
-    .replace(/已钉[^,，。；;]*/g, '已列出相关原文条目')
-    .replace(/其余事件仍为索引/g, '其余事件仅作概览')
-    // 最后一层只处理前述替换后才形成的读者文案，防止「本库→本页」留下编辑口吻。
-    .replace(/本页只收前两层的尚待更多材料确认线索/g, '现有材料仅支持前两层的线索')
-    .replace(/这是本页后宫栏最有用的一条：有趣，是因为制度细，不是因为秘闻。三种母职必须分栏/g, '关键在于分清生母、抚养者与嫡母三种身份，而不是把它们写成宫廷秘闻')
-    .replace(/本页已收一道装开页为其他真迹，许可公版。?/g, '现存道装册页可供对照。')
-    .replace(/野史可以登记，但不能覆盖已列原文的实录文本/g, '野史传说不能覆盖现有《实录》文本')
-    .replace(/本栏目前只列出冲突/g, '现有材料存在冲突')
-    .replace(/没有人物档、没有打开的原始诏旨之前，(?:目前)?只列出传说，不建婚姻关系边/g, '在缺少可直接回查的原始诏旨时，只能把它列为传说，不能认定婚姻关系')
-    .replace(/本页只给入口和制度说明/g, '这里仅说明访问入口与材料层级')
-    .replace(/本页家庭字段仍是待取证/g, '其中亲属关系尚待玉牒等材料核对')
-    .replace(/本页把一史馆原档默认黄色\/红色：只存档号、短引文、外链/g, '一史馆原档宜只保存档号、短引文和外链，未经授权不复制图像')
-    .replace(/本页康熙即位、崩逝、初废拘执、颁废、复立条都链到该站的具体条次/g, '这里所列康熙即位、崩逝、初废拘执、颁废与复立均可回到该站的具体条目')
-    .replace(/本页人物档已把她登记为弘历生母/g, '现有材料将她列为弘历生母')
-    .replace(/玉牒原文尚无可直接回查的原文/g, '玉牒原文尚未列出可直接回查的位置')
-    .replace(/本页尚未逐件核对，目前只列出入口/g, '现阶段仅提供访问入口，尚未完成逐件核对')
-    .replace(/本页尚无可直接回查的原文后妃传与玉牒对应段落/g, '目前尚未列出《后妃传》与玉牒对应段落的原文位置')
-    .replace(/本页尚无可直接回查的原文咸丰朝后妃传对应段落/g, '目前尚未列出咸丰朝《后妃传》对应段落的原文位置')
-    .replace(/晚清笔记说法，降级登记/g, '这一说法仅见于晚清笔记，证据层级较低')
-    .replace(/出生传说按来源登记/g, '出生传说应注明来源')
-    .replace(/人物档与后妃传把/g, '人物资料与《后妃传》将')
-    .replace(/在人物档为/g, '人物资料记为')
-    .replace(/人物档用名/g, '本页用名')
-    .replace(/可以登记来源/g, '可以注明来源')
-    .replace(/本页未见到/g, '目前没有见到')
-    .replace(/本页尚未定位到/g, '目前尚未定位到')
-    .replace(/本页尚无可直接回查的原文/g, '目前尚无可直接回查的原文')
-    .replace(/本页目前只打开/g, '目前可直接回查的材料仅有')
-    .replace(/本页站在清史角度登记/g, '此处从清史角度表述')
-    .replace(/本页均为索引/g, '此处仅作索引')
-    .replace(/本页未登记/g, '此处未列出')
-    .replace(/本页未对勘/g, '尚未对勘')
-    .replace(/本页未核查/g, '此处尚未核查')
-    .replace(/本页不静默改字/g, '此处保留异文')
-    .replace(/本页不取一个总数/g, '此处不采用单一总数')
-    .replace(/本页不作裁判/g, '此处不作裁断')
-    .replace(/开国骨架/g, '开国主线')
-    .replace(/军事骨架/g, '军事脉络')
-    .replace(/战争骨架/g, '战争概况')
-    .replace(/制度骨架/g, '制度体系')
-    .replace(/尚未逐条拆解|未逐条拆解/g, '尚未逐条核对')
-    .replace(/待回原文/g, '尚待核对原文')
-    .replace(/未逐条回原文/g, '尚未逐条核对原文')
-    .replace(/未回《/g, '尚未核对《')
-    .replace(/未回案档/g, '尚未核对案档')
-    .replace(/未回原件/g, '尚未核对原件')
-    .replace(/逐条依据条/g, '逐条依据')
-    .replace(/目前目前/g, '目前');
-}
-
-function readerProse(value) {
-  const text = readerCopy(value);
-  if (!text) return '';
-  return (text.match(/[^!！?？。；;]+[!！?？。；;]?/g) || [text])
-    .map((sentence) => sentence.trim())
-    .filter((sentence) => sentence && !EDITORIAL_COPY.test(sentence))
-    .join('');
-}
-
-function readerMetadata(value) {
-  return String(value || '')
-    .replace(/待核权/g, '商业使用条件尚未确认，请以来源机构最新权利说明为准')
-    .replace(/待核/g, '有待考证')
-    .replace(/待查/g, '有待查证');
 }
 
 function publicPortraitProse(value) {
@@ -367,7 +198,7 @@ function readerStatusBlock(raw) {
 }
 
 function mdToHtml(src, fig) {
-  const text = String(src || '').replace(/\r\n/g, '\n').replace(/^# .+\n+/, '');
+  const text = stripInternalComments(String(src || '')).replace(/\r\n/g, '\n').replace(/^# .+\n+/, '');
   const lines = text.split('\n');
   const html = [];
   const usedIds = new Set();
@@ -533,9 +364,14 @@ function publicBodyHtml(html, refs = {}) {
   );
   // 纯编辑验收项直接不发布。
   const privateChecklist = /进入站点前|人工复核|深挖状态|章程原则|待用户抽查|责任人|审核备注|第一版产出|项目北极星指标|技术架构组|结构化入库|接入站点|内容选题库|大事记组|task-queue|\bschema\b|(?:data|content)\/[A-Za-z0-9_./-]+/i;
-  out = out.replace(/<(p|li|blockquote)\b[^>]*>[\s\S]*?<\/\1>/g, (block) => (
-    privateChecklist.test(block.replace(/<[^>]+>/g, '')) ? '' : block
-  ));
+  out = out.replace(/<(p|li|blockquote)\b[^>]*>[\s\S]*?<\/\1>/g, (block) => {
+    const plain = block.replace(/<[^>]+>/g, '');
+    if (privateChecklist.test(plain)) {
+      console.warn(`[publicBodyHtml] 删块: ${plain.replace(/\s+/g, ' ').trim().slice(0, 120)}`);
+      return '';
+    }
+    return block;
+  });
   out = out.replace(/人物档沿用\s*<a\b[^>]*>[\s\S]*?<\/a>\s*，不另编号。?/g, '');
   // 把必要的证据不足改成读者口径，而不是工作队列口径。
   out = readerCopy(out)
@@ -695,7 +531,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, dr
   <header class="masthead static-masthead">
     <a class="brand" href="./">清史读本</a>
     <nav class="nav" aria-label="主导航">
-      <a href="./">十二帝</a><a href="./#/lanes">对照</a><a href="./#/sites">今地</a><a href="./#/works">文献</a>
+      <a href="./">十二帝</a><a href="./#/lanes">对照</a><a href="./#/sites">今地</a><a href="./#/works">文献</a><a href="./#/how">怎么读</a>
     </nav>
   </header>
   <main id="main" tabindex="-1">
@@ -720,6 +556,83 @@ ${draft ? `        ${researchDraftBanner('chapter')}\n` : ''}        <p class="c
 </html>
 `;
   return withSpaHash(withInPageHash(page, chapter.slug));
+}
+
+function staticShareHtml({ title, description, pathSeg, id, image, assetStamp = '11' }) {
+  const canonical = new URL(`${pathSeg}/${encodeURIComponent(id)}/`, siteBaseUrl).href;
+  const hash = pathSeg === 'person' ? `#/person/${id}` : pathSeg === 'lane' ? `#/lane/${id}` : `#/site/${id}`;
+  return `<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="../../">
+  <title>${escHtml(title)} · 清史读本</title>
+  <meta name="description" content="${escHtml(description)}">
+  <meta name="robots" content="noindex,follow">
+  <link rel="canonical" href="${escHtml(canonical)}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="清史读本">
+  <meta property="og:title" content="${escHtml(title)}">
+  <meta property="og:description" content="${escHtml(description)}">
+  <meta property="og:url" content="${escHtml(canonical)}">
+  ${image ? `<meta property="og:image" content="${escHtml(image)}">` : ''}
+  <link rel="stylesheet" href="styles.css?v=${assetStamp}">
+</head>
+<body>
+  <a class="skip" href="${escHtml(pathSeg)}/${escHtml(id)}/#main">跳到正文</a>
+  <header class="masthead static-masthead">
+    <a class="brand" href="./">清史读本</a>
+    <nav class="nav" aria-label="主导航">
+      <a href="./">十二帝</a><a href="./#/lanes">对照</a><a href="./#/sites">今地</a><a href="./#/works">文献</a><a href="./#/how">怎么读</a>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    <article>
+      <p class="kicker">清史读本</p>
+      <h1>${escHtml(title)}</h1>
+      <p class="lede">${escHtml(description)}</p>
+      <p class="actions"><a class="link" href="${escHtml(hash)}">打开交互版</a></p>
+    </article>
+  </main>
+</body>
+</html>`;
+}
+
+function writeStaticSharePages({ people, lanes, sites, portraits, assetStamp = '11' }) {
+  const jobs = [];
+  for (const row of people || []) {
+    jobs.push({
+      pathSeg: 'person',
+      id: row.person_id,
+      title: String(row['规范名'] || '').replace(/^爱新觉罗·/, ''),
+      description: row['常用名或异名'] || row['人物类型'] || '人物条目',
+    });
+  }
+  for (const row of lanes || []) {
+    jobs.push({
+      pathSeg: 'lane',
+      id: row.lane_id,
+      title: row['标题'],
+      description: (row['差异或读法'] || row['通行说法'] || '对照').split('。')[0],
+    });
+  }
+  for (const row of sites || []) {
+    jobs.push({
+      pathSeg: 'site',
+      id: row.site_id,
+      title: row['事件'] || row['卡片钩子'] || row.site_id,
+      description: row['卡片钩子'] || row['今地说明'] || '',
+      image: row['预览文件'] ? new URL(row['预览文件'], siteBaseUrl).href : '',
+    });
+  }
+  for (const job of jobs) {
+    if (!/^[A-Za-z0-9-]+$/.test(job.id)) continue;
+    const dir = path.join(siteDir, job.pathSeg, job.id);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'index.html'), staticShareHtml({ ...job, assetStamp }));
+  }
+  return jobs.length;
 }
 
 function writeStaticChapterPages({ chapters, units, portraits, emperors, claims, conflictSets, assetStamp = '11' }) {
@@ -766,7 +679,13 @@ function writeStaticChapterPages({ chapters, units, portraits, emperors, claims,
   }
 
   const urls = [siteBaseUrl.href, ...indexable.map((chapter) => new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href)];
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((url) => `  <url><loc>${escHtml(url)}</loc></url>`).join('\n')}\n</urlset>\n`;
+  let lastmod = '';
+  try {
+    lastmod = String(execFileSync('git', ['log', '-1', '--format=%cs'], { cwd: root, encoding: 'utf8' })).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(lastmod)) lastmod = '';
+  } catch { lastmod = ''; }
+  const lastmodTag = lastmod ? `<lastmod>${lastmod}</lastmod>` : '';
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((url) => `  <url><loc>${escHtml(url)}</loc>${lastmodTag}</url>`).join('\n')}\n</urlset>\n`;
   fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), sitemap);
   fs.writeFileSync(path.join(siteDir, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', siteBaseUrl).href}\n`);
   return { total: chapters.length, indexable: indexable.length };
@@ -921,10 +840,10 @@ function buildDynasty({ dynasty, data }) {
   const publicClaims = claims.map(publicClaim);
   const publicLanes = lanes.map((row) => ({
     ...pick(row, ['lane_id', '栏目', '相关人物ID', '标题', '来源入口', '冲突组 ID']),
-    '通行说法': readerProse(row['通行说法']),
-    '官书或档案怎么写': readerProse(row['官书或档案怎么写']),
-    '野史笔记或影视怎么写': readerProse(row['野史笔记或影视怎么写']),
-    '差异或读法': readerProse(row['差异或读法']),
+    '通行说法': readerProse(row['通行说法'], { file: 'side-lanes.csv', field: `${row.lane_id}/通行说法` }),
+    '官书或档案怎么写': readerProse(row['官书或档案怎么写'], { file: 'side-lanes.csv', field: `${row.lane_id}/官书` }),
+    '野史笔记或影视怎么写': readerProse(row['野史笔记或影视怎么写'], { file: 'side-lanes.csv', field: `${row.lane_id}/野史` }),
+    '差异或读法': readerProse(row['差异或读法'], { file: 'side-lanes.csv', field: `${row.lane_id}/读法` }),
   }));
   const publicEmpressTimeline = empressTimeline.map((row) => ({
     ...pick(row, [
@@ -1040,6 +959,11 @@ function buildDynasty({ dynasty, data }) {
   for (const emperor of emperorRecords) {
     const era = String(emperor['年号或通称'] || '').split('；')[0];
     emperor.eraSlug = eraSlugByLabel[era] || '';
+    const firstChapter = publicChapters
+      .filter((row) => row.person_id === emperor.person_id)
+      .slice()
+      .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0))[0];
+    emperor.chronicleSlug = firstChapter?.slug?.split('-')[0] || '';
     emperor.reads = pickEmperorReads(emperor.person_id);
   }
   const publicOverviews = overviews.map((row) => ({
@@ -1256,7 +1180,9 @@ function buildDynasty({ dynasty, data }) {
   let indexHtml = fs.readFileSync(indexPath, 'utf8');
   const homeRe = /<main id="main"[^>]*>[\s\S]*?<\/main>/;
   if (homeRe.test(indexHtml)) {
-    const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false });
+    const skipHomeLanes = new Set(['QH-L-0007', 'QH-L-0009']);
+    const homeLanes = publicLanes.filter((row) => !skipHomeLanes.has(row.lane_id)).slice(0, 3);
+    const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false, lanes: homeLanes });
     indexHtml = indexHtml.replace(homeRe, `<main id="main" tabindex="-1" data-ssr="home">\n${home}\n  </main>`);
   } else {
     console.warn('WARN: index.html 未找到 <main id="main">，跳过直出。');
@@ -1286,6 +1212,11 @@ function buildDynasty({ dynasty, data }) {
   const homeStructured = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'WebSite', name: '清史读本',
     url: siteBaseUrl.href, inLanguage: 'zh-Hans', description: homeDescription,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteBaseUrl.href}#/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
   }).replace(/</g, '\\u003c');
   const discoveryMeta = `  <!-- generated-site-meta:start -->
   <meta name="robots" content="index,follow">
@@ -1312,6 +1243,14 @@ function buildDynasty({ dynasty, data }) {
   const staticPages = writeStaticChapterPages({
     chapters, units, portraits, emperors: emperorRecords, claims, conflictSets, assetStamp,
   });
+  const sharePages = writeStaticSharePages({
+    people: publicPeople,
+    lanes: publicLanes,
+    sites: publicSites,
+    portraits,
+    assetStamp,
+  });
+  staticPages.share = sharePages;
   return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length, staticPages };
 }
 

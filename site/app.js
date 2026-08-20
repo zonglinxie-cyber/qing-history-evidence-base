@@ -57,7 +57,6 @@ const ASSET_V = DYNASTY.v ? `?v=${encodeURIComponent(DYNASTY.v)}` : '';
 const ERA_PAGES = { kangxi: kangxiPage, yongzheng: yongzhengPage };
 const VIEW_CHUNKS = {
   '': ['home'],
-  emperors: ['home'],
   sites: ['home'],
   site: ['home'],
   person: ['home', 'people', REIGN_CHUNK],
@@ -698,7 +697,9 @@ function eraPage(slug) {
   }
 
   function home() {
-    return homeHtml(DATA.dynasty, DATA.emperors, DATA.sites, { onerror: true });
+    const skipHomeLanes = new Set(['QH-L-0007', 'QH-L-0009']);
+    const lanes = (DATA.lanes || []).filter((row) => !skipHomeLanes.has(row.lane_id)).slice(0, 3);
+    return homeHtml(DATA.dynasty, DATA.emperors, DATA.sites, { onerror: true, lanes });
   }
 
   function eraChapters(era) {
@@ -706,6 +707,24 @@ function eraPage(slug) {
       .filter((row) => row.era === era)
       .slice()
       .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
+  }
+
+  function relatedLaneCards(chapter) {
+    const ids = String(chapter?.related || '').split(/[；;]/).map((item) => item.trim())
+      .map((href) => href.match(/^#\/lane\/([^/?#]+)/)?.[1]).filter(Boolean);
+    const rows = ids.map((id) => (DATA.lanes || []).find((item) => item.lane_id === id)).filter(Boolean);
+    if (!rows.length) return '';
+    return `<section class="now-read">
+      <h2>相关对照</h2>
+      <ol class="threads now-read-list">${rows.map((row) => `
+        <li>
+          <a class="thread" href="#/lane/${esc(row.lane_id)}">
+            <span class="thread-year">${esc(row['栏目'] || '对照')}</span>
+            <h2>${esc(row['标题'])}</h2>
+            <p>${esc((row['差异或读法'] || '').split('。')[0] || row['标题'])}</p>
+          </a>
+        </li>`).join('')}</ol>
+    </section>`;
   }
 
   function relatedLinks(value) {
@@ -809,15 +828,8 @@ function eraPage(slug) {
           ${read.evidenceNote ? `<details class="evidence-drawer"><summary>史料说明</summary><p>${esc(read.evidenceNote)}</p></details>` : ''}
         </details>`;
     }
-    const eraSlug = String(emperor['年号或通称'] || '').split('；')[0];
-    const dirMap = {
-      天命: 'nurhaci', 天聪: 'huangtaiji', 崇德: 'huangtaiji',
-      顺治: 'shunzhi', 康熙: 'kangxi', 雍正: 'yongzheng', 乾隆: 'qianlong',
-      嘉庆: 'jiaqing', 道光: 'daoguang', 咸丰: 'xianfeng', 同治: 'tongzhi',
-      光绪: 'guangxu', 宣统: 'xuantong',
-    };
     const hasChronicle = chronicleRows(emperor.emperor_id).length > 0;
-    const chronicleHref = hasChronicle && dirMap[eraSlug] ? `#/chronicle/${dirMap[eraSlug]}` : '';
+    const chronicleHref = hasChronicle && emperor.chronicleSlug ? `#/chronicle/${emperor.chronicleSlug}` : '';
     return `
       ${readsHtml}
       <details class="more-read">
@@ -905,13 +917,9 @@ function eraPage(slug) {
     const shown = rows.length ? rows : all.slice(0, 5);
     const more = all.length > shown.length;
     const era = ((DATA.emperors || []).find((e) => e.emperor_id === emperorId)?.['年号或通称'] || '').split('；')[0];
-    const dirMap = {
-      天命: 'nurhaci', 天聪: 'huangtaiji', 崇德: 'huangtaiji',
-      顺治: 'shunzhi', 康熙: 'kangxi', 雍正: 'yongzheng', 乾隆: 'qianlong',
-      嘉庆: 'jiaqing', 道光: 'daoguang', 咸丰: 'xianfeng', 同治: 'tongzhi',
-      光绪: 'guangxu', 宣统: 'xuantong',
-    };
-    const href = dirMap[era] ? `#/chronicle/${dirMap[era]}` : '';
+    const href = (DATA.emperors || []).find((row) => row.emperor_id === emperorId)?.chronicleSlug
+      ? `#/chronicle/${(DATA.emperors || []).find((row) => row.emperor_id === emperorId).chronicleSlug}`
+      : '';
     return `
       <h2>这一朝大事</h2>
       <div class="chronicle-list">${shown.map(chronicleItem).join('')}</div>
@@ -985,30 +993,20 @@ function eraPage(slug) {
   }
 
   function chroniclePage(slug) {
-    const dirMap = {
-      nurhaci: '天命', huangtaiji: '天聪', shunzhi: '顺治', kangxi: '康熙',
-      yongzheng: '雍正', qianlong: '乾隆', jiaqing: '嘉庆', daoguang: '道光',
-      xianfeng: '咸丰', tongzhi: '同治', guangxu: '光绪', xuantong: '宣统',
-    };
     if (!slug) {
       return `<h1>还没有这份大事记</h1><p class="lede">要看哪一朝，写在地址后面。康熙有十六件。</p><p class="actions"><a class="link" href="#/chronicle/kangxi">康熙大事记</a> · <a class="link" href="#/">回十二帝</a></p>`;
     }
-    const eraLabel = dirMap[slug] || '';
-    const eraRoute = {
-      天命: 'tianming', 天聪: 'tiancong', 顺治: 'shunzhi', 康熙: 'kangxi',
-      雍正: 'yongzheng', 乾隆: 'qianlong', 嘉庆: 'jiaqing', 道光: 'daoguang',
-      咸丰: 'xianfeng', 同治: 'tongzhi', 光绪: 'guangxu', 宣统: 'xuantong',
-    };
-    const emperor = (DATA.emperors || []).find((row) => {
-      const era = String(row['年号或通称'] || '').split('；')[0];
-      return era === eraLabel;
-    });
+    const emperor = (DATA.emperors || []).find((row) => row.chronicleSlug === slug)
+      || (DATA.emperors || []).find((row) => {
+        const era = String(row['年号或通称'] || '').split('；')[0];
+        return era === slug;
+      });
     if (!emperor) {
       return `<h1>还没有这份大事记</h1><p class="actions"><a class="link" href="#/">回十二帝</a></p>`;
     }
     const rows = chronicleRows(emperor.emperor_id);
     const era = String(emperor['年号或通称'] || '').split('；')[0];
-    const back = eraRoute[era] || slug;
+    const back = emperor.eraSlug || slug;
     if (!rows.length) {
       const opened = eraChapters(era);
       return `
@@ -1228,6 +1226,7 @@ function eraPage(slug) {
     return `
       <p class="kicker">今地 · ${esc(site['事件'])}</p>
       <h1 class="site-page-title">${esc(hook)}</h1>
+      <p class="crumb"><a class="link" href="site/${esc(id)}/">可分享链接</a></p>
       <div class="dossier image-dossier site-page">
         <figure class="portrait large site-hero">
           ${canEmbedSite(site) ? siteImg(site['预览文件'], hook) : ''}
@@ -1302,6 +1301,7 @@ function eraPage(slug) {
       <p class="kicker">皇帝</p>
       <h1>${esc(era)}</h1>
       <p class="lede">${esc(aliases)}</p>
+      <p class="crumb"><a class="link" href="person/${esc(id)}/">可分享链接</a></p>
       <div class="emperor-read">
         ${portraitBlock(portrait, '', 'portrait-lead')}
         <dl class="kv vita-kv">
@@ -1340,6 +1340,7 @@ function eraPage(slug) {
       <p class="kicker">${esc(person['人物类型'] || '人物')}</p>
       <h1>${esc(person['规范名'].replace(/^爱新觉罗·/, ''))}</h1>
       <p class="lede">${esc(person['常用名或异名'] || '')}</p>
+      <p class="crumb"><a class="link" href="person/${esc(id)}/">可分享链接</a></p>
       <div class="reading">
         ${yinreng ? `<p class="lede">嫡子，两岁立为太子，做了三十三年。经历了废黜、复立、再废，而拘执、颁诏、告祭都不是同一天。</p>
         <details class="evidence-drawer"><summary>史料说明</summary><p>实录在再废当日记拘执与废黜；咸安宫地名见于后出的本纪和列传，不应把不同层次的记载合成同一日的现场纪录。</p></details>
@@ -1710,6 +1711,7 @@ function eraPage(slug) {
     return `
       <p class="kicker">${esc({ 后宫制度: '后宫制度', 野史对照: '传闻', 罕读史料: '罕读史料' }[row['栏目']] || row['栏目'])}</p>
       <h1>${esc(row['标题'])}</h1>
+      <p class="crumb"><a class="link" href="lane/${esc(id)}/">可分享链接</a></p>
       ${laneCard(row)}
       ${questions.length ? `<h2>这类问题</h2>${questions.map((item) => questionCard(item)).join('')}` : ''}
       <p class="actions"><a class="link" href="#/lanes">回到对照</a> ${laneHref(row['来源入口'])}</p>
@@ -1850,6 +1852,7 @@ function eraPage(slug) {
         <p class="actions">${units.map((unit) => `<a class="link" href="#/claims?unit=${esc(unit.source_unit_id)}">${esc(unit['卷次'] || unit.source_unit_id)}</a>`).join(' · ')}</p>
       </section>` : ''}
       ${chapter.related ? `<p class="chapter-related">${relatedLinks(chapter.related)}</p>` : ''}
+      ${relatedLaneCards(chapter)}
       ${chapterNav(chapter, list)}
     `;
   }
@@ -2200,15 +2203,25 @@ function eraPage(slug) {
   }
 
   function highlightHtml(text, q) {
-    const safe = esc(text);
+    const src = String(text ?? '');
     const needle = String(q || '').trim();
-    if (!needle) return safe;
+    if (!needle) return esc(src);
     const chars = [...needle].map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    let re;
     try {
-      return safe.replace(new RegExp(chars.join('[·\\s；;，,。.\-_/]*'), 'gi'), (m) => `<mark>${m}</mark>`);
+      re = new RegExp(chars.join('[·\\s；;，,。.\\-_/]*'), 'gi');
     } catch {
-      return safe;
+      return esc(src);
     }
+    let out = '';
+    let last = 0;
+    for (const match of src.matchAll(re)) {
+      out += esc(src.slice(last, match.index));
+      out += `<mark>${esc(match[0])}</mark>`;
+      last = match.index + match[0].length;
+    }
+    out += esc(src.slice(last));
+    return out;
   }
 
   function clipBlock(items, renderOne, limit = 8) {
@@ -2299,7 +2312,7 @@ function eraPage(slug) {
     const { parts, query, path } = parseHash();
     setNav(path === '/' ? '/' : `/${parts[0]}`);
     const view = parts[0] || '';
-    const isHome = !view || view === 'emperors';
+    const isHome = !view;
     if (isHome && main.dataset.ssr === 'home') {
       delete main.dataset.ssr;
       ensureView('').catch(() => {});

@@ -64,6 +64,31 @@ async function main() {
       byKind.set(entry.kind, list.concat(rows));
     }
 
+    // 同 kind 多文件合并后主键必须全局唯一（避免康熙/雍正主张 ID 静默覆盖）
+    const uniqueByKind = new Map();
+    for (const entry of DATA_MANIFEST) {
+      if (entry.dynasty !== dynasty.code && entry.dynasty !== 'shared') continue;
+      for (const key of entry.unique || []) {
+        uniqueByKind.set(`${entry.kind}\0${key}`, key);
+      }
+    }
+    for (const [kind, rows] of byKind) {
+      const keys = [...new Set(
+        DATA_MANIFEST
+          .filter((entry) => entry.kind === kind && (entry.dynasty === dynasty.code || entry.dynasty === 'shared'))
+          .flatMap((entry) => entry.unique || []),
+      )];
+      for (const key of keys) {
+        const seen = new Map();
+        for (const row of rows) {
+          const id = String(row[key] || '').trim();
+          if (!id) continue;
+          if (seen.has(id)) errors.push(`${kind} 跨文件重复 ${key}: ${id}`);
+          seen.set(id, true);
+        }
+      }
+    }
+
     // 章节 era 枚举：朝次必须取自本朝年号表
     const eraSet = new Set(reignEraLabels(dynasty.code));
     for (const row of byKind.get('chapters') || []) {

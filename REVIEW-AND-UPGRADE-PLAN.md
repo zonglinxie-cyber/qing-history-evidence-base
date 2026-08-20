@@ -167,7 +167,7 @@
 
 ## 四、P2：结构性改造（1–2 月，决定「能不能长大」）
 
-### P2-1 编辑态/发布态数据分层（根治 readerCopy）
+### P2-1 编辑态/发布态数据分层（根治 readerCopy） ⚠️ 删句日志与 `<!--internal-->` 已落地；规则表未压到 <20
 - 问题：工作流字段与权威数据同表混写，构建被迫用 150 条正则把「编辑腔」翻译成「读者腔」，已出现死规则（`build-site.mjs:88` 与 `:138` 重复等）、静默删句无日志、P0-2 类病句。
 - 改法（分三步）：
   1. 给 `readerProse` 的删句加构建日志（每删一句打印文件+句子），先让误删可见；
@@ -175,7 +175,7 @@
   3. 逐步删空 readerCopy 规则表，最终整个函数退役（保留泄漏门禁测试作为兜底）。
 - 验收：`readerCopy` 规则数下降到 <20 条；构建日志零静默删句。
 
-### P2-2 校验补强（每条都是小改动）
+### P2-2 校验补强（每条都是小改动） ✅
 1. validate 增加**跨文件全局唯一**检查（同 kind 多 CSV 合并后主键查重——现在康熙/雍正两个 claims 文件若撞 ID 会静默覆盖）；
 2. `image-regions.csv`、`iiif-manifests.csv` 的 `visual_id/assertion_id` 补外键校验；`task-queue.csv` 前置任务 ID 同理；
 3. `schema.mjs:38` `active !== '否'` 改白名单 `=== '是'`；
@@ -183,7 +183,7 @@
 5. 给 `mdToHtml` 与 `readerCopy` 建 fixture 单测；给 validate 建「坏数据样本必须全红」自测；
 6. `test-render.mjs` 的 `setTimeout 120ms` 改轮询,消除慢 CI flake;把「内容钉子」与「管线测试」拆成两个文件。
 
-### P2-3 内容覆盖扩展（写作任务，按用户兴趣排序）
+### P2-3 内容覆盖扩展（写作任务，按用户兴趣排序） ⚠️ 未开写；红线禁止无 unit/claim 立章
 以「一个想自己读清史的普通读者」缺口清单，逐个立章（每章走标准流程：units → claims → 正文 → chapters.csv 绑定）：
 1. 八旗制度入门（读懂全清的前置知识，建议做成「怎么读」侧的通识章）；
 2. 军机处与清代官制常识（总督/巡抚/尚书是什么）；
@@ -200,30 +200,30 @@
 - 补充观察：本次审读发现**深挖区（康雍）几乎无硬伤，索引区错误密度明显更高**（8 处错误中 3 处在早期三帝/晚清章）——「索引级未核」的免责不能豁免次序颠倒类错误，扩写晚清前先按 P0/P1 清干净存量索引章。
 - 红线：每章仍须冲突并陈、绑 unit；宁缺毋滥。
 
-### P2-3b 启动人工复核流程（数据可信度）
+### P2-3b 启动人工复核流程（数据可信度） ✅ STATUS 汇总待抽查清单；不代填复核人
 - 问题：全部 231 条主张几乎均为「审核中/AI 录入」，复核人/复核日期两列只有 1 条填写（QH-A-YZ-0040）。宣称的 M1/H1 复核层目前是空集——「已核」的实质仍是单人单轮。这是诚实的（站内横幅已披露），但 STATUS.md 的「具名复核主张 5」与实际字段填写状态需对齐。
 - 改法：执行模型不代人复核（红线：AI 没有发布权）；能做的是——把「待用户抽查」清单聚合成一个可勾选的复核工作台视图（每章已有清单，汇总到 STATUS 或工作簿），并在 P0/P1 修正每条史实后把对应主张标记「需重审」。
 - 验收：用户可在一处看到全部待抽查项及其状态。
 
-### P2-4 放大特色内容的曝光
+### P2-4 放大特色内容的曝光 ✅ 导航「怎么读」；首页上移对照；章末相关对照卡
 - `side-lanes.csv`（33 条野史对照/罕读史料）是全站独有价值，但入口埋在首页底部与个别卡片：
   1. 主导航加「怎么读」；对照栏在首页上移；
   2. 每章末尾自动关联相关 lane 卡片（用 `related` 字段已有数据）；
   3. 把「读这一句」（原文/今译/当时/不能写成）栏目推广到所有已绑 claim 的章。
 
-### P2-5 社交分享与 SEO 深化
+### P2-5 社交分享与 SEO 深化 ✅ 人物/对照/今地静态分享页；SearchAction；sitemap lastmod
 1. 为 person / lane / site 页生成轻量静态页（复用章节静态页管线），解决分享预览全是首页信息的问题；
 2. Article JSON-LD 补 `datePublished/dateModified/author`（用 git 提交时间或 CSV 修订字段）；sitemap 补 `lastmod`；
 3. WebSite JSON-LD 补 SearchAction。
 
-### P2-6 协作与仓库健康
+### P2-6 协作与仓库健康 ⚠️ engines/lockfile/CI porcelain/labeled 已做；产物出库与 workbook 未动
 1. CI 产物一致性检查补未跟踪文件：`test -z "$(git status --porcelain -- site/ STATUS.md)"`；
 2. `issue-to-pr.yml` 改为维护者打标签触发（`labeled` 事件），加并发上限与 bot 分支清理；
 3. 中期：产物出库——CI 内构建两次比对哈希替代「产物入库 diff 门禁」，`site/data`、`site/media` 移出 git（media 走 Releases/LFS），gh-pages 仍由 Actions 构建发布（.git 已 89MB，并行 PR 在 search.json 上必冲突）；
 4. `package.json` 加 `"engines": {"node": ">=20"}`；lockfile `resolved` 从 npmmirror 统一回官方 registry；
 5. `scripts/build-workbook.mjs` 挂进 npm scripts 或删除；`outputs/*.xlsx` 移出 git。
 
-### P2-7 前端代码清理
+### P2-7 前端代码清理 ✅ dirMap 改 chronicleSlug；highlightHtml 不拆实体；#/emperors 死别名已删
 1. `app.js` 三处重复 `dirMap` + `eraRoute` 删除，统一读数据里的 `eraSlug`；person 页 extras 硬编码挪进 `qing-content.mjs`；
 2. `highlightHtml` 修复实体拆碎 bug（查询含 `&` 时 `<mark>` 插进 `&amp;` 中间）；
 3. `loadChapterBody` 失败渲染「正文加载失败，点此重试」；

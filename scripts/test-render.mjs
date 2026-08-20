@@ -95,8 +95,14 @@ await import(path.join(siteDir, 'app.js'));
 async function go(hash) {
   globalThis.location.hash = hash;
   for (const fn of listeners['hashchange'] || []) fn();
-  await new Promise((r) => setTimeout(r, 120));
-  return el('main').innerHTML;
+  const deadline = Date.now() + 4000;
+  let html = '';
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 15));
+    html = el('main').innerHTML || '';
+    if (html && !html.includes('检索中…')) return html;
+  }
+  return html;
 }
 
 let failed = 0;
@@ -137,6 +143,7 @@ check('首页转轴入口', homeHtmlOut.includes('先看这几处转轴') && hom
 const headerNav = html.match(/<nav class="nav" aria-label="主导航">[\s\S]*?<\/nav>/)?.[0] || '';
 check('顶栏是读者词', headerNav.includes('对照') && headerNav.includes('今地')
   && headerNav.includes('文献') && headerNav.includes('十二帝')
+  && headerNav.includes('怎么读')
   && !headerNav.includes('#/path') && !headerNav.includes('#/hands')
   && !headerNav.includes('#/claims'));
 check('帝卡先给可读章', homeHtmlOut.includes('#/chapter/kangxi-02')
@@ -384,8 +391,11 @@ check('放行章即使未闭环也是 index', xf01Static.includes('name="robots"
 const nh02Static = fs.readFileSync(path.join(siteDir, 'chapter', 'nurhaci-02', 'index.html'), 'utf8');
 check('未放行章保持 noindex', nh02Static.includes('name="robots" content="noindex,follow"'));
 check('robots.txt 指向 sitemap', fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8').includes('/sitemap.xml'));
+check('sitemap 带 lastmod', sitemap.includes('<lastmod>'));
+check('人物分享页已生成', fs.existsSync(path.join(siteDir, 'person', 'QH-P-000001', 'index.html')));
 check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
-  && html.includes('"@type":"WebSite"') && html.includes('property="og:url"'));
+  && html.includes('"@type":"WebSite"') && html.includes('property="og:url"')
+  && html.includes('SearchAction'));
 check('进站即恢复手选主题', html.includes("localStorage.getItem('theme')")
   && kx01Static.includes("localStorage.getItem('theme')")
   && html.indexOf("localStorage.getItem('theme')") < html.indexOf('styles.css'));

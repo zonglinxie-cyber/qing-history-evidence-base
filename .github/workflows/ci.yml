@@ -29,7 +29,9 @@ jobs:
         run: npm run build
 
       - name: 构建产物可重复
-        run: git diff --exit-code -- STATUS.md site/
+        run: |
+          git diff --exit-code -- STATUS.md site/
+          test -z "$(git status --porcelain -- site/ STATUS.md)"
 
       - name: 渲染冒烟测试
         run: npm test

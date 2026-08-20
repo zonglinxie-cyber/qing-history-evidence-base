@@ -28,6 +28,23 @@ const status = countBy(claims, '状态');
 const workState = countBy(works, 'open_state');
 const timelineState = countBy(timeline, 'status');
 const reviewed = claims.filter((row) => String(row['复核人'] || '').trim()).length;
+const adopted = claims.filter((row) => row['状态'] === '已采纳');
+const chapterText = chapters.map((row) => {
+  try { return fs.readFileSync(path.join(root, 'content', row.file), 'utf8'); }
+  catch { return ''; }
+}).join('\n');
+const uncitedAdopted = adopted.filter((row) => !chapterText.includes(`{{claim:${row['Assertion ID']}}}`));
+const reviewItems = [];
+for (const row of chapters) {
+  const markdown = fs.readFileSync(path.join(root, 'content', row.file), 'utf8');
+  const block = markdown.split(/^## 待用户抽查\s*$/m)[1];
+  if (!block) continue;
+  const body = block.split(/^## /m)[0];
+  for (const line of body.split('\n')) {
+    const item = line.replace(/^\s*\d+\.\s*/, '').replace(/^\s*[-*]\s*/, '').trim();
+    if (item) reviewItems.push({ slug: row.slug, title: row.title, item });
+  }
+}
 const sourceBoundChapters = chapters.filter((row) => String(row.unit_ids || '').trim()).length;
 const indexableChapters = chapters.filter((row) => isChapterIndexable(row)).length;
 const evidenceClosedChapters = chapters.filter((row) => {
@@ -73,7 +90,24 @@ const md = `# 当前状态
 ${Object.entries(timelineState).map(([key, value]) => `- ${key}：${value} 条`).join('\n')}
 
 “卷级索引”只表示知道应回哪一卷，不等于日级原文已经钉住；升级到 E1 必须绑定结构化主张。
+
+## 待人工抽查
+
+共 ${reviewItems.length} 条（来自各章「待用户抽查」）。AI 不得代填复核人。
+
+${reviewItems.length
+  ? reviewItems.map((row) => `- [ ] [${row.slug}] ${row.item}`).join('\n')
+  : '- （各章尚未列出抽查清单）'}
+
+## 已采纳但正文未引用
+
+${uncitedAdopted.length
+  ? uncitedAdopted.map((row) => `- ${row['Assertion ID']}`).join('\n')
+  : '- 无'}
 `;
 
 fs.writeFileSync(path.join(root, 'STATUS.md'), md);
-console.log(`Wrote STATUS.md (claims ${claims.length}, chapters ${chapters.length}, source-bound ${sourceBoundChapters}, indexable ${indexableChapters})`);
+if (uncitedAdopted.length) {
+  console.warn(`WARN 已采纳主张未被章节引用：${uncitedAdopted.map((row) => row['Assertion ID']).join('、')}`);
+}
+console.log(`Wrote STATUS.md (claims ${claims.length}, chapters ${chapters.length}, source-bound ${sourceBoundChapters}, indexable ${indexableChapters}, review-items ${reviewItems.length})`);

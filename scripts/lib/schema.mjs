@@ -35,7 +35,7 @@ export const DYNASTIES = dynastyRows.map((row) => {
     reignEras,
     canonicalHistoryWork: row.canonical_history_work,
     rulesModule: row.rules_module,
-    active: row.active !== '否',
+    active: row.active === '是',
   };
 });
 

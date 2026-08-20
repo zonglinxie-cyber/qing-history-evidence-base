@@ -5,8 +5,7 @@ name: Issue to PR
 
 on:
   issues:
-    # opened 与 labeled 都接收；并发锁和已有 PR 检查保证同一 Issue 幂等。
-    types: [opened, labeled]
+    types: [labeled]
 
 concurrency:
   group: correction-issue-${{ github.event.issue.number }}
@@ -14,10 +13,7 @@ concurrency:
 
 jobs:
   correction-pr:
-    if: >-
-      github.event.issue.state == 'open' &&
-      ((github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'content-correction')) ||
-      (github.event.action == 'labeled' && github.event.label.name == 'content-correction'))
+    if: github.event.issue.state == 'open' && github.event.label.name == 'content-correction'
     runs-on: ubuntu-latest
     permissions:
       contents: write
