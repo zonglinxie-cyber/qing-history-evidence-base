@@ -438,16 +438,29 @@ function eraPage(slug) {
     return (DATA.predicates || {})[code] || code;
   }
 
+  const EVIDENCE_HINT = {
+    '已列原文': '能回到实录或本纪的具体条目',
+    '已回原文': '能回到实录或本纪的具体条目',
+    '存在异说': '同一件事有两种以上写法，并列保存',
+    '两说并存': '同一件事有两种以上写法，并列保存',
+    '参考线索': '依据后出史书或通行叙述，尚未对到日级原文',
+    '后出转述': '依据后出史书或通行叙述，尚未对到日级原文',
+    '尚不确定': '现有材料还不足以判定',
+  };
+
   function evidenceMark(state) {
     if (!state) return '';
-    if (state === '已列原文') return '<span class="mark ok">已列原文</span>';
-    if (state === '存在异说') return '<span class="mark two">存在异说</span>';
-    if (state === '参考线索') return '<span class="mark">参考线索</span>';
-    if (state === '尚不确定') return '<span class="mark">尚不确定</span>';
-    if (state.startsWith('E')) return '<span class="mark ok">已回原文</span>';
-    if (state.startsWith('C')) return '<span class="mark two">两说并存</span>';
-    if (state.startsWith('S')) return '<span class="mark">后出转述</span>';
-    return `<span class="mark">${esc(state)}</span>`;
+    let label = state;
+    let cls = 'mark';
+    if (state === '已列原文' || state.startsWith('E')) { label = state === '已列原文' ? '已列原文' : '已回原文'; cls = 'mark ok'; }
+    else if (state === '存在异说' || state.startsWith('C')) { label = state === '存在异说' ? '存在异说' : '两说并存'; cls = 'mark two'; }
+    else if (state === '参考线索') { label = '参考线索'; }
+    else if (state.startsWith('S')) { label = '后出转述'; }
+    else if (state === '尚不确定') { label = '尚不确定'; }
+    else { label = state; }
+    const hint = EVIDENCE_HINT[label] || '';
+    const title = hint ? ` title="${esc(hint)}"` : '';
+    return `<span class="${cls}"${title}>${esc(label)}</span>`;
   }
 
   function lanePeople(row) {
@@ -2257,8 +2270,12 @@ function eraPage(slug) {
           <h2>实录、本纪、列传、世表</h2>
           <p>实录能对到卷和条次，但仍是官修，不是原档。本纪后出，有时会多写实录当天没有的话；列传可以跟本纪差一天，世表常把几年收成一句。后出的那一层，不拿来改前面一层。</p>
           <h2>怎么看核对状态</h2>
-          <p>「已核对」表示页面所引文字与所列出处已对应；它不等于学界已对事件的所有解释形成定论。</p>
-          <p>页内常见标记：<strong>已列原文</strong>＝能回到实录或本纪的具体条目；<strong>参考线索</strong>＝后出史书或通行叙述；<strong>存在异说</strong>＝同一件事有两种以上写法，并列保存。</p>
+          <p>「已核对」表示页面所引文字与所列出处已对应；它不等于学界已对事件的所有解释形成定论。把鼠标停在页内标记上，也可以看到同一句解释。</p>
+          <ul>
+            <li><strong>已列原文</strong>：能回到实录或本纪的具体条目。</li>
+            <li><strong>参考线索</strong>：依据后出史书或通行叙述，尚未对到日级原文。</li>
+            <li><strong>存在异说</strong>：同一件事有两种以上写法，并列保存，不择一抹平。</li>
+          </ul>
           <h2>空白的图</h2>
           <p>只有绿标能嵌进来，黄的只给说明和外链。网上看得见，不等于能放进这个站。</p>
           <h2>咸安宫</h2>
