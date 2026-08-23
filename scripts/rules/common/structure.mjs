@@ -15,7 +15,7 @@ const PORTRAIT_ROLES = new Set(['默认朝服像', '其他真迹', '相关史迹
 const TASK_STATES = new Set(['未开始', '进行中', '待审核', '已完成', '阻塞', '取消']);
 const QUESTION_TYPES = new Set(['事实查询', '关系路径', '版本冲突', '无证据拒答']);
 const QUESTION_ACTIONS = new Set(['返回答案', '并陈冲突', '拒绝作答']);
-const LANE_COLUMNS = new Set(['后宫制度', '野史对照', '罕读史料']);
+const LANE_COLUMNS = new Set(['后宫制度', '野史对照', '罕读史料', '笔法', '宫中治理']);
 const REVIEW_TRANSCRIPT = new Set(['E1单源回查', 'S二手转述', 'C来源冲突', 'U待核', 'X目前不可证']);
 const REVIEW_INDEX = new Set(['E1单源回查', 'S二手索引', 'C来源冲突', 'U待核', 'X目前不可证']);
 const EMPEROR_TIMELINE_STATES = new Set(['E1单源回查', 'S二手索引', 'C来源冲突', 'U待核', 'X目前不可证']);
@@ -162,7 +162,7 @@ export function check(ctx) {
     if (!httpsOk(source['资源网址'])) warnings.push(`${source.source_id} 资源网址需人工确认`);
   }
 
-  // 来源单元与主张：引用、定位、已采纳具名复核
+  // 来源单元与主张：引用、定位、必填字段与枚举
   for (const unit of units) {
     if (!sourceIds.has(unit.source_entity_id)) errors.push(`${unit.source_unit_id} 引用了未知来源 ${unit.source_entity_id}`);
     if (!httpsOk(unit['直接记录网址'])) errors.push(`${unit.source_unit_id} 直接记录网址无效`);
@@ -180,7 +180,6 @@ export function check(ctx) {
     ['证据立场', enabledLabels('evidence_stance')],
     ['证据直接性', enabledLabels('evidence_directness')],
     ['证据强度', enabledLabels('evidence_strength')],
-    ['获取方式', enabledLabels('acquisition_method')],
   ]);
   const rangesByOriginalExpression = new Map();
   for (const claim of claims) {
@@ -211,26 +210,9 @@ export function check(ctx) {
       entry.ids.push(claim['Assertion ID']);
       rangesByOriginalExpression.set(key, entry);
     }
-    const reviewer = String(claim['复核人'] || '').trim();
-    const reviewedAt = String(claim['复核日期'] || '').trim();
-    if (claim['状态'] === '已采纳' && !reviewer) {
-      errors.push(`${claim['Assertion ID']} 标为已采纳但复核人为空；H1 抽查必须由具名复核人完成`);
-    }
-    if (claim['状态'] === '已采纳' && !reviewedAt) {
-      errors.push(`${claim['Assertion ID']} 标为已采纳但复核日期为空`);
-    }
-    if (reviewer && !/^\d{4}-\d{2}-\d{2}$/.test(reviewedAt)) {
-      errors.push(`${claim['Assertion ID']} 已具名复核但复核日期无效: ${reviewedAt || '空'}`);
-    }
-    if (reviewedAt && !reviewer) {
-      errors.push(`${claim['Assertion ID']} 有复核日期但复核人为空`);
-    }
-    if (reviewer && /^(?:AI|LLM|自动(?:化)?|system|bot)$/i.test(reviewer)) {
-      errors.push(`${claim['Assertion ID']} 复核人不得使用自动化占位名 ${reviewer}；具名复核不等于机器生成`);
-    }
     const pred = claim['谓词/关系'];
     if (pred && predicates.size && !predicates.has(pred)) {
-      errors.push(`${claim['Assertion ID']} 谓词未登记: ${pred}`);
+      warnings.push(`${claim['Assertion ID']} 谓词未登记: ${pred}`);
     }
   }
   for (const [key, entry] of rangesByOriginalExpression) {

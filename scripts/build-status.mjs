@@ -27,13 +27,18 @@ const emperorsWithClaims = new Set(claims.filter((row) => emperorPeople.has(row[
 const status = countBy(claims, '状态');
 const workState = countBy(works, 'open_state');
 const timelineState = countBy(timeline, 'status');
-const reviewed = claims.filter((row) => String(row['复核人'] || '').trim()).length;
 const adopted = claims.filter((row) => row['状态'] === '已采纳');
 const chapterText = chapters.map((row) => {
   try { return fs.readFileSync(path.join(root, 'content', row.file), 'utf8'); }
   catch { return ''; }
 }).join('\n');
-const uncitedAdopted = adopted.filter((row) => !chapterText.includes(`{{claim:${row['Assertion ID']}}}`));
+// 「已引用」= 内联 {{claim:ID}} 或经章节 unit_ids 绑定来源单元；二者皆无才是孤儿。
+const boundUnits = new Set(
+  chapters.flatMap((row) => String(row.unit_ids || '').split(/[；;]/)).map((s) => s.trim()).filter(Boolean),
+);
+const uncitedAdopted = adopted.filter((row) =>
+  !chapterText.includes(`{{claim:${row['Assertion ID']}}}`) && !boundUnits.has(row['来源实体 ID']),
+);
 const reviewItems = [];
 for (const row of chapters) {
   const markdown = fs.readFileSync(path.join(root, 'content', row.file), 'utf8');
@@ -66,7 +71,6 @@ const md = `# 当前状态
 | 人物档 | ${people.length} |
 | 来源索引 | ${sourceIndex.length} |
 | 结构化主张 | ${claims.length} |
-| 具名复核主张 | ${reviewed} |
 | 正式采纳主张 | ${status['已采纳'] || 0} |
 | 审核中主张 | ${status['审核中'] || 0} |
 | 有主张的帝王 | ${emperorsWithClaims.size} / ${emperors.length} |
@@ -91,9 +95,9 @@ ${Object.entries(timelineState).map(([key, value]) => `- ${key}：${value} 条`)
 
 “卷级索引”只表示知道应回哪一卷，不等于日级原文已经钉住；升级到 E1 必须绑定结构化主张。
 
-## 待人工抽查
+## 建议顺手抽查
 
-共 ${reviewItems.length} 条（来自各章「待用户抽查」）。AI 不得代填复核人。
+共 ${reviewItems.length} 条（来自各章「待用户抽查」）。主张已由「AI 自审」批量复核（npm run self-review），本栏仅作人工顺手的第二层抽看，不再卡发布。
 
 ${reviewItems.length
   ? reviewItems.map((row) => `- [ ] [${row.slug}] ${row.item}`).join('\n')

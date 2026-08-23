@@ -3,7 +3,7 @@
 版本：0.1.0
 制定日期：2026-08-16
 定位：把「清史证据库」的六项目标分解为 8 个专家组的角色、职责、交付物、接口与验收标准
-配套文档：`docs/01-project-charter.md`、`docs/02-information-architecture.md`、`docs/09-content-strategy.md`
+配套文档：`docs/01-project-charter.md`、`docs/02-information-architecture.md`、`docs/archive/09-content-strategy.md`（同已归档）
 
 ---
 

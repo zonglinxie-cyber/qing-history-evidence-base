@@ -12,6 +12,26 @@ import { pinyin } from 'pinyin-pro';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(scriptDir, '..');
+
+function readVersion() {
+  try {
+    return fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
+  } catch {
+    return '0.0.0';
+  }
+}
+
+function readReleaseJson() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(root, 'site', 'data', 'release.json'), 'utf8'));
+  } catch {
+    return { version: readVersion(), updatedAt: '', entries: [] };
+  }
+}
+
+function siteFooterVersion(version) {
+  return `    <p class="foot-version"><a href="./#/changelog">v${escHtml(version)}</a> · <a href="./#/changelog">更新日志</a></p>\n`;
+}
 const dataDir = path.join(root, 'data');
 const siteDir = path.join(root, 'site');
 const dataOutDir = path.join(siteDir, 'data');
@@ -531,26 +551,30 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, dr
   <header class="masthead static-masthead">
     <a class="brand" href="./">清史读本</a>
     <nav class="nav" aria-label="主导航">
-      <a href="./">十二帝</a><a href="./#/lanes">对照</a><a href="./#/sites">今地</a><a href="./#/works">文献</a><a href="./#/how">怎么读</a>
+      <a href="./">十二帝</a><a href="./#/material">材料</a><a href="./#/lanes">说法对照</a><a href="./#/sites">遗址今况</a><a href="./#/how">怎么读</a>
     </nav>
   </header>
   <main id="main" tabindex="-1">
     <article>
-      <div class="reading">
+      <div class="chapter-shell">
+      <div class="reading chapter-head">
         <p class="kicker">${escHtml(chapter.era)}</p>
         <h1>${escHtml(chapter.title)}</h1>
         <p class="lede">${escHtml(chapter.lede)}</p>
 ${draft ? `        ${researchDraftBanner('chapter')}\n` : ''}        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
       </div>
+      <div class="chapter-body">
       <div class="md">${staticChapterBody(chapter.bodyHtml, { claims, conflictSets })}</div>
       ${evidence}
       ${nav}
+      </div>
+      </div>
     </article>
   </main>
   <footer class="foot">
     <p class="foot-links"><a href="#/how">怎么读</a> · <a href="#/questions">现有材料答不了</a> · <a href="#/sources">来源</a></p>
     <p class="foot-note">AI 辅助个人研究稿；未经专业清史学者全面审校。</p>
-    <p class="foot-links"><a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base" rel="noopener">开源仓库</a></p>
+${siteFooterVersion(readVersion())}    <p class="foot-links"><a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base" rel="noopener">开源仓库</a></p>
   </footer>
 </body>
 </html>
@@ -584,7 +608,7 @@ function staticShareHtml({ title, description, pathSeg, id, image, assetStamp = 
   <header class="masthead static-masthead">
     <a class="brand" href="./">清史读本</a>
     <nav class="nav" aria-label="主导航">
-      <a href="./">十二帝</a><a href="./#/lanes">对照</a><a href="./#/sites">今地</a><a href="./#/works">文献</a><a href="./#/how">怎么读</a>
+      <a href="./">十二帝</a><a href="./#/material">材料</a><a href="./#/lanes">说法对照</a><a href="./#/sites">遗址今况</a><a href="./#/how">怎么读</a>
     </nav>
   </header>
   <main id="main" tabindex="-1">
@@ -729,6 +753,7 @@ function buildDynasty({ dynasty, data }) {
     units, claims, questions, chapters: chapterRows, lanes, empressTimeline,
     princes, princesses, heirChain, historicSites, imageRegions, iiifManifests,
     works, vocab, conflictSets, chronicle, overviews: overviewRows, emperorTimeline,
+    personPortraits,
   } = data;
 
   for (const row of portraits) {
@@ -736,6 +761,9 @@ function buildDynasty({ dynasty, data }) {
   }
   for (const row of historicSites) {
     row['预览文件'] = localPreview(row.site_id, row['预览文件']);
+  }
+  for (const row of (personPortraits || [])) {
+    row['预览文件'] = localPreview(row.visual_id, row['预览文件']);
   }
 
   const portraitsByEmperor = new Map();
@@ -1142,6 +1170,7 @@ function buildDynasty({ dynasty, data }) {
     writeJson('home.json', {
       // 构建产物必须可重复；发布时间由部署平台提供，不写入每次变化的当前时间。
       notice: '引文可回原文。家谱尚未用玉牒核对。',
+      release: readReleaseJson(),
       dynasty: slim,
       emperors: emperorRecords,
       sites: publicSites,
@@ -1153,7 +1182,18 @@ function buildDynasty({ dynasty, data }) {
       },
       suggest,
     }),
-    writeJson('people.json', { people: publicPeople, portraits: publicPortraits, crosswalk: publicCrosswalk, regions: publicRegions, iiif: publicIiif }),
+    writeJson('people.json', { people: publicPeople, portraits: publicPortraits, crosswalk: publicCrosswalk, regions: publicRegions, iiif: publicIiif, personPortraits: (personPortraits || []).map((row) => ({
+      visual_id: row.visual_id,
+      person_id: row.person_id,
+      '对象标题': row['对象标题'],
+      '图像性质': row['图像性质'],
+      '作者或摄影者': row['作者或摄影者'],
+      '制作年代': row['制作年代'],
+      '文件页': row['文件页'],
+      '预览文件': row['预览文件'],
+      '许可': row['许可'],
+      '使用说明': row['使用说明'],
+    })) }),
     writeJson('catalog.json', { sources: publicSources }),
   ];
   const chapterBodyDir = path.join(dataOutDir, 'chapter');
@@ -1180,17 +1220,22 @@ function buildDynasty({ dynasty, data }) {
   let indexHtml = fs.readFileSync(indexPath, 'utf8');
   const homeRe = /<main id="main"[^>]*>[\s\S]*?<\/main>/;
   if (homeRe.test(indexHtml)) {
-    const skipHomeLanes = new Set(['QH-L-0007', 'QH-L-0009']);
-    const homeLanes = publicLanes.filter((row) => !skipHomeLanes.has(row.lane_id)).slice(0, 3);
-    const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false, lanes: homeLanes });
+    const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false });
     indexHtml = indexHtml.replace(homeRe, `<main id="main" tabindex="-1" data-ssr="home">\n${home}\n  </main>`);
   } else {
     console.warn('WARN: index.html 未找到 <main id="main">，跳过直出。');
   }
   // 注入朝代配置：app.js 启动时同步读取 #dynasty-config，决定数据块与专题路由
+  // 资源戳同时覆盖 styles.css，否则改样式后线上 ?v= 不变、浏览器吃旧缓存
+  // 资源戳原来只算数据和 styles.css，不含 app.js/templates.js/qing-content.mjs：
+  // 只改 JS 时 ?v= 不变，回访读者拿到的是缓存里的旧脚本。
   const assetStamp = createHash('sha256')
+    .update(fs.readFileSync(path.join(siteDir, 'app.js')))
+    .update(fs.readFileSync(path.join(siteDir, 'templates.js')))
+    .update(fs.readFileSync(path.join(siteDir, 'qing-content.mjs')))
     .update(fs.readFileSync(path.join(dataOutDir, 'home.json')))
     .update(fs.readFileSync(path.join(dataOutDir, `d-${dynasty.code}.json`)))
+    .update(fs.readFileSync(path.join(siteDir, 'styles.css')))
     .digest('hex')
     .slice(0, 12);
   const dynastyConfig = {
@@ -1238,6 +1283,15 @@ function buildDynasty({ dynasty, data }) {
   indexHtml = withThemeBoot(indexHtml);
   indexHtml = indexHtml.replace(/href="styles\.css\?v=[^"]+"/, `href="styles.css?v=${assetStamp}"`);
   indexHtml = indexHtml.replace(/src="app\.js(?:\?v=[^"]*)?"/, `src="app.js?v=${assetStamp}"`);
+  const versionTag = siteFooterVersion(readVersion()).trim();
+  const versionRe = /  <!-- generated-site-version:start -->[\s\S]*?  <!-- generated-site-version:end -->/;
+  const versionBlock = `  <!-- generated-site-version:start -->\n    ${versionTag}\n    <!-- generated-site-version:end -->`;
+  indexHtml = versionRe.test(indexHtml)
+    ? indexHtml.replace(versionRe, versionBlock)
+    : indexHtml.replace(
+      '<p class="foot-note">AI 辅助个人研究稿；未经专业清史学者全面审校。</p>',
+      `<p class="foot-note">AI 辅助个人研究稿；未经专业清史学者全面审校。</p>\n    ${versionTag}`,
+    );
   fs.writeFileSync(indexPath, indexHtml);
 
   const staticPages = writeStaticChapterPages({
