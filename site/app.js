@@ -1356,7 +1356,7 @@ function eraPage(slug) {
             <p>${esc(site['当时'])}</p>
             <h2>今日</h2>
             <p>${esc(site['今日'])}</p>
-            <h2>怎么对上</h2>
+            <h2>今昔考辨</h2>
             <p>${esc(site['今地说明'])}</p>
             ${emperors.length ? `<dl class="kv">
               <dt>相关</dt><dd>${emperors.map((emperor) => `<a href="#/person/${esc(emperor.person_id)}">${esc(emperor['年号或通称'].split('；')[0])}</a>`).join(' · ')}</dd>
@@ -1368,14 +1368,18 @@ function eraPage(slug) {
             </div>
           </div>
         </div>
-        ${(SITE_DETAILS[id] || []).length ? `
+        ${(SITE_DETAILS[id] || []).length ? (() => {
+          const items = SITE_DETAILS[id];
+          const sec = items.find(d => d._section) || {};
+          const cards = items.filter(d => !d._section);
+          return cards.length ? `
           <section class="site-details-section">
             <div class="section-head">
-              <h2>建筑规制与细节特写</h2>
-              <p class="muted">历史现场的石雕、大木作、方城明楼与遗址规制细节。</p>
+              <h2>${esc(sec.title || '建筑规制与细节特写')}</h2>
+              <p class="muted">${esc(sec.desc || '历史现场的规制、石雕与遗址细节。')}</p>
             </div>
             <div class="site-details-grid">
-              ${SITE_DETAILS[id].map((d) => `
+              ${cards.map((d) => `
                 <figure class="site-detail-card">
                   <div class="site-detail-pic">
                     ${imgTag(d.preview, d.title, { width: 640, height: 480, lightbox: d.title })}
@@ -1388,7 +1392,8 @@ function eraPage(slug) {
                 </figure>
               `).join('')}
             </div>
-          </section>` : ''}
+          </section>` : '';
+        })() : ''}
         ${others.length ? `
           <section class="site-siblings-section">
             <div class="section-head">
