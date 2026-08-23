@@ -36,9 +36,9 @@ relationship_type,关系类型,teacher_of,为师,Teacher of,主体是客体明�
 relationship_type,关系类型,student_of,从师于,Student of,主体受教于客体,social,teacher_of,true,230
 relationship_type,关系类型,political_ally_of,政治盟友为,Political ally of,在明确时间与议题下形成政治合作；对称关系,political,political_ally_of,true,240
 relationship_type,关系类型,political_opponent_of,政治对手为,Political opponent of,在明确时间与议题下形成政治对立；对称关系,political,political_opponent_of,true,250
-assertion_status,主张状态,draft,草稿,Draft,尚未进入正式复核的候选主张,,,true,10
-assertion_status,主张状态,in_review,审核中,In review,已提交并正在进行来源与学术复核,,,true,20
-assertion_status,主张状态,accepted,已采纳,Accepted,通过规定审核且可进入正式展示,,,true,30
+assertion_status,主张状态,draft,草稿,Draft,候选主张，尚未进入自审（当前未使用）,,,true,10
+assertion_status,主张状态,in_review,审核中,In review,自审未过：缺逐字引文或卷页定位，或挂在冲突组；展示时带徽标，不作定论,,,true,20
+assertion_status,主张状态,accepted,已采纳,Accepted,自审通过：有逐字引文、卷页定位且无冲突组；可作定论式叙述,,,true,30
 assertion_status,主张状态,disputed,有争议,Disputed,存在未解决的相互冲突证据或解释,,,true,40
 assertion_status,主张状态,rejected,已驳回,Rejected,经审核不成立或证据不足,,,true,50
 assertion_status,主张状态,deprecated,已废弃,Deprecated,曾使用但被新版本取代或撤回,,,true,60
@@ -223,3 +223,42 @@ assertion_predicate,主张谓词,institution_renamed_as,记为改称,institution
 assertion_predicate,主张谓词,maternal_uncle_of_empress,后弟,maternal_uncle_of_empress,,,,true,950
 assertion_predicate,主张谓词,received_deathbed_charge,召受顾命,received_deathbed_charge,,,,true,960
 assertion_predicate,主张谓词,titled_as,记作,titled_as,,,,true,970
+assertion_predicate,主张谓词,petitioned_to_retire,请老乞休,petitioned_to_retire,,,,true,980
+assertion_predicate,主张谓词,revolted,起兵反叛,revolted,,,,true,985
+assertion_predicate,主张谓词,surrendered,投降,surrendered,,,,true,990
+assertion_predicate,主张谓词,proclaimed_himself_emperor,僭号称帝,proclaimed_himself_emperor,,,,true,995
+assertion_predicate,主张谓词,captured,攻克取,captured,,,,true,996
+assertion_predicate,主张谓词,defeated,大败击败,defeated,,,,true,997
+assertion_predicate,主张谓词,invaded,侵入边塞,invaded,,,,true,998
+assertion_predicate,主张谓词,besieged,围攻,besieged,,,,true,999
+assertion_predicate,主张谓词,signed_treaty,签约定界,signed_treaty,,,,true,1001
+assertion_predicate,主张谓词,dismissed_from_office,革职,dismissed_from_office,,,,true,1003
+assertion_predicate,主张谓词,work_completed,书成告成,work_completed,,,,true,1005
+assertion_predicate,主张谓词,script_created,创制文字,script_created,,,,true,1007
+assertion_predicate,主张谓词,fort_fell,陷失守,fort_fell,城塞陷落失守,,,true,1009
+assertion_predicate,主张谓词,palace_burned,宫被焚,palace_burned,宫苑被焚毁,,,true,1011
+assertion_predicate,主张谓词,birth_order,序齿,birth_order,本纪或列传序齿,,,true,1013
+assertion_predicate,主张谓词,executed,处斩,executed,依律处决死刑,,,true,1015
+assertion_predicate,主张谓词,regency_began,垂帘听政,regency_began,皇太后垂帘摄政开始,,,true,1017
+assertion_predicate,主张谓词,personal_rule_began,亲政,personal_rule_began,皇帝亲裁大政开始,,,true,1019
+assertion_predicate,主张谓词,declared_war,宣战,declared_war,对敌国下诏宣战,,,true,1021
+assertion_predicate,主张谓词,regency_resumed,复垂帘训政,regency_resumed,皇太后再垂帘训政,,,true,1023
+assertion_predicate,主张谓词,fled_capital,出京幸外地,fled_capital,皇帝离京避兵,,,true,1025
+assertion_predicate,主张谓词,constitution_announced,宣布立宪,constitution_announced,下诏仿行宪政或宣布立宪,,,true,1027
+assertion_predicate,主张谓词,conquered,平定征服,conquered,以兵平定夺地,,,true,1029
+assertion_predicate,主张谓词,campaigned_against,用兵征剿,campaigned_against,兴师征讨某方,,,true,1031
+assertion_predicate,主张谓词,ordered_calendar_revision,命改历,ordered_calendar_revision,命人改行新历法,,,true,1033
+assertion_predicate,主张谓词,proposed_plan,议上方案,proposed_plan,向朝廷议上方案,,,true,1035
+assertion_predicate,主张谓词,issued_proclamation,檄谕布告,issued_proclamation,向对方发布檄文谕令,,,true,1037
+assertion_predicate,主张谓词,moved_capital,迁都定都,moved_capital,把都城迁至某地,,,true,1039
+assertion_predicate,主张谓词,impeached,被参劾获罪,impeached,被人上疏参劾而后定罪,,,true,1041
+assertion_predicate,主张谓词,prohibited,下诏禁止,prohibited,下诏或从其奏禁止某事,,,true,1043
+assertion_predicate,主张谓词,commanded,下诏命令,commanded,下诏命令全国或某群体遵行某政策,,,true,1045
+assertion_predicate,主张谓词,reported_in_saying,口训转述,reported_in_saying,,,,true,680
+assertion_predicate,主张谓词,reported_in_anecdote,掌故转述,reported_in_anecdote,,,,true,690
+assertion_predicate,主张谓词,reported_in_deposition,供词转述,reported_in_deposition,讯问供词中当事人自述或供述,,,true,700
+assertion_predicate,主张谓词,reported_in_writing,著述转述,reported_in_writing,著作文本中当事人或他人记述,,,true,710
+assertion_predicate,主张谓词,reported_in_memorial,奏折转述,reported_in_memorial,奏折电奏中臣工进言,,,true,720
+assertion_predicate,主张谓词,reported_in_diary,日记转述,reported_in_diary,私人日记或笔记中的记述,,,true,730
+assertion_predicate,主张谓词,reported_in_treaty,条约转述,reported_in_treaty,条约或协定文本中的条款,,,true,740
+assertion_predicate,主张谓词,issued_edict,申谕约束,issued_edict,申谕约束某群体或行为,,,true,750

@@ -1,12 +1,16 @@
 {
   "name": "qing-history-phase0",
+  "version": "0.3.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-site.mjs && node scripts/build-status.mjs",
+    "build": "node scripts/validate-data.mjs && node scripts/build-release.mjs && node scripts/build-site.mjs && node scripts/build-data-browser.mjs && node scripts/build-status.mjs",
+    "release": "node scripts/build-release.mjs",
     "watch": "node scripts/build-site.mjs --watch",
     "status": "node scripts/build-status.mjs",
     "validate": "node scripts/validate-data.mjs",
+    "validate:strict": "STRICT=1 node scripts/validate-data.mjs",
+    "self-review": "node scripts/self-review.mjs",
     "test": "node scripts/test-reader.mjs && node scripts/test-validate-fixtures.mjs && node scripts/test-render.mjs",
     "cache-media": "node scripts/cache-media.mjs",
     "optimize-media": "node scripts/optimize-media.mjs"

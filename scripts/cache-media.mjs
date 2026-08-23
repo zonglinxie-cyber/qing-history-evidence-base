@@ -73,7 +73,9 @@ async function download(url, dest, { toWebp = false } = {}) {
 function jobs() {
   const portraits = loadCsv(path.join(dataDir, 'emperor-portraits.csv'));
   const sites = loadCsv(path.join(dataDir, 'historic-sites.csv'));
+  const personPortraits = loadCsv(path.join(dataDir, 'person-portraits.csv'));
   const out = [];
+  const openLicense = (value) => /public domain|cc0|cc by/i.test(String(value || ''));
   for (const row of portraits) {
     if (row['权利颜色'] !== '绿' || row['可本地保存'] !== '是' || !row['预览文件']) continue;
     out.push({
@@ -85,6 +87,11 @@ function jobs() {
   for (const row of sites) {
     if (row['权利颜色'] !== '绿' || !row['预览文件']) continue;
     out.push({ id: row.site_id, url: thumbUrl(row['预览文件']), first: false });
+  }
+  // 人物画像：许可列直接写许可名，Public domain/CC0/CC BY 才本地缓存。
+  for (const row of personPortraits) {
+    if (!openLicense(row['许可']) || !row['预览文件']) continue;
+    out.push({ id: row.visual_id, url: thumbUrl(row['预览文件']), first: false });
   }
   out.sort((a, b) => Number(b.first) - Number(a.first));
   return out;

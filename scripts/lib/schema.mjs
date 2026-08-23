@@ -109,4 +109,5 @@ export const KIND_TO_FIELD = {
   community_corrections: 'communityCorrections',
   overview: 'overviews',
   emperor_timeline: 'emperorTimeline',
+  person_portraits: 'personPortraits',
 };

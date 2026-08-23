@@ -1,3 +1,5 @@
+import { EMPEROR_CARD, PORTRAIT_FRAMING } from './qing-content.mjs';
+
 const WIDTHS = [320, 500, 800, 1280];
 
 export function esc(value) {
@@ -76,7 +78,7 @@ export function mediaSrcset(url) {
       srcset: WIDTHS.map((width) => `${base}/${width}px-${file} ${width}w`).join(', '),
     };
   }
-  const local = src.match(/^(media\/[A-Za-z0-9-]+?)(?:-\d+|@2x)?(\.(?:jpe?g|png|webp))$/i);
+  const local = src.match(/^(media\/[A-Za-z0-9-]+?)(?:-(?:480|960)|@2x)?(\.(?:jpe?g|png|webp))$/i);
   if (local) {
     const [, stem, ext] = local;
     return {
@@ -149,7 +151,15 @@ export function researchDraftBanner(scope = 'chapter') {
   const text = chapter
     ? '本章可能只有部分段落已对到原文，其余仍依赖后出史书或现代研究。请按正文中的「看依据」链接核对，不要把整章当作已成定论。'
     : '全库只有部分条目已对到可回查的原文。请优先阅读每条主张的引文和出处，并将其他内容视为待继续完善的研究草稿。';
-  return `<aside class="research-banner research-banner-${chapter ? 'draft' : 'site'}" role="note" aria-label="研究状态">
+  // 章节页的草稿提示留在正文旁边，该显眼；
+  // 首页的全库声明收成一行可展开——读者还没看到任何内容时不该先读免责。
+  if (!chapter) {
+    return `<details class="research-note" aria-label="研究状态">
+    <summary>${headline}</summary>
+    <p>${text}</p>
+  </details>`;
+  }
+  return `<aside class="research-banner research-banner-draft" role="note" aria-label="研究状态">
     <p class="research-banner-head">${headline}</p>
     <p>${text}</p>
   </aside>`;
@@ -157,38 +167,78 @@ export function researchDraftBanner(scope = 'chapter') {
 
 export function emperorCard(emperor, opts = {}) {
   const portrait = emperor.portrait;
-  const era = emperor['年号或通称'].split('；')[0];
+  const eras = String(emperor['年号或通称'] || '').split('；').map((s) => s.trim()).filter(Boolean);
+  const era = eras[0] || '';
   const alt = portrait?.['对象标题'] || `${era}朝服像`;
   const { born, died } = yearSpan(emperor);
   const given = String(emperor['规范名'] || '').replace(/^爱新觉罗·/, '');
+  const fullName = String(emperor['规范名'] || '');
+  const temple = String(emperor['庙号'] || '').trim();
+  const posthumous = String(emperor['谥号'] || '').trim();
+  const birthOrder = String(emperor['皇子序'] || '').trim();
+  const { from, to, reign } = yearSpan(emperor);
+  const frame = PORTRAIT_FRAMING[emperor.emperor_id];
+  const frameStyle = frame ? ` style="--pic-z:${frame.z};--pic-y:${frame.y}%"` : '';
+  // 溥仪没有庙号，也没有朝廷追上的谥号。留白会被读成漏填，写明原因。
+  const idRow = (label, value, attrs = '') => (
+    `<div class="card-id-row"><dt>${esc(label)}</dt><dd${attrs}>${value}</dd></div>`
+  );
   const eraHref = emperor.eraSlug ? `#/${emperor.eraSlug}` : `#/person/${emperor.person_id}`;
-  const chapters = emperor.reads?.chapters || [];
-  const lane = emperor.reads?.lane;
+  const hook = EMPEROR_CARD[emperor.person_id]?.hook || '';
   const img = canEmbed(portrait)
     ? imgTag(portrait['预览文件'], alt, {
       width: 600,
       height: 800,
-      sizes: '(max-width: 600px) 92vw, (max-width: 960px) 45vw, 280px',
+      sizes: '(max-width: 600px) 92vw, (max-width: 960px) 45vw, 430px',
       onerror: opts.onerror !== false,
       eager: opts.eager,
     })
     : '';
   return `
       <article class="card emperor-card">
-        <a class="card-pic" href="${esc(eraHref)}" aria-label="${esc(alt)}">
+        <a class="card-pic"${frameStyle} href="${esc(eraHref)}" aria-label="${esc(alt)}">
           ${img}
         </a>
         <div class="meta">
           <a class="era-link" href="${esc(eraHref)}">
-            <div class="era">${esc(era)}</div>
-            <p class="card-vita-line">${esc([given, born && died ? `${born}–${died}` : ''].filter(Boolean).join(' · '))}</p>
+            <p class="card-era-label">年号</p>
+            <div class="era">${esc(eras.join(' · '))}</div>
           </a>
-          ${chapters.length ? `<ol class="card-reads">${chapters.map((row) => (
-            `<li><a href="#/chapter/${esc(row.slug)}">${esc(row.title)}</a></li>`
-          )).join('')}</ol>` : ''}
-          ${lane ? `<p class="card-lane"><a href="#/lane/${esc(lane.id)}">${esc(lane.title)}</a></p>` : ''}
+          <dl class="card-vita-line card-ids">
+            ${idRow('名', esc(fullName || given) + (birthOrder ? `<span class="card-id-sub">（${esc(birthOrder)}）</span>` : ''))}
+            ${idRow('庙号', temple ? esc(temple) : '<span class="card-id-none">无，清亡未上</span>')}
+            ${idRow('谥号', posthumous
+              ? `<span class="card-id-shi">${esc(posthumous)}</span>`
+              : '<span class="card-id-none">无，清亡未上</span>')}
+            ${born && died ? idRow('在世', `${born}年–${died}年`) : ''}
+            ${from && to ? idRow('在位', `${from}年–${to}年${reign ? ` · 共 ${reign} 年` : ''}`) : ''}
+          </dl>
+          ${hook ? `<p class="card-hook-line">${esc(hook)}</p>` : ''}
         </div>
       </article>`;
+}
+
+const EMPEROR_SHORT_ERA = {
+  'QH-E-01': '天命',
+  'QH-E-02': '崇德',
+  'QH-E-03': '顺治',
+  'QH-E-04': '康熙',
+  'QH-E-05': '雍正',
+  'QH-E-06': '乾隆',
+  'QH-E-07': '嘉庆',
+  'QH-E-08': '道光',
+  'QH-E-09': '咸丰',
+  'QH-E-10': '同治',
+  'QH-E-11': '光绪',
+  'QH-E-12': '宣统',
+};
+
+export function siteEraLabel(site) {
+  const ids = String(site['相关皇帝ID'] || '').split(/[；;]/).map((s) => s.trim()).filter(Boolean);
+  if (!ids.length) return '今地';
+  if (ids.length === 1) return (EMPEROR_SHORT_ERA[ids[0]] || '') + '朝';
+  if (ids.length <= 3) return ids.map((id) => EMPEROR_SHORT_ERA[id] || id).join('·') + '朝';
+  return '中枢·跨朝';
 }
 
 export function siteCard(site, opts = {}) {
@@ -222,7 +272,7 @@ export function siteCard(site, opts = {}) {
           ${img}
         </a>
         <a class="meta" href="#/site/${esc(site.site_id)}">
-          <div class="card-kind">今地</div>
+          <div class="card-kind">${esc(siteEraLabel(site))}</div>
           <div class="era">${esc(site['事件'])}</div>
           <div class="sub">${esc(today)}</div>
           ${hook ? `<p class="card-hook">${esc(hook)}</p>` : ''}
@@ -242,114 +292,14 @@ export function sortedSites(sites) {
 }
 
 export function homeHtml(dynasty, emperors, sites, opts = {}) {
-  const featured = featuredSites(sites);
-  const rest = sortedSites(sites).length - featured.length;
-  const lanes = (opts.lanes || []).slice(0, 3);
+  // 首页只放十二帝画像。转轴、逐解、说法对照、遗址今况、真迹、文献
+  // 一律走顶栏，不在这里堆二级入口。
   return `      <div class="reading">
         <p class="kicker">${esc(dynasty?.kicker || '')}</p>
         <h1>${esc(dynasty?.headline || '')}</h1>
         <p class="lede">${noOrphan(dynasty?.lede || '')}</p>
       </div>
+      <p class="actions home-actions"><a class="link" href="#/path">276 年转轴</a> · <a class="link" href="#/material">材料</a> · <a class="link" href="#/how">怎么读</a></p>
       ${researchDraftBanner('site')}
-      <div class="grid cards">${emperors.map((row, i) => emperorCard(row, { ...opts, eager: i < 3 })).join('')}</div>
-      <section class="now-read">
-        <div class="page-head story">
-          <h2>先看这几处转轴</h2>
-        </div>
-        <p class="lede">从称汗到退位，其间有称帝、入关、密储、内禅、条约与热河等转轴。走完这一页，再点皇帝。</p>
-        <p class="actions"><a class="link" href="#/path">276年转轴</a> · <a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/spine/money">饷从哪来，兵谁养</a></p>
-      </section>
-      <section class="now-read">
-        <div class="page-head story">
-          <h2>康熙这一段</h2>
-        </div>
-        <p class="lede">太子废了两次，即位和驾崩的日子，官书都写到了。</p>
-        <ol class="threads now-read-list">
-          <li>
-            <a class="thread" href="#/chapter/kangxi-02">
-              <span class="thread-year">1675–1712</span>
-              <h2>两废太子</h2>
-              <p>立、废、复立、再废，日子对得上的留下，对不上的也留下。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/chapter/kangxi-01">
-              <span class="thread-year">1661 · 1722</span>
-              <h2>即位、崩逝与遗诏</h2>
-              <p>那年即位，次年才改元。口谕和遗诏是两份不同的文件，实录写的是寝宫。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/kangxi">
-              <span class="thread-year">康熙朝</span>
-              <h2>储位、四后、儿女</h2>
-              <p>胤礽怎样一天一天被废，皇后当时叫什么，儿子怎么排。</p>
-            </a>
-          </li>
-        </ol>
-      </section>
-      <section class="now-read">
-        <div class="page-head story">
-          <h2>已经对上日子的几处</h2>
-        </div>
-        <p class="lede">和珅不是第五天处死的，继后那拉氏在官书里也没有被写成抗旨宫斗，十三日崩逝到二十日才举行即位礼。</p>
-        <ol class="threads now-read-list">
-          <li>
-            <a class="thread" href="#/chapter/jiaqing-04">
-              <span class="thread-year">1796–99</span>
-              <h2>内禅之后：太上皇崩与和珅案</h2>
-              <p>第五天下狱，十五日后赐死；二十条是上谕中的列罪，不是抄家清册。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/lane/QH-L-0033">
-              <span class="thread-year">继后</span>
-              <h2>继皇后那拉氏</h2>
-              <p>官书有断发的叙述，但没有写成抗旨宫斗。姓氏有两说，不择其一。</p>
-            </a>
-          </li>
-          <li>
-            <a class="thread" href="#/chapter/yongzheng-07">
-              <span class="thread-year">1722</span>
-              <h2>从十三日崩逝到二十日即位</h2>
-              <p>口谕、遗诏、即位礼，不是同一天。</p>
-            </a>
-          </li>
-        </ol>
-      </section>
-      ${lanes.length ? `<section class="now-read">
-        <div class="page-head story">
-          <h2>官书和传闻怎么对不上</h2>
-        </div>
-        <p class="lede">对照栏把通行说法、官书原文和野史分栏，不把好看的故事升格成事实。</p>
-        <ol class="threads now-read-list">
-          ${lanes.map((row) => `
-          <li>
-            <a class="thread" href="#/lane/${esc(row.lane_id)}">
-              <span class="thread-year">${esc(row['栏目'] || '对照')}</span>
-              <h2>${esc(row['标题'])}</h2>
-              <p>${esc((row['差异或读法'] || row['通行说法'] || '').split('。')[0])}。</p>
-            </a>
-          </li>`).join('')}
-        </ol>
-        <p class="actions"><a class="link" href="#/lanes">全部对照</a></p>
-      </section>` : ''}
-      <section class="now-read">
-        <div class="page-head story">
-          <h2>纸上的字</h2>
-        </div>
-        <p class="lede">朱批是红笔写的，御笔是纸本，令旨不是幼帝亲批，黄标只给外链。</p>
-        <p class="actions"><a class="link" href="#/hands">真迹手稿</a> · <a class="link" href="#/image/QH-V-E05I">雍正朱批</a> · <a class="link" href="#/image/QH-V-E10C">入承大统诏</a></p>
-      </section>
-      <section class="sites-home">
-        <div class="page-head story">
-          <h2>这些事，今天在哪儿</h2>
-        </div>
-        <p class="lede">战场、陵寝、园子、关城——这些地方今天什么样，能不能去，和当时差多远。</p>
-        <div class="grid cards site-cards">${featured.map((row) => siteCard(row, opts)).join('')}</div>
-        <p class="actions">
-          ${rest > 0 ? `<a class="link" href="#/sites">其余 ${rest} 处今地</a> · ` : ''}
-          <a class="link" href="#/lanes">对照</a>
-        </p>
-      </section>`;
+      <div class="grid cards">${emperors.map((row, i) => emperorCard(row, { ...opts, eager: i < 3 })).join('')}</div>`;
 }

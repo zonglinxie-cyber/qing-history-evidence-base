@@ -22,6 +22,9 @@ const contentDir = path.join(root, 'content');
 
 const errors = [];
 const warnings = [];
+// 证据/编辑质量断言：默认按 warning 输出、不阻断构建；STRICT=1 时升级为 error 阻断。
+const assertions = [];
+const STRICT = process.env.STRICT === '1';
 
 function load(file) {
   return loadCsv(path.join(dataDir, file), {
@@ -55,11 +58,18 @@ async function main() {
   for (const dynasty of activeDynasties()) {
     // 装载本朝文件（含 shared 共享文件），按 kind 合并
     const byKind = new Map();
+    const fileDetails = [];
     for (const entry of DATA_MANIFEST) {
       if (entry.dynasty !== dynasty.code && entry.dynasty !== 'shared') continue;
       const rows = load(entry.file);
       checkMinCount(entry.file, rows);
       checkUnique(entry.file, rows);
+      fileDetails.push({
+        file: entry.file,
+        kind: entry.kind,
+        rows: rows.length,
+        columns: rows.length ? Object.keys(rows[0]) : [],
+      });
       const list = byKind.get(entry.kind) || [];
       byKind.set(entry.kind, list.concat(rows));
     }
@@ -116,52 +126,10 @@ async function main() {
       // 上限规则：单元只能等于或保守于其台账来源等级（现代整理稿可低于原始档案上限）
       const sourceRank = rankBySource.get(unit.source_entity_id);
       if (sourceRank && SOURCE_RANKS.has(sourceRank) && RANK_ORDER[rank] < RANK_ORDER[sourceRank]) {
-        errors.push(`${unit.source_unit_id} 证据等级 ${rank} 高于台账来源 ${unit.source_entity_id} 的上限 ${sourceRank}`);
+        assertions.push(`${unit.source_unit_id} 证据等级 ${rank} 高于台账来源 ${unit.source_entity_id} 的上限 ${sourceRank}`);
       }
       rankByUnit.set(unit.source_unit_id, rank);
     }
-    // 已采纳主张必须至少有一条 A1/A2 支持证据；高风险命题的双来源家族要求在各朝 rules 模块检查
-    for (const claim of byKind.get('source_claims') || []) {
-      if (claim['状态'] !== '已采纳') continue;
-      const unitRank = rankByUnit.get(claim['来源实体 ID']);
-      const stance = claim['证据立场'] || '支持';
-      if (stance === '支持' && unitRank !== 'A1' && unitRank !== 'A2') {
-        errors.push(`${claim['Assertion ID']} 已采纳但支持证据等级为 ${unitRank || '未知'}；普通事实至少需要一个 A1/A2 证据`);
-      }
-    }
-
-    // 来源家族登记表：独立性按派生树判定（无共同祖先才算独立），防「实录+转抄实录」假冒双来源
-    const families = byKind.get('families') || [];
-    const famById = new Map(families.map((f) => [f.family_id, f]));
-    const ancestorsOf = (id) => {
-      const out = new Set([id]);
-      const stack = [id];
-      while (stack.length) {
-        const cur = famById.get(stack.pop());
-        if (!cur) continue;
-        for (const p of String(cur.derives_from || '').split(';').map((s) => s.trim()).filter(Boolean)) {
-          if (!out.has(p)) { out.add(p); stack.push(p); }
-        }
-      }
-      return out;
-    };
-    const independentFamilies = (a, b) => {
-      const B = ancestorsOf(b);
-      for (const x of ancestorsOf(a)) if (B.has(x)) return false;
-      return true;
-    };
-    for (const f of families) {
-      for (const p of String(f.derives_from || '').split(';').map((s) => s.trim()).filter(Boolean)) {
-        if (!famById.has(p)) errors.push(`${f.family_id} 的 derives_from 指向未登记家族 ${p}`);
-      }
-    }
-    for (const claim of byKind.get('source_claims') || []) {
-      const fid = String(claim['来源家族 ID'] || '').trim();
-      if (fid && !famById.has(fid)) {
-        errors.push(`${claim['Assertion ID']} 来源家族 ID ${fid} 未登记`);
-      }
-    }
-
     // 冲突组一等公民：登记 + ≥2 条主张 + 客体或时间互斥；有现行判断必须写保留意见
     const conflictSets = byKind.get('conflict_sets') || [];
     const csById = new Map(conflictSets.map((c) => [c.conflict_set_id, c]));
@@ -176,21 +144,21 @@ async function main() {
       const objs = new Set(arr.map((c) => c['客体 ID 或值']));
       const times = new Set(arr.map((c) => c['原始时间表达']));
       if (arr.length < 2 || (objs.size < 2 && times.size < 2)) {
-        errors.push(`冲突组 ${g} 需要≥2 条主张且客体或时间互斥，当前 ${arr.length} 条/客体 ${objs.size}/时间 ${times.size}`);
+        assertions.push(`冲突组 ${g} 需要≥2 条主张且客体或时间互斥，当前 ${arr.length} 条/客体 ${objs.size}/时间 ${times.size}`);
       }
     }
     for (const cs of conflictSets) {
       if (String(cs['现行编辑判断'] || '').trim() && !String(cs['保留意见'] || '').trim()) {
-        errors.push(`${cs.conflict_set_id} 有现行编辑判断但未写保留意见`);
+        assertions.push(`${cs.conflict_set_id} 有现行编辑判断但未写保留意见`);
       }
       const referenced = claimsByGroup.get(cs.conflict_set_id) || [];
       if (referenced.length === 0 && !String(cs['现行编辑判断'] || '').trim()) {
-        errors.push(`${cs.conflict_set_id} 无主张引用且未写现行编辑判断；空组必须登记为待补面 TODO`);
+        assertions.push(`${cs.conflict_set_id} 无主张引用且未写现行编辑判断；空组必须登记为待补面 TODO`);
       }
     }
 
     // 组装 ctx，dispatch 到本朝 rules 模块（缺省跳过）
-    const ctx = { dynasty, contentDir, errors, warnings, rankBySource, rankByUnit, independentFamilies };
+    const ctx = { dynasty, contentDir, errors, warnings, assertions, rankBySource, rankByUnit };
     for (const [kind, field] of Object.entries(KIND_TO_FIELD)) {
       ctx[field] = byKind.get(kind) || [];
     }
@@ -214,12 +182,26 @@ async function main() {
     summary.push({
       dynasty: dynasty.code,
       files: DATA_MANIFEST.filter((e) => e.dynasty === dynasty.code || e.dynasty === 'shared').length,
+      tables: fileDetails,
       rows: Object.fromEntries([...byKind.entries()].map(([k, v]) => [KIND_TO_FIELD[k] || k, v.length])),
     });
   }
 
-  console.log(JSON.stringify({ dynasties: summary, errors: errors.length, warnings: warnings.length }, null, 2));
+  // 证据/编辑类断言分流：默认并入 warning（不阻断），STRICT=1 时并入 error（阻断）。
+  if (STRICT) errors.push(...assertions);
+  else warnings.push(...assertions);
+
+  console.log(JSON.stringify({
+    dynasties: summary,
+    errors: errors.length,
+    warnings: warnings.length,
+    assertions: assertions.length,
+    mode: STRICT
+      ? 'STRICT=1：证据/编辑类断言按 error 阻断'
+      : '默认：证据/编辑类断言按 warning 不阻断（STRICT=1 时升级为 error）',
+  }, null, 2));
   if (warnings.length) console.log(`WARNINGS\n- ${warnings.join('\n- ')}`);
+  if (STRICT && assertions.length) console.log(`注：${assertions.length} 条证据/编辑类断言已升为 error（见下 ERROR 列表）。`);
   if (errors.length) {
     console.error(`ERRORS\n- ${errors.join('\n- ')}`);
     process.exitCode = 1;

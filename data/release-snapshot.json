@@ -1,0 +1,19 @@
+{
+  "version": "0.3.2",
+  "fingerprint": "c03702c238ed6079",
+  "metrics": {
+    "emperors": 12,
+    "emperorsWithClaims": 12,
+    "chapters": 58,
+    "claims": 526,
+    "adopted": 471,
+    "pending": 55,
+    "people": 177,
+    "sourceIndex": 88,
+    "questions": 83,
+    "sourceBoundChapters": 56,
+    "indexableChapters": 36,
+    "evidenceClosedChapters": 4
+  },
+  "updatedAt": "2026-08-23"
+}

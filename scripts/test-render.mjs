@@ -15,6 +15,8 @@ if (!configMatch) {
 const config = configMatch[1];
 const dynastyConfig = JSON.parse(config);
 const reignData = JSON.parse(fs.readFileSync(path.join(siteDir, 'data', `${dynastyConfig.chunk}.json`), 'utf8'));
+const homeData = JSON.parse(fs.readFileSync(path.join(siteDir, 'data', 'home.json'), 'utf8'));
+const peopleData = JSON.parse(fs.readFileSync(path.join(siteDir, 'data', 'people.json'), 'utf8'));
 
 const els = new Map();
 function fakeEl(id) {
@@ -126,30 +128,42 @@ for (const slug of registeredEras) {
 const unregistered = eras.find((slug) => !registeredEras.includes(slug));
 if (unregistered) {
   const out = await go(`#/${unregistered}`);
-  check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('已经写下的') || out.includes('现有章节'));
+  check(`无专题页的年号路由优雅降级 #/${unregistered}`, out.includes('thread') && out.includes('日子还对不回去的'));
 }
 
 const homeHtmlOut = await go('#/');
-check('首页现有可读入口', homeHtmlOut.includes('康熙这一段') && homeHtmlOut.includes('两废太子'));
-check('首页已打开对照入口', homeHtmlOut.includes('已经对上日子的几处') && homeHtmlOut.includes('#/chapter/jiaqing-04') && homeHtmlOut.includes('#/lane/QH-L-0033'));
-check('首页真迹入口', homeHtmlOut.includes('纸上的字') && homeHtmlOut.includes('#/hands'));
+check('首页只放帝卡不放二级入口', (homeHtmlOut.match(/class="card emperor-card"/g) || []).length === 12
+  && !homeHtmlOut.includes('class="thread"')
+  && !homeHtmlOut.includes('#/chapter/')
+  && !homeHtmlOut.includes('card-reads')
+  && !homeHtmlOut.includes('card-lane'));
+const jieduOut = await go('#/jiedu');
+check('逐解全部在自己的页面上', jieduOut.includes('一部一部读') && (jieduOut.match(/class="thread"/g) || []).length >= 40);
+const howOut = await go('#/how');
+check('已打开对照入口移到怎么读', howOut.includes('已经对上日子的几处') && howOut.includes('#/chapter/jiaqing-04') && howOut.includes('#/lane/QH-L-0033'));
+const materialOut = await go('#/material');
+check('材料页收齐三种材料', ['#/works', '#/hands', '#/jiedu']
+  .every((h) => materialOut.includes(h)) && !materialOut.includes('href="#/images"'));
+check('材料页按朝可下钻', materialOut.includes('#/works?era=') && materialOut.includes('#/jiedu?era='));
 check('首页不叠六期评传入口', !homeHtmlOut.includes('由浅入深读全朝') && !homeHtmlOut.includes('#/overview/periods'));
 check('首页不写结构化证据仪表', !homeHtmlOut.includes('尚无结构化证据'));
 check('首页醒目标明个人研究稿', homeHtmlOut.includes('AI 辅助个人研究库') && homeHtmlOut.includes('并非专家审定本'));
 const descriptionTags = html.match(/<meta\s+name="description"\s+content="[^"]*">/g) || [];
 check('首页只有一条研究稿 description', descriptionTags.length === 1
   && descriptionTags[0].includes('AI 辅助个人研究稿'));
-check('首页转轴入口', homeHtmlOut.includes('先看这几处转轴') && homeHtmlOut.includes('#/path'));
+check('转轴入口在首页', homeHtmlOut.includes('#/path'));
 const headerNav = html.match(/<nav class="nav" aria-label="主导航">[\s\S]*?<\/nav>/)?.[0] || '';
-check('顶栏是读者词', headerNav.includes('对照') && headerNav.includes('今地')
-  && headerNav.includes('文献') && headerNav.includes('十二帝')
+const navItems = (headerNav.match(/<a\b/g) || []).length;
+check('顶栏收成五条轴', navItems === 5
+  && headerNav.includes('十二帝') && headerNav.includes('材料')
+  && headerNav.includes('说法对照') && headerNav.includes('遗址今况')
   && headerNav.includes('怎么读')
-  && !headerNav.includes('#/path') && !headerNav.includes('#/hands')
   && !headerNav.includes('#/claims'));
-check('帝卡先给可读章', homeHtmlOut.includes('#/chapter/kangxi-02')
-  && homeHtmlOut.includes('两废太子')
-  && homeHtmlOut.includes('card-reads')
-  && homeHtmlOut.includes('card-vita-line'));
+check('帝卡给全名号并以一句收束', homeHtmlOut.includes('card-vita-line')
+  && (homeHtmlOut.match(/class="card-id-row"/g) || []).length === 60
+  && (homeHtmlOut.match(/class="card-hook-line"/g) || []).length === 12
+  && homeHtmlOut.includes('（雍正第四子）')
+  && homeHtmlOut.includes('法天隆运至诚先觉体元立极敷文奋武钦明孝慈神圣纯皇帝'));
 check('首页不主推改诏与吕四娘', !homeHtmlOut.includes('#/lane/QH-L-0007')
   && !homeHtmlOut.includes('#/lane/QH-L-0009')
   && !homeHtmlOut.includes('吕四娘'));
@@ -174,8 +188,8 @@ const person = await go('#/person/QH-P-000001');
 check('人物页渲染（含朝代内容模块）', person.includes('两废太子') || person.includes('分日'));
 check('康熙帝页拆栏', person.includes('见诸文书的习惯') && person.includes('当时要解决什么')
   && person.includes('史料说明') && !person.includes('未开') && !person.includes('未拆'));
-check('康熙帝页先给出可读章', person.includes('这一朝可读') && person.includes('还想往下读')
-  && person.includes('#/chapter/kangxi-02'));
+check('康熙帝页六段合一且保留专题链', ['① 人', '② 相', '③ 笔', '④ 物', '⑤ 事', '⑥ 料'].every((title) => person.includes(title))
+  && person.includes('#/chapter/kangxi-02') && person.includes('太子怎样立，怎样废') && person.includes('#/succession'));
 const nurhaci = await go('#/person/QH-P-000051');
 check('努尔哈赤帝页有结构且非康熙腔', nurhaci.includes('当时要解决什么') && nurhaci.includes('吞并女真各部') && !nurhaci.includes('择吉不是册立'));
 const xuantong = await go('#/person/QH-P-000059');
@@ -184,7 +198,26 @@ const qlChron = await go('#/chronicle/qianlong');
 check('无条次朝大事记不编年表', qlChron.includes('还没有逐日的官书条') && qlChron.includes('#/qianlong'));
 check('无条次朝大事记仍给出已写章节', qlChron.includes('#/chapter/qianlong-01') || qlChron.includes('十全'));
 const qlEra = await go('#/qianlong');
-check('乾隆朝页钉住已打开对照', qlEra.includes('#/lane/QH-L-0033') && qlEra.includes('#/chapter/jiaqing-04') && qlEra.includes('已经写下的'));
+check('乾隆朝页钉住已打开对照', qlEra.includes('#/lane/QH-L-0033') && qlEra.includes('#/chapter/jiaqing-04') && qlEra.includes('日子还对不回去的'));
+const emperorRouteFailures = [];
+const emperorVisualFailures = [];
+for (const emperor of homeData.emperors || []) {
+  const slug = emperor.eraSlug;
+  const era = String(emperor['年号或通称'] || '').split('；')[0];
+  const expectedVisuals = (peopleData.portraits || []).filter((row) => row.emperor_id === emperor.emperor_id).length;
+  const byEra = await go(`#/${slug}`);
+  const eraLayout = el('main').dataset.layout;
+  const byPerson = await go(`#/person/${emperor.person_id}`);
+  const personLayout = el('main').dataset.layout;
+  const visualList = await go(`#/hands?era=${encodeURIComponent(era)}`);
+  if (byEra !== byPerson || eraLayout !== 'era' || personLayout !== 'era') emperorRouteFailures.push(slug);
+  if ((visualList.match(/#\/image\//g) || []).length !== expectedVisuals || !byEra.includes(`像与物 ${expectedVisuals} 件`)) emperorVisualFailures.push(slug);
+}
+check('十二帝年号路由与旧人物路由内容及版心一致', emperorRouteFailures.length === 0);
+check('十二帝材料计数与各朝像与物清单一致', emperorVisualFailures.length === 0);
+const qlUnified = await go('#/qianlong');
+check('乾隆合并页显示至少 11 件视觉材料且今天在哪儿不重复', (qlUnified.match(/#\/image\//g) || []).length >= 11
+  && (qlUnified.match(/今天在哪儿/g) || []).length === 1);
 const questionsPage = await go('#/questions');
 check('问题页不再自称导读或黄金问题', questionsPage.includes('这类问题，现在停在这里') && !questionsPage.includes('从问题进入清史') && !questionsPage.includes('黄金问题'));
 check('问题页先放三道拒答', questionsPage.includes('八亿两') && questionsPage.includes('抗旨断发') && questionsPage.includes('九子夺嫡是哪一天'));
@@ -200,7 +233,12 @@ check('和珅对照栏挂上拒答', heshen.includes('#/question/QH-GQ-0068') ||
 const nala = await go('#/lane/QH-L-0033');
 check('继皇后对照栏', nala.includes('那拉氏') && nala.includes('不择一'));
 const hands = await go('#/hands');
-check('真迹手稿页', hands.includes('纸上的字，才是这一笔') && hands.includes('雍正朱批') && hands.includes('入承大统诏') && !hands.includes('黄金问题'));
+check('像与物页 63 件全部有入口', hands.includes('画的、写的、用的、拍下来的')
+  && hands.includes('器物') && hands.includes('便服·行乐·戎装·化身') && hands.includes('历史照片')
+  && (hands.match(/#\/image\//g) || []).length === 63 && !hands.includes('黄金问题'));
+const qianlongVisuals = await go('#/hands?era=乾隆');
+check('乾隆像与物按组显示且不少于 11 件', (qianlongVisuals.match(/#\/image\//g) || []).length >= 11
+  && qianlongVisuals.includes('visual-object') && qianlongVisuals.includes('visual-life'));
 const szChapter = await go('#/chapter/shunzhi-01');
 check('顺治章拆出本纪入关句', szChapter.includes('大軍入關') && szChapter.includes('data-claim="QH-A-SZ-0002"') && /<aside class="read-line"[\s\S]*不能写成皇帝亲征[\s\S]*<\/aside>/.test(szChapter));
 const xtChapter = await go('#/chapter/xuantong-01');
@@ -219,6 +257,10 @@ check('样板章行内主张', chapter.includes('data-claim="QH-A-KX-0124"') || 
 check('样板章目录', chapter.includes('chapter-toc') && chapter.includes('data-scroll'));
 check('样板章上下篇', chapter.includes('chapter-nav') && chapter.includes('上一篇') && chapter.includes('下一篇'));
 check('样板章依据摘要不倾倒主张卡', chapter.includes('本章可回查的卷') && !chapter.includes('thread-block'));
+const shortChapter = await go('#/chapter/xuantong-03');
+check('短章使用 reading 单栏且元信息收成一行', el('main').dataset.layout === 'reading'
+  && !shortChapter.includes('class="chapter-toc"') && shortChapter.includes('class="chapter-meta-row"')
+  && (shortChapter.match(/class="chapter-meta-item/g) || []).length === 3);
 check('两废章读这一句', /<aside class="read-line"[\s\S]*不能写成对质全文[\s\S]*<\/aside>/.test(chapter));
 const kx01 = await go('#/chapter/kangxi-01');
 check('即位章原文块', kx01.includes('source-quote') && kx01.includes('上即皇帝位') && kx01.includes('崩於寢宮'));
@@ -272,6 +314,8 @@ check('文献专栏按帝分组且有专论入口', works.includes('大义觉迷
 check('文献可读性徽章', works.includes('可查原文条目') || works.includes('已关联逐条依据'));
 check('起居注不假装可读原文', works.includes('馆藏入口') && works.includes('馆藏／咨询入口'));
 const juemilu = await go('#/chapter/yongzheng-04');
+check('长章保留 chapter 版心与目录侧栏', el('main').dataset.layout === 'chapter'
+  && juemilu.includes('class="chapter-toc"') && (juemilu.match(/data-scroll=/g) || []).length >= 15);
 check('大义觉迷录专论章渲染', juemilu.includes('自辩') && juemilu.includes('缴书'));
 check('觉迷录短引与实录条次入章', juemilu.includes('data-claim="QH-A-YZ-0047"')
   && juemilu.includes('data-claim="QH-A-YZ-0049"')
@@ -306,14 +350,25 @@ check('主张页公开读者核对状态但不暴露编辑身份', adoptedClaim.
 const claimCf = await go('#/claim/QH-A-KX-0070');
 check('主张页同组异说并排区块', claimCf.includes('同组异说') && claimCf.includes('QH-CF-KX-INVEST-DAY'));
 const images = await go('#/images');
-check('画像总览带灯箱属性', images.includes('data-lightbox'));
+check('旧画像路由是像与物别名', images.includes('画的、写的、用的、拍下来的')
+  && (images.match(/#\/image\//g) || []).length === 63);
 const imagePage = await go('#/image/QH-V-E04');
 check('图像详情页主图带灯箱属性', imagePage.includes('data-lightbox'));
 const sitePage = await go('#/site/QH-ST-0013');
 check('今地页主图带灯箱属性', sitePage.includes('data-lightbox'));
-check('今地卡带灯箱属性', homeHtmlOut.includes('data-lightbox="畅春园"') || homeHtmlOut.includes('data-lightbox="畅春园'));
+const sitesOut = await go('#/sites');
+check('今地卡带灯箱属性', sitesOut.includes('data-lightbox="畅春园"') || sitesOut.includes('data-lightbox="畅春园'));
 const unknown = await go('#/no-such-page');
 check('未知路由 404', unknown.includes('没有这个页面'));
+
+const dataList = await go('#/data');
+check('数据浏览器表清单', dataList.includes('全部数据表')
+  && dataList.includes('yongzheng-princesses.csv') && dataList.includes('kangxi-source-claims.csv'));
+const princessTable = await go('#/data?file=yongzheng-princesses.csv');
+check('数据浏览器单表保留原始值与原始状态', princessTable.includes('yongzheng-princesses.csv')
+  && princessTable.includes('怀恪公主') && princessTable.includes('S二手转述') && princessTable.includes('证据状态'));
+const reviewPage = await go('#/review');
+check('存疑页空态可打开', reviewPage.includes('本地存疑标注') && reviewPage.includes('还没有存疑标注'));
 
 // 灯箱高清变体：Wikimedia 缩略图应取最大档
 const { largestVariant, noOrphan } = await import(path.join(siteDir, 'templates.js'));
@@ -323,6 +378,9 @@ check('largestVariant 本地图取 1280 档', largestVariant('media/QH-V-E04.jpg
 check('本地图 srcset 含 480/960/1280', html.includes('media/QH-V-E04-480.jpg 480w')
   && html.includes('media/QH-V-E04-960.jpg 960w')
   && html.includes('media/QH-V-E04@2x.jpg 1280w'));
+// 回归：今地 site_id 含数字后缀（QH-ST-0001），mediaSrcset 不得把它误判成宽度档而截成 QH-ST.jpg
+check('今地数字 ID 图不被 mediaSrcset 截断', largestVariant('media/QH-ST-0001.jpg') === 'media/QH-ST-0001@2x.jpg');
+check('今地图不用占位 QH-ST.jpg', !html.includes('media/QH-ST.jpg'));
 check('句末不孤字', noOrphan('以官书原文为底本，逐条整理。').includes('class="nobr">整理。'));
 const homeOut = await go('#/');
 check('首页导语句末不孤字', homeOut.includes('class="nobr"') && homeOut.includes('整理。'));
@@ -379,8 +437,8 @@ check('康熙即位章静态导语不把崩地写成畅春园', !kx01Static.incl
 const yz04Static = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');
 check('觉迷录静态章内联冲突引文', yz04Static.includes('claim-compare') && yz04Static.includes('將「十」字改為「于」字') && !yz04Static.includes('在交互版查看相关异说'));
 check('觉迷录静态交叉引用保留标题', yz04Static.includes('传位十四子与改诏') && !yz04Static.includes('>相关章节<'));
-check('静态章顶栏是读者词', yz04Static.includes('对照') && yz04Static.includes('今地')
-  && !yz04Static.includes('href="./#/path"') && !yz04Static.includes('href="./#/hands"'));
+check('静态章顶栏是读者词', yz04Static.includes('说法对照') && yz04Static.includes('遗址今况')
+  && yz04Static.includes('材料') && yz04Static.includes('十二帝'));
 check(`sitemap 只收收录列为是的章节 ${indexableChapters.length} 篇`,
   indexableChapters.length >= 30
   && indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
@@ -399,8 +457,10 @@ check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
 check('进站即恢复手选主题', html.includes("localStorage.getItem('theme')")
   && kx01Static.includes("localStorage.getItem('theme')")
   && html.indexOf("localStorage.getItem('theme')") < html.indexOf('styles.css'));
-const nh03Static = fs.readFileSync(path.join(siteDir, 'chapter', 'nurhaci-03', 'index.html'), 'utf8');
-check('静态章末篇下一篇接到下一朝', nh03Static.includes('chapter/huangtaiji-01/') && nh03Static.includes('下一篇'));
+const lastTianming = (reignData.chapters || []).filter((c) => c.era === '天命')
+  .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0)).pop();
+const nhLastStatic = fs.readFileSync(path.join(siteDir, 'chapter', lastTianming.slug, 'index.html'), 'utf8');
+check('静态章末篇下一篇接到下一朝', nhLastStatic.includes('chapter/huangtaiji-01/') && nhLastStatic.includes('下一篇'));
 check('首页前几张帝像优先加载', html.includes('fetchpriority="high"'));
 check('依据抽屉与灯箱使用 dialog', html.includes('<dialog id="drawer"')
   && html.includes('<dialog id="lightbox"')
