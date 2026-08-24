@@ -703,11 +703,9 @@ function writeStaticChapterPages({ chapters, units, portraits, emperors, claims,
   }
 
   const urls = [siteBaseUrl.href, ...indexable.map((chapter) => new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href)];
-  let lastmod = '';
-  try {
-    lastmod = String(execFileSync('git', ['log', '-1', '--format=%cs'], { cwd: root, encoding: 'utf8' })).trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(lastmod)) lastmod = '';
-  } catch { lastmod = ''; }
+  // 与 release.updatedAt 对齐：指纹未变时日期稳定，避免 git log 随任意 commit 漂移导致 CI 可重复检查失败
+  let lastmod = readReleaseJson().updatedAt || '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(lastmod)) lastmod = '';
   const lastmodTag = lastmod ? `<lastmod>${lastmod}</lastmod>` : '';
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((url) => `  <url><loc>${escHtml(url)}</loc>${lastmodTag}</url>`).join('\n')}\n</urlset>\n`;
   fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), sitemap);
