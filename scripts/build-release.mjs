@@ -126,7 +126,9 @@ try {
 
 ensureInitialChangelog(version, metrics);
 
-const date = todayLocal();
+const fingerprintChanged = !snapshot || snapshot.fingerprint !== fingerprint;
+// 指纹未变时保留既有 updatedAt，避免 release → home.json → assetStamp 链每天漂移、CI 可重复检查失败
+const date = fingerprintChanged ? todayLocal() : snapshot.updatedAt;
 const changes = snapshot ? diffMetrics(snapshot.metrics, metrics) : [];
 
 if (snapshot && snapshot.fingerprint !== fingerprint) {
