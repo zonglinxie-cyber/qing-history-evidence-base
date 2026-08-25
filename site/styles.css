@@ -1662,30 +1662,6 @@ a.img-fallback.yellow,
   border: 1px solid var(--line);
   border-radius: 3px;
 }
-.research-banner {
-  max-width: var(--read);
-  margin: 0 0 24px;
-  padding: 14px 16px;
-  color: var(--text);
-  background: color-mix(in srgb, #b56a18 10%, var(--panel));
-  border: 1px solid color-mix(in srgb, #b56a18 48%, var(--line));
-  border-left: 5px solid #b56a18;
-  border-radius: 4px;
-}
-.research-banner p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.7;
-}
-.research-banner .research-banner-head {
-  margin-bottom: 4px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
-.research-banner-site {
-  max-width: none;
-  margin-bottom: 28px;
-}
 .foot-note {
   margin: 6px 0;
   color: var(--muted);
@@ -1766,7 +1742,6 @@ a.img-fallback.yellow,
 .chapter-head > .kicker::before { display: none; }
 .chapter-head > h1,
 .chapter-head > .lede,
-.chapter-head > .research-banner,
 .chapter-head > .chapter-meta-row,
 .chapter-head > .crumb,
 .chapter-head > .actions,
@@ -1801,13 +1776,6 @@ a.img-fallback.yellow,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.chapter-meta-item .research-banner {
-  max-width: none;
-  margin: 8px 0 0;
-  padding: 8px;
-  border-left-width: 3px;
-}
-.chapter-meta-item .research-banner-head { display: none; }
 .chapter-meta-item p { font-size: 12px; line-height: 1.6; }
 @media (max-width: 600px) {
   .chapter-meta-row { grid-template-columns: 1fr; }
@@ -2326,7 +2294,7 @@ html.light { color-scheme: light; }
 .search-more { margin: 8px 0 16px; }
 .search-more summary { cursor: pointer; color: var(--muted); }
 
-/* 开闸 v0.1：数据浏览器（#/data）与存疑标记（#/review / 标存疑） */
+/* 数据浏览器（#/data）：原始表校对视图 */
 .data-kind { margin: 0 0 24px; }
 .data-kind h2 { font-size: 16px; margin: 0 0 6px; }
 .data-files { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 24px; }
@@ -2344,29 +2312,7 @@ html.light { color-scheme: light; }
 .data-sort:hover { color: var(--ink); }
 .data-table td { font-size: 13px; min-width: 8ch; }
 
-.review-mark { display: inline-block; font: inherit; font-size: 13px; color: var(--muted); border: 1px solid var(--line); background: none; padding: 1px 8px; border-radius: 3px; cursor: pointer; }
-.review-mark:hover { color: var(--ink); border-color: var(--ink); }
-.review-mark.set { color: var(--vermilion); border-color: var(--vermilion); }
-.review-list { margin: 0 0 16px; }
-.review-note { border-bottom: 1px solid var(--line); padding: 14px 0; max-width: var(--read); }
-.review-note .sentence { font-size: 16px; margin: 0 0 6px; }
-.review-note .bound { margin: 6px 0 0; }
 
-.note-dialog { width: min(92vw, 30rem); border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 18px; border-radius: 6px; }
-.note-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
-.note-reasons { border: 0; padding: 0; margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; }
-.note-reasons legend { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-.note-reasons label { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; cursor: pointer; }
-.note-field { display: block; font-size: 13px; color: var(--muted); margin: 0 0 12px; }
-.review-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
-}
-.review-actions .link {
-  font-size: 13px;
-}
 
 /* 检索分类筛选胶囊 */
 .search-facets {
@@ -2487,7 +2433,7 @@ html.light { color-scheme: light; }
   .chapter-head { border-bottom: 1px solid #000; }
   .md h2::before,
   .page-head.story h2::before { background: #000; }
-  .masthead, .search, .suggest, .to-top, .drawer, .lightbox, .note-dialog, .data-tools,
+  .masthead, .search, .suggest, .to-top, .drawer, .lightbox, .data-tools,
   .actions, .skip, #search-status { display: none !important; }
   main { max-width: 100%; }
   .reading, .dossier { max-width: 100%; }
@@ -2571,29 +2517,6 @@ main[data-layout="full"]    { max-width: var(--page); }
 }
 
 /* 全库研究声明：收成一行，不在读者看到任何内容之前拦路 */
-.research-note {
-  max-width: var(--read);
-  margin: 0 0 28px;
-  font-size: 13px;
-  color: var(--muted);
-}
-.research-note > summary {
-  cursor: pointer;
-  padding: 6px 0;
-  border-bottom: 1px dotted var(--line);
-  list-style: none;
-}
-.research-note > summary::-webkit-details-marker { display: none; }
-.research-note > summary::before {
-  content: "＋ ";
-  color: var(--vermilion);
-}
-.research-note[open] > summary::before { content: "－ "; }
-.research-note > summary:hover { color: var(--vermilion); }
-.research-note p {
-  margin: 10px 0 0;
-  line-height: 1.75;
-}
 
 @media (max-width: 600px) {
   .card-hook-line { font-size: 16px; }
@@ -2970,3 +2893,78 @@ main[data-layout="era"] { max-width: 62rem; }
   .era-rail .actions { line-height: 2; }
   .era-rail > * + * { margin-top: 22px; }
 }
+
+/* ==== v0.4.0 长列表页统一骨架 ==== */
+
+/* 依据页一级：来源索引。全部 881 条不再平铺，先给一张「哪部书有多少条」的表 */
+.src-index { display: block; margin: 0 0 32px; border-top: 1px solid var(--line); }
+.src-index .src-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.src-index .src-row:hover .src-name { color: var(--vermilion); }
+.src-index .src-name { font-family: var(--serif); font-size: 17px; line-height: 1.5; }
+.src-index .src-count { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; flex: none; }
+
+/* 二级：选中某部书之后的标题和分卷组 */
+.src-title { font-family: var(--serif); font-size: 24px; margin: 18px 0 14px; font-weight: 500; }
+.claim-group { margin: 0 0 34px; }
+.group-head {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 500;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.group-head .muted { font-size: 13px; }
+
+/* 文献卡：书名才是标题。原先复用了帝王卡的 .era（24px 粗体），
+   把「御制文集 · 乾隆朝编」排得比书名还大，主次是反的 */
+.work-card .work-kicker {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0 0 2px;
+}
+.work-card h2 { font-family: var(--serif); font-size: 22px; font-weight: 500; margin: 2px 0 6px; }
+.work-card .work-vol { font-size: 13px; margin: 0 0 8px; }
+
+/* 网格行高互不牵连，否则一张 30 行的卡把整行拉高 */
+.work-grid { align-items: start; }
+
+/* 正文截断 */
+.clamp .work-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.clamp.open .work-desc { display: block; overflow: visible; }
+.clamp-toggle { font-size: 13px; padding: 2px 0; margin-top: 2px; }
+
+/* 人物页固定分块 */
+.person-section { margin: 0 0 40px; }
+.person-section > h2 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 90px;
+}
+.person-section > h2 .muted { font-size: 13px; font-weight: 400; }

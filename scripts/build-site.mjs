@@ -7,7 +7,7 @@ import { loadCsv } from './lib/csv.mjs';
 import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
 import { EDITORIAL_COPY, readerCopy, readerProse, readerMetadata, stripInternalComments } from './lib/reader.mjs';
 import { buildIndex } from '../site/search.js';
-import { homeHtml, isChapterIndexable, isChapterEvidenceClosed, researchDraftBanner } from '../site/templates.js';
+import { homeHtml, isChapterIndexable, isChapterEvidenceClosed } from '../site/templates.js';
 import { pinyin } from 'pinyin-pro';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -498,7 +498,8 @@ function staticChapterBody(html, { claims, conflictSets } = {}) {
 function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, draft, claims, conflictSets, assetStamp = '11' }) {
   const canonical = new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href;
   const image = portrait?.['预览文件'] ? new URL(portrait['预览文件'], siteBaseUrl).href : '';
-  const robots = indexable ? 'index,follow' : 'noindex,follow';
+  // 个人学习库：全站 noindex。允许抓取是故意的——搜索引擎必须能读到这个标签，才会把旧收录撤下来。
+  const robots = 'noindex,follow';
   const description = draft ? `研究草稿（未完成整章史料核对）：${chapter.lede}` : chapter.lede;
   const structured = JSON.stringify({
     '@context': 'https://schema.org',
@@ -561,7 +562,7 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, dr
         <p class="kicker">${escHtml(chapter.era)}</p>
         <h1>${escHtml(chapter.title)}</h1>
         <p class="lede">${escHtml(chapter.lede)}</p>
-${draft ? `        ${researchDraftBanner('chapter')}\n` : ''}        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
+        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
       </div>
       <div class="chapter-body">
       <div class="md">${staticChapterBody(chapter.bodyHtml, { claims, conflictSets })}</div>
@@ -573,7 +574,6 @@ ${draft ? `        ${researchDraftBanner('chapter')}\n` : ''}        <p class="c
   </main>
   <footer class="foot">
     <p class="foot-links"><a href="#/how">怎么读</a> · <a href="#/questions">现有材料答不了</a> · <a href="#/sources">来源</a></p>
-    <p class="foot-note">AI 辅助个人研究稿；未经专业清史学者全面审校。</p>
 ${siteFooterVersion(readVersion())}    <p class="foot-links"><a href="https://github.com/zonglinxie-cyber/qing-history-evidence-base" rel="noopener">开源仓库</a></p>
   </footer>
 </body>
@@ -702,14 +702,11 @@ function writeStaticChapterPages({ chapters, units, portraits, emperors, claims,
     if (canIndex) indexable.push(chapter);
   }
 
-  const urls = [siteBaseUrl.href, ...indexable.map((chapter) => new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href)];
-  // 与 release.updatedAt 对齐：指纹未变时日期稳定，避免 git log 随任意 commit 漂移导致 CI 可重复检查失败
-  let lastmod = readReleaseJson().updatedAt || '';
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(lastmod)) lastmod = '';
-  const lastmodTag = lastmod ? `<lastmod>${lastmod}</lastmod>` : '';
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((url) => `  <url><loc>${escHtml(url)}</loc>${lastmodTag}</url>`).join('\n')}\n</urlset>\n`;
-  fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), sitemap);
-  fs.writeFileSync(path.join(siteDir, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', siteBaseUrl).href}\n`);
+  // 不再生成 sitemap：这个库不投递给搜索引擎。
+  // robots.txt 仍然 Allow —— 若改成 Disallow，爬虫读不到页面里的 noindex，
+  // 已经被收录的旧页面反而会一直留在搜索结果里撤不下来。
+  fs.rmSync(path.join(siteDir, 'sitemap.xml'), { force: true });
+  fs.writeFileSync(path.join(siteDir, 'robots.txt'), 'User-agent: *\nAllow: /\n');
   return { total: chapters.length, indexable: indexable.length };
 }
 
@@ -1251,7 +1248,7 @@ function buildDynasty({ dynasty, data }) {
   const homePortrait = portraits.find((row) => row.emperor_id === 'QH-E-04' && row['展示角色'] === '默认朝服像')
     || portraits.find((row) => row['展示角色'] === '默认朝服像');
   const homeImage = homePortrait?.['预览文件'] ? new URL(homePortrait['预览文件'], siteBaseUrl).href : '';
-  const homeDescription = `AI 辅助个人研究稿（仅部分史料已回查）：${dynasty.lede}`;
+  const homeDescription = dynasty.lede;
   const homeStructured = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'WebSite', name: '清史读本',
     url: siteBaseUrl.href, inLanguage: 'zh-Hans', description: homeDescription,
@@ -1262,7 +1259,7 @@ function buildDynasty({ dynasty, data }) {
     },
   }).replace(/</g, '\\u003c');
   const discoveryMeta = `  <!-- generated-site-meta:start -->
-  <meta name="robots" content="index,follow">
+  <meta name="robots" content="noindex,follow">
   <meta name="description" content="${escHtml(homeDescription)}">
   <link rel="canonical" href="${escHtml(siteBaseUrl.href)}">
   <meta property="og:type" content="website">
@@ -1286,10 +1283,7 @@ function buildDynasty({ dynasty, data }) {
   const versionBlock = `  <!-- generated-site-version:start -->\n    ${versionTag}\n    <!-- generated-site-version:end -->`;
   indexHtml = versionRe.test(indexHtml)
     ? indexHtml.replace(versionRe, versionBlock)
-    : indexHtml.replace(
-      '<p class="foot-note">AI 辅助个人研究稿；未经专业清史学者全面审校。</p>',
-      `<p class="foot-note">AI 辅助个人研究稿；未经专业清史学者全面审校。</p>\n    ${versionTag}`,
-    );
+    : indexHtml.replace('</footer>', `  ${versionTag}\n  </footer>`);
   fs.writeFileSync(indexPath, indexHtml);
 
   const staticPages = writeStaticChapterPages({

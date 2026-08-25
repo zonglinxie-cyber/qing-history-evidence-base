@@ -8,7 +8,6 @@ import {
   imgTag,
   largestVariant,
   noEvidenceBanner,
-  researchDraftBanner,
   siteEraLabel,
   featuredSites as pickFeaturedSites,
   sortedSites as sortSites,
@@ -88,7 +87,6 @@ const VIEW_CHUNKS = {
   chronicle: ['home', REIGN_CHUNK],
   overview: ['home', REIGN_CHUNK],
   data: ['raw'],
-  review: [],
   search: ['home', 'people', REIGN_CHUNK, 'catalog', 'search'],
 };
 
@@ -478,7 +476,7 @@ function eraPage(slug) {
       else if (key === 'lanes') on = current === 'lanes' || current === 'lane';
       else if (key === 'sites') on = current === 'sites' || current === 'site';
       // 材料是一条轴，它下面四种材料页都算它亮
-      else if (key === 'material') on = ['material', 'works', 'hands', 'jiedu', 'images', 'image'].includes(current);
+      else if (key === 'material') on = ['material', 'works', 'hands', 'jiedu', 'image'].includes(current);
       else on = key === current;
       link.classList.toggle('active', on);
       if (on) link.setAttribute('aria-current', 'page');
@@ -604,7 +602,6 @@ function eraPage(slug) {
           ${source ? `<a class="link" href="#/source/${esc(source.source_id)}">来源说明</a>` : ''}
           <button class="link" type="button" data-cite-claim="${esc(claim['Assertion ID'])}">复制引用条</button>
         </p>` : ''}
-      <p class="actions">${reviewButton('claim', claim['Assertion ID'])}</p>
     `, trigger);
   }
 
@@ -628,7 +625,6 @@ function eraPage(slug) {
         <p class="quote">「${esc(claim['支持引文'])}」</p>
         <p class="actions">
           <button class="link" data-claim="${esc(claim['Assertion ID'])}">看依据</button>
-          ${reviewButton('claim', claim['Assertion ID'])}
         </p>
       </article>
     `;
@@ -782,7 +778,7 @@ function eraPage(slug) {
             ${materialCell(r.jiedu, 'jiedu', r.era)}
           </tr>`).join('')}</tbody>
       </table></div>
-      <p class="actions"><a class="link" href="#/path">276 年转轴</a> · <a class="link" href="#/sources">用过哪些材料</a> · <a class="link" href="#/how">怎么读</a></p>
+      <p class="actions"><a class="link" href="#/overview">纵着读全朝</a> · <a class="link" href="#/path">276 年转轴</a> · <a class="link" href="#/sources">用过哪些材料</a> · <a class="link" href="#/how">怎么读</a></p>
     `;
   }
 
@@ -1080,7 +1076,7 @@ function eraPage(slug) {
             </a>
           </li>`).join('')}
       </ol>
-      <p class="actions"><a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/spine/money">饷和兵</a> · <a class="link" href="#/hands">真迹手稿</a> · <a class="link" href="#/questions?type=%E8%AF%81%E6%8D%AE%E8%BE%B9%E7%95%8C">现有材料答不了</a></p>
+      <p class="actions"><a class="link" href="#/overview">纵着读全朝</a> · <a class="link" href="#/spine/power">谁坐龙椅，谁拍板</a> · <a class="link" href="#/spine/money">饷和兵</a> · <a class="link" href="#/hands">真迹手稿</a> · <a class="link" href="#/questions?type=%E8%AF%81%E6%8D%AE%E8%BE%B9%E7%95%8C">现有材料答不了</a></p>
     `;
   }
 
@@ -1341,7 +1337,6 @@ function eraPage(slug) {
         <p class="kicker">${esc(siteEraLabel(site))} · ${esc(site['事件'])}</p>
         <h1 class="site-page-title">${esc(hook)}</h1>
         <div class="image-meta-actions">
-          ${reviewButton('site', id)}
           <a class="link" href="site/${esc(id)}/">可分享链接</a>
         </div>
         <div class="dossier image-dossier site-page">
@@ -1524,33 +1519,61 @@ function eraPage(slug) {
     const claims = DATA.claims.filter((row) => row['主体 ID'] === id || row['客体 ID 或值'] === id);
     const yinreng = id === 'QH-P-000004';
     const heshen = id === 'QH-P-000124';
+
+    // 固定骨架：这一页分几块、每块多少条，进页就能看见。
+    // 原先「储位/称号/依据/对照」是四种不同层级的标记，滚下去看不出结构。
+    const sections = [];
+    const intro = [
+      yinreng ? `<p class="lede">嫡子，两岁立为太子，做了三十三年。经历了废黜、复立、再废，而拘执、颁诏、告祭都不是同一天。</p>
+        <details class="evidence-drawer"><summary>史料说明</summary><p>实录在再废当日记拘执与废黜；咸安宫地名见于后出的本纪和列传，不应把不同层次的记载合成同一日的现场纪录。</p></details>
+        <p class="actions"><a class="link" href="#/chapter/kangxi-02">读两废太子</a> · <a class="link" href="#/succession">看分日全链</a></p>` : '',
+      heshen ? `<p class="lede">太上皇崩后第五天下狱，第十五日赐死。二十条是上谕列罪，不是抄家清册。</p>
+        <details class="evidence-drawer"><summary>史料说明</summary><p>《清史稿》卷16分日；卷319转录二十大罪。已打开的列传没有「八亿两」这一总数。</p></details>
+        <p class="actions"><a class="link" href="#/chapter/jiaqing-04">读分日</a> · <a class="link" href="#/lane/QH-L-0032">对照通行说法</a></p>` : '',
+      princeCard(id),
+      princessCard(id),
+    ].filter(Boolean).join('');
+    if (intro) sections.push({ id: 'p-intro', title: '这个人', count: '', body: intro });
+
+    const heirRows = heirEventsFor(id);
+    if (heirRows.length) sections.push({
+      id: 'p-heir', title: '储位', count: `${heirRows.length} 条`,
+      body: `${heirList(heirRows)}<p class="actions"><a class="link" href="#/succession">读全链</a></p>`,
+    });
+
+    const empressRows = empressEventsFor(id);
+    if (empressRows.length) sections.push({
+      id: 'p-title', title: '称号', count: `${empressRows.length} 条`,
+      body: `${timelineList(empressRows)}<p class="actions"><a class="link" href="#/empresses">读四后全轴</a></p>`,
+    });
+
+    const lanes = lanesForPerson(id);
+    if (lanes.length) sections.push({
+      id: 'p-lane', title: '对照', count: `${lanes.length} 条`,
+      body: lanes.map(laneCard).join(''),
+    });
+
+    if (claims.length) sections.push({
+      id: 'p-claim', title: '依据', count: `${claims.length} 条`,
+      body: `<p class="muted">这个人名下的原文出处，按库中顺序。</p>${claims.map(claimCard).join('')}`,
+    });
+
     return `
       <p class="kicker">${esc(person['人物类型'] || '人物')}</p>
       <h1>${esc(person['规范名'].replace(/^爱新觉罗·/, ''))}</h1>
       <p class="lede">${esc(person['常用名或异名'] || '')}</p>
       <p class="crumb"><a class="link" href="person/${esc(id)}/">可分享链接</a></p>
       ${personPortraitBlock(id)}
+      ${sections.length > 1 ? `<nav class="chapter-toc" aria-label="本页目录">
+        <p class="toc-label">本页分 ${sections.length} 块</p>
+        <ol>${sections.map((sec) => `<li><button type="button" class="link" data-scroll="${sec.id}">${esc(sec.title)}${sec.count ? ` <span class="muted">${esc(sec.count)}</span>` : ''}</button></li>`).join('')}</ol>
+      </nav>` : ''}
       <div class="reading">
-        ${yinreng ? `<p class="lede">嫡子，两岁立为太子，做了三十三年。经历了废黜、复立、再废，而拘执、颁诏、告祭都不是同一天。</p>
-        <details class="evidence-drawer"><summary>史料说明</summary><p>实录在再废当日记拘执与废黜；咸安宫地名见于后出的本纪和列传，不应把不同层次的记载合成同一日的现场纪录。</p></details>
-        <p class="actions"><a class="link" href="#/chapter/kangxi-02">读两废太子</a> · <a class="link" href="#/succession">看分日全链</a></p>` : ''}
-        ${heshen ? `<p class="lede">太上皇崩后第五天下狱，第十五日赐死。二十条是上谕列罪，不是抄家清册。</p>
-        <details class="evidence-drawer"><summary>史料说明</summary><p>《清史稿》卷16分日；卷319转录二十大罪。已打开的列传没有「八亿两」这一总数。</p></details>
-        <p class="actions"><a class="link" href="#/chapter/jiaqing-04">读分日</a> · <a class="link" href="#/lane/QH-L-0032">对照通行说法</a></p>` : ''}
-        ${princeCard(id)}
-        ${princessCard(id)}
-        ${heirEventsFor(id).length ? `<div class="thread-block">
-          <h2>储位</h2>
-          ${heirList(heirEventsFor(id))}
-          <p class="actions"><a class="link" href="#/succession">读全链</a></p>
-        </div>` : ''}
-        ${empressEventsFor(id).length ? `<div class="thread-block">
-          <h2>称号</h2>
-          ${timelineList(empressEventsFor(id))}
-          <p class="actions"><a class="link" href="#/empresses">读四后全轴</a></p>
-        </div>` : ''}
-        ${claims.length ? `<details class="claims-drawer"><summary>依据 ${claims.length} 条</summary>${claims.map(claimCard).join('')}</details>` : ''}
-        ${lanesForPerson(id).length ? `<h2>对照</h2>${lanesForPerson(id).map(laneCard).join('')}` : ''}
+        ${sections.map((sec) => `
+          <section class="person-section">
+            <h2 id="${sec.id}">${esc(sec.title)}${sec.count ? ` <span class="muted">${esc(sec.count)}</span>` : ''}</h2>
+            ${sec.body}
+          </section>`).join('')}
       </div>
     `;
   }
@@ -1921,16 +1944,6 @@ function eraPage(slug) {
         <p class="lede">六月先择吉，十二月才册立。四十七年九月，驻跸、拘执、颁诏，隔了二十天，放出来不等于又立回去。五十一年再废，实录写成两天。</p>
         <p class="crumb"><a class="link" href="#/kangxi">康熙朝</a> · <a class="link" href="#/chapter/kangxi-02">两废太子</a></p>
       </div>
-      <aside class="gap-card">
-        <h2>咸安宫</h2>
-        <p>本纪和列传写他再废后关在这里。实录那两天只写拘执、废黜，没有这个地名。</p>
-        <p>起居注该日还没打开。所以地点只记在后出的那一层，不提前写进实录。</p>
-      </aside>
-      <aside class="gap-card">
-        <h2>别朝的继位层</h2>
-        <p>本页数康熙一条链。别的继位文本在各自章里：<a class="link" href="#/chapter/yongzheng-07">雍正·十三日崩逝到二十日即位</a>、<a class="link" href="#/chapter/daoguang-04">道光·密匣两启</a>、<a class="link" href="#/chapter/xianfeng-01">咸丰·序层回銮</a>、<a class="link" href="#/chapter/guangxu-01">光绪·懿旨立嗣</a>、<a class="link" href="#/chapter/xuantong-01">宣统·退位诏</a>。匣、旨、诏，生产者各不相同。</p>
-        <p>清代自己排过一次序：<a class="link" href="#/chapter/qianlong-01">乾隆传位诏</a>把口谕、密缄、明诏摆成一排，「以今视昔，孰逾于此」。排序者是乾隆，自述非公论——但枢纽的四种文本，本朝人自己也对过账。</p>
-      </aside>
       <div class="filters">
         ${['全部', ...HEIR_THREADS.map((item) => item.key)].map((item) => {
           const label = item === '全部' ? '全链' : (HEIR_THREADS.find((thread) => thread.key === item)?.title || item);
@@ -1947,6 +1960,17 @@ function eraPage(slug) {
             ${heirList(rows)}
           </section>`;
       }).join('')}
+      <h2 class="src-title">补注</h2>
+      <aside class="gap-card">
+        <h2>咸安宫</h2>
+        <p>本纪和列传写他再废后关在这里。实录那两天只写拘执、废黜，没有这个地名。</p>
+        <p>起居注该日还没打开。所以地点只记在后出的那一层，不提前写进实录。</p>
+      </aside>
+      <aside class="gap-card">
+        <h2>别朝的继位层</h2>
+        <p>本页数康熙一条链。别的继位文本在各自章里：<a class="link" href="#/chapter/yongzheng-07">雍正·十三日崩逝到二十日即位</a>、<a class="link" href="#/chapter/daoguang-04">道光·密匣两启</a>、<a class="link" href="#/chapter/xianfeng-01">咸丰·序层回銮</a>、<a class="link" href="#/chapter/guangxu-01">光绪·懿旨立嗣</a>、<a class="link" href="#/chapter/xuantong-01">宣统·退位诏</a>。匣、旨、诏，生产者各不相同。</p>
+        <p>清代自己排过一次序：<a class="link" href="#/chapter/qianlong-01">乾隆传位诏</a>把口谕、密缄、明诏摆成一排，「以今视昔，孰逾于此」。排序者是乾隆，自述非公论——但枢纽的四种文本，本朝人自己也对过账。</p>
+      </aside>
       <p class="actions"><a class="link" href="#/person/QH-P-000004">胤礽</a> · <a class="link" href="#/lanes">对照</a> · <a class="link" href="#/princes">皇子</a></p>
     `;
   }
@@ -2001,7 +2025,6 @@ function eraPage(slug) {
       <p class="kicker">${esc({ 后宫制度: '后宫制度', 野史对照: '传闻', 罕读史料: '罕读史料', 宫中治理: '宫中治理', 笔法: '笔法' }[row['栏目']] || row['栏目'])}</p>
       <h1>${esc(row['标题'])}</h1>
       <p class="crumb"><a class="link" href="lane/${esc(id)}/">可分享链接</a></p>
-      <p class="actions">${reviewButton('lane', id)}</p>
       ${laneCard(row)}
       ${questions.length ? `<h2>这类问题</h2>${questions.map((item) => questionCard(item)).join('')}` : ''}
       <p class="actions"><a class="link" href="#/lanes">回到对照</a> ${laneHref(row['来源入口'])}</p>
@@ -2009,23 +2032,96 @@ function eraPage(slug) {
     `;
   }
 
+  // 依据页：全部 = 来源索引（不再一次铺 881 张卡），选中某部书才展开卷次和条目
+  function claimSourceName(claim) {
+    return unitById.get(claim['来源实体 ID'])?.['史料名'] || '未标注来源';
+  }
+
+  function claimsBySource() {
+    const map = new Map();
+    (DATA.claims || []).forEach((row) => {
+      const name = claimSourceName(row);
+      if (!map.has(name)) map.set(name, []);
+      map.get(name).push(row);
+    });
+    return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+  }
+
   function claimsPage(query) {
-    const selected = query.unit || '全部';
-    const units = ['全部', ...DATA.units.map((row) => row.source_unit_id)];
-    const rows = DATA.claims.filter((row) => selected === '全部' || row['来源实体 ID'] === selected);
-    return `
+    // 兼容 #/claims?unit=QH-SU-XXX：章节页和静态分享页仍在生成这种旧链接
+    if (query.unit && !query.src) {
+      const unit = unitById.get(query.unit);
+      if (unit) query = { ...query, src: unit['史料名'] || '', vol: unit['卷次'] || '' };
+    }
+    const groups = claimsBySource();
+    const total = (DATA.claims || []).length;
+    const src = query.src || '';
+    const head = `
       <div class="page-head">
         <h1>依据</h1>
       </div>
-      <p class="lede">一条主张对应一句原文、一个出处。可按来源卷次筛选。</p>
-      <div class="filters">
-        ${units.map((item) => {
-          const rec = unitById.get(item);
-          const label = item === '全部' ? '全部' : `${rec?.['史料名'] || ''} ${rec?.['卷次'] || item}`.trim();
-          return `<button type="button" data-unit="${esc(item)}" class="${item === selected ? 'on' : ''}" aria-pressed="${item === selected}">${esc(label)}</button>`;
-        }).join('')}
-      </div>
-      ${rows.map(claimCard).join('')}
+      <p class="lede">一条主张对应一句原文、一个出处。全库 ${total} 条，来自 ${groups.length} 种史料。</p>`;
+
+    // 一级：没选书时只给来源索引，不渲染条目
+    if (!src) {
+      return `
+        ${head}
+        <nav class="src-index" aria-label="按史料看">
+          ${groups.map(([name, rows]) => `
+            <button type="button" class="src-row" data-src="${esc(name)}">
+              <span class="src-name">${esc(name)}</span>
+              <span class="src-count">${rows.length}</span>
+            </button>`).join('')}
+        </nav>`;
+    }
+
+    const rows = (DATA.claims || []).filter((row) => claimSourceName(row) === src);
+    if (!rows.length) {
+      return `${head}<p class="empty">没有「${esc(src)}」的依据。</p>
+        <p class="actions"><button type="button" class="link" data-src="全部">回到来源索引</button></p>`;
+    }
+
+    // 二级：卷次。同名卷次合并，按条数排
+    const volMap = new Map();
+    rows.forEach((row) => {
+      const vol = unitById.get(row['来源实体 ID'])?.['卷次'] || '未分卷';
+      if (!volMap.has(vol)) volMap.set(vol, []);
+      volMap.get(vol).push(row);
+    });
+    // 卷次混用阿拉伯数字（卷6）和中文数字（卷之二十一），两种都要能排
+    const volNum = (name) => {
+      const raw = String(name);
+      const arab = raw.match(/\d+/);
+      if (arab) return Number(arab[0]);
+      const digits = { 零: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+      const cn = raw.replace(/^卷之?/, '').match(/[零一二三四五六七八九十百]+/);
+      if (!cn) return Number.MAX_SAFE_INTEGER;
+      let section = 0;
+      let current = 0;
+      for (const ch of cn[0]) {
+        if (ch in digits) { current = digits[ch]; continue; }
+        if (ch === '十') { section += (current || 1) * 10; current = 0; continue; }
+        if (ch === '百') { section += (current || 1) * 100; current = 0; continue; }
+      }
+      return (section + current) || Number.MAX_SAFE_INTEGER;
+    };
+    const vols = [...volMap.entries()].sort((a, b) => volNum(a[0]) - volNum(b[0]) || a[0].localeCompare(b[0], 'zh'));
+    const vol = query.vol || '';
+    const shown = vol && volMap.has(vol) ? [[vol, volMap.get(vol)]] : vols;
+
+    return `
+      ${head}
+      <p class="crumb"><button type="button" class="link" data-src="全部">← 全部来源</button></p>
+      <h2 class="src-title">${esc(src)} <span class="muted">${rows.length} 条</span></h2>
+      ${vols.length > 1 ? `<div class="filters">
+        <button type="button" data-vol="全部" class="${vol ? '' : 'on'}" aria-pressed="${!vol}">全部卷次</button>
+        ${vols.map(([name, list]) => `<button type="button" data-vol="${esc(name)}" class="${name === vol ? 'on' : ''}" aria-pressed="${name === vol}">${esc(name)} <span class="muted">${list.length}</span></button>`).join('')}
+      </div>` : ''}
+      ${shown.map(([name, list]) => `
+        <section class="claim-group">
+          <h3 class="group-head">${esc(name)} <span class="muted">${list.length} 条</span></h3>
+          ${list.map(claimCard).join('')}
+        </section>`).join('')}
     `;
   }
 
@@ -2155,9 +2251,8 @@ function eraPage(slug) {
     const compact = short ? extractLeadingEvidenceDrawers(expandedBody) : { drawers: [], body: expandedBody };
     const body = compact.body;
     const toc = short ? [] : chapterToc(body);
-    const compactMeta = short && (chapter.draft || compact.drawers.length) ? `
+    const compactMeta = short && compact.drawers.length ? `
       <div class="chapter-meta-row" aria-label="本章研究说明">
-        ${chapter.draft ? `<details class="chapter-meta-item research-meta"><summary>研究状态</summary>${researchDraftBanner('chapter')}</details>` : ''}
         ${compact.drawers.join('')}
       </div>` : '';
     return `
@@ -2166,14 +2261,13 @@ function eraPage(slug) {
         <p class="kicker">${esc(chapter.era)}</p>
         <h1>${esc(chapter.title)}</h1>
         <p class="lede">${noOrphan(chapter.lede)}</p>
-        ${short ? compactMeta : (chapter.draft ? researchDraftBanner('chapter') : '')}
         <p class="crumb"><a class="link" href="${esc(home)}">${esc(homeLabel)}</a> · <a class="link" href="chapter/${esc(chapter.slug)}/">可分享链接</a></p>
-        <p class="actions">${reviewButton('chapter', chapter.slug)}</p>
       </div>
       ${toc.length ? `<nav class="chapter-toc" aria-label="本章目录">
         <p class="toc-label">本章目录</p>
         <ol>${toc.map((item) => `<li><button type="button" class="link" data-scroll="${esc(item.id)}">${esc(item.title)}</button></li>`).join('')}</ol>
       </nav>` : ''}
+      ${short ? compactMeta : ''}
       <div class="chapter-body">
       <div class="md">${body}</div>
       ${units.length ? `<section class="chapter-evidence">
@@ -2191,8 +2285,26 @@ function eraPage(slug) {
 
   function overviewPage(slug) {
     const list = DATA.overviews || [];
-    const ov = list.find((row) => row.slug === slug) || (slug ? null : list[0]);
-    if (!ov) return `<h1>未找到专题 ${esc(slug || '')}</h1><p><a href="#/">回十二帝</a></p>`;
+    // 没给篇名时给索引，而不是默默显示第一篇——这 5 篇原先全站没有入口
+    if (!slug) {
+      const sorted = list.slice().sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
+      return `
+        <p class="kicker">脉络</p>
+        <h1>纵着读全朝</h1>
+        <p class="lede">十二帝不按朝分开看，而是横过来排：谁做了什么、争议在哪、原文怎么读。共 ${sorted.length} 篇。</p>
+        <ol class="threads">
+          ${sorted.map((row) => `
+            <li>
+              <a class="thread" href="#/overview/${esc(row.slug)}">
+                <h2>${esc(row.title)}</h2>
+                <p>${esc(row.lede || '')}</p>
+              </a>
+            </li>`).join('')}
+        </ol>
+        <p class="actions"><a class="link" href="#/path">转轴年</a> · <a class="link" href="#/material">材料</a> · <a class="link" href="#/">回十二帝</a></p>`;
+    }
+    const ov = list.find((row) => row.slug === slug);
+    if (!ov) return `<h1>未找到专题 ${esc(slug || '')}</h1><p class="actions"><a class="link" href="#/overview">回脉络目录</a></p>`;
     const body = expandConflicts(ov.bodyHtml || '');
     const toc = chapterToc(body);
     const siblings = list.slice().sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
@@ -2205,8 +2317,7 @@ function eraPage(slug) {
         <p class="kicker">脉络</p>
         <h1>${esc(ov.title)}</h1>
         <p class="lede">${noOrphan(ov.lede)}</p>
-        ${researchDraftBanner('chapter')}
-        <p class="crumb"><a class="link" href="#/">回十二帝</a></p>
+        <p class="crumb"><a class="link" href="#/overview">回脉络目录</a> · <a class="link" href="#/">回十二帝</a></p>
       </div>
       ${toc.length ? `<nav class="chapter-toc" aria-label="本章目录">
         <p class="toc-label">本章目录</p>
@@ -2324,10 +2435,6 @@ function eraPage(slug) {
   }
 
   // 旧的画像总览链接保留为别名，和 #/hands 渲染同一份完整清单。
-  function imagesPage(query = {}) {
-    return handsPage(query);
-  }
-
   function imagePage(id) {
     const portrait = portraitById.get(id);
     if (!portrait) return `<h1>未找到图像 ${esc(id)}</h1>`;
@@ -2371,7 +2478,6 @@ function eraPage(slug) {
           <h1>${esc(portrait['对象标题'])}</h1>
           ${hook ? `<p class="lede">${esc(hook)}</p>` : ''}
           <div class="image-meta-actions">
-            ${reviewButton('image', id)}
             <a class="link" href="image/${esc(id)}/">可分享链接</a>
           </div>
         </div>
@@ -2468,6 +2574,14 @@ function eraPage(slug) {
     return `<span class="open-state">${esc(state || '馆藏入口')}</span>`;
   }
 
+  // 卡片正文统一截 3 行：文献里有把上百个碑文名全列进来的条目，不截就把网格撑塌
+  function longDesc(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return '';
+    if (raw.length <= 90) return `<p class="work-desc">${esc(raw)}</p>`;
+    return `<div class="clamp"><p class="work-desc">${esc(raw)}</p><button type="button" class="link clamp-toggle" data-clamp>展开</button></div>`;
+  }
+
   function worksPage(query = {}) {
     const only = query.era || '';
     const works = DATA.works || [];
@@ -2477,10 +2591,10 @@ function eraPage(slug) {
       return `
       <article class="card work-card">
         <div class="meta">
-          <div class="era">${esc(w['文献类型'])} · ${esc(w['成书年代'])} · ${openStateChip(w.availability)}</div>
+          <div class="work-kicker">${esc(w['文献类型'])} · ${esc(w['成书年代'])} · ${openStateChip(w.availability)}</div>
           <h2>${esc(w['文献名称'])}</h2>
-          ${w['卷数'] ? `<p class="muted">${esc(w['卷数'])}</p>` : ''}
-          <p>${esc(w['内容概述'])}</p>
+          ${w['卷数'] ? `<p class="muted work-vol">${esc(w['卷数'])}</p>` : ''}
+          ${longDesc(w['内容概述'])}
           <p class="actions">
             ${w['dedicated_chapter'] ? `<a class="link" href="#/chapter/${esc(w['dedicated_chapter'])}">读专论</a>` : ''}
             ${safeUrl(w['来源入口']) ? `<a class="link" href="${esc(safeUrl(w['来源入口']))}" target="_blank" rel="noopener">${esc(entryLabel)}</a>` : ''}
@@ -2750,7 +2864,7 @@ function eraPage(slug) {
           <h2 id="how-10">物质层</h2>
           <p>条约先是物质，再是文本。曾纪泽在彼得堡改约，日记里记的是：外部送来写约的纸，尺寸比先前加大，连日画的格全不合；写约的硬纸，打算用糖板印底再写，试演良久。画押那天，「遂将条约章程、卡伦单专条画押盖印，酉初二刻毕」。纸的尺寸、格的画法、试写的笔，都是交涉的一部分——读条约，问一句它是怎么被写出来的。</p>
         </div>
-        <p class="actions"><a class="link" href="#/chapter/yongzheng-04">大义觉迷录</a> · <a class="link" href="#/chapter/yongzheng-02">朱批三批</a> · <a class="link" href="#/chapter/kangxi-13">庭训格言</a> · <a class="link" href="#/chapter/daoguang-04">密匣两启</a> · <a class="link" href="#/chapter/xianfeng-01">咸丰遗诏</a> · <a class="link" href="#/chapter/xuantong-01">退位诏</a> · <a class="link" href="#/path">转轴年</a></p>
+        <p class="actions"><a class="link" href="#/chapter/yongzheng-04">大义觉迷录</a> · <a class="link" href="#/chapter/yongzheng-02">朱批三批</a> · <a class="link" href="#/chapter/kangxi-13">庭训格言</a> · <a class="link" href="#/chapter/daoguang-04">密匣两启</a> · <a class="link" href="#/chapter/xianfeng-01">咸丰遗诏</a> · <a class="link" href="#/chapter/xuantong-01">退位诏</a> · <a class="link" href="#/path">转轴年</a> · <a class="link" href="#/overview">纵着读全朝</a></p>
       </div>
     `;
   }
@@ -2786,7 +2900,7 @@ function eraPage(slug) {
       .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
   }
 
-  // ===== 开闸 v0.1：数据浏览器（#/data） + 存疑标记（#/review / 标存疑） =====
+  // ===== 数据浏览器（#/data）：40 张原始表的校对视图 =====
 
   const KIND_LABELS = {
     emperors: '帝王', research_cards: '研究卡', portraits: '画像', image_regions: '图像区域',
@@ -2798,163 +2912,6 @@ function eraPage(slug) {
     conflict_sets: '冲突组', community_corrections: '社区纠错', overview: '综述',
     emperor_timeline: '统治年表',
   };
-
-  const REVIEW_KEY = 'qh-review-notes';
-  const REVIEW_TYPE_LABEL = { claim: '主张', chapter: '章节', lane: '对照', site: '今地' };
-
-  function loadReviewNotes() {
-    try {
-      const raw = JSON.parse(localStorage.getItem(REVIEW_KEY) || '[]');
-      return Array.isArray(raw) ? raw : [];
-    } catch { return []; }
-  }
-  function saveReviewNotes(list) {
-    try { localStorage.setItem(REVIEW_KEY, JSON.stringify(list)); } catch { /* ignore */ }
-  }
-  function reviewNoteFor(type, id) {
-    return loadReviewNotes().find((n) => n.target_type === type && n.target_id === id);
-  }
-  function reviewButton(type, id) {
-    const note = reviewNoteFor(type, id);
-    const when = String(note?.updated_at || note?.created_at || '').slice(0, 10);
-    return note
-      ? `<button type="button" class="review-mark set" data-review="${esc(type)}:${esc(id)}">已标存疑${when ? `（${esc(when)}）` : ''}</button>`
-      : `<button type="button" class="review-mark" data-review="${esc(type)}:${esc(id)}">标存疑</button>`;
-  }
-  function reviewHref(n) {
-    if (n.target_type === 'claim') return `#/claim/${encodeURIComponent(n.target_id)}`;
-    if (n.target_type === 'chapter') return `#/chapter/${encodeURIComponent(n.target_id)}`;
-    if (n.target_type === 'lane') return `#/lane/${encodeURIComponent(n.target_id)}`;
-    if (n.target_type === 'site') return `#/site/${encodeURIComponent(n.target_id)}`;
-    return '#/';
-  }
-
-  function makeGithubIssueUrl(n) {
-    const targetLabel = REVIEW_TYPE_LABEL[n.target_type] || n.target_type;
-    let targetDetails = '';
-    if (n.target_type === 'claim') {
-      const claim = claimById.get(n.target_id);
-      if (claim) targetDetails = `\n- 相关表述: ${claim['主体 ID'] ? personName(claim['主体 ID']) : ''} ${predicateLabel(claim['谓词/关系'])} ${claim['客体 ID 或值'] || ''}\n- 支持引文: 「${claim['支持引文'] || ''}」\n- 史料来源: ${claim['来源实体 ID'] || ''}`;
-    } else if (n.target_type === 'chapter') {
-      const ch = (DATA.chapters || []).find((c) => c.slug === n.target_id);
-      if (ch) targetDetails = `\n- 章节标题: ${ch.title || n.target_id}`;
-    } else if (n.target_type === 'lane') {
-      const ln = (DATA.lanes || []).find((l) => l.lane_id === n.target_id);
-      if (ln) targetDetails = `\n- 对照标题: ${ln['标题'] || n.target_id}\n- 官书表述: ${ln['官书或档案怎么写'] || ''}`;
-    } else if (n.target_type === 'site') {
-      const st = (DATA.sites || []).find((s) => s.site_id === n.target_id);
-      if (st) targetDetails = `\n- 遗址名称: ${st['遗址名称'] || n.target_id}\n- 现存位置: ${st['现存位置'] || ''}`;
-    }
-    const body = `### 出错位置
-${n.target_id} (${targetLabel})${targetDetails}
-
-### 当前表述
-存疑原因：${n.reason || '暂不确定'}
-
-### 你的修正
-${n.note || '（请在此补充修正内容）'}
-
-### 证据来源
-（请在此补充史料名、卷次或在线链接，无证据的修正不予采纳）
-
-### 你与该材料的熟悉程度
-我核对过原文
-`;
-    const title = `[纠错] ${targetLabel} ${n.target_id}`;
-    return `https://github.com/zonglinxie-cyber/qing-history-evidence-base/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=content-correction`;
-  }
-
-  let reviewTarget = { type: '', id: '' };
-  const noteDialogEl = document.getElementById('note-dialog');
-  function openReviewDialog(type, id) {
-    reviewTarget = { type, id };
-    const note = reviewNoteFor(type, id);
-    const target = document.getElementById('note-target');
-    if (target) target.textContent = `${REVIEW_TYPE_LABEL[type] || type} · ${id}`;
-    const form = document.getElementById('note-form');
-    if (form && typeof form.reset === 'function') form.reset();
-    const radios = [...(noteDialogEl?.querySelectorAll?.('input[name="note-reason"]') || [])];
-    const pick = radios.find((r) => r.value === (note?.reason || '暂不确定'));
-    if (pick) pick.checked = true;
-    const text = document.getElementById('note-text');
-    if (text) text.value = note?.note || '';
-    const removeBtn = document.getElementById('note-remove');
-    if (removeBtn) removeBtn.hidden = !note;
-    const ghBtn = document.getElementById('note-github-issue');
-    if (ghBtn) {
-      ghBtn.href = makeGithubIssueUrl({ target_type: type, target_id: id, reason: note?.reason, note: note?.note });
-    }
-    openModal(noteDialogEl);
-  }
-  function saveReviewNote() {
-    const reason = noteDialogEl?.querySelector?.('input[name="note-reason"]:checked')?.value || '暂不确定';
-    const text = document.getElementById('note-text');
-    const note = String(text?.value || '').trim();
-    const now = new Date().toISOString().slice(0, 10);
-    const list = loadReviewNotes();
-    const existing = list.find((n) => n.target_type === reviewTarget.type && n.target_id === reviewTarget.id);
-    if (existing) {
-      existing.reason = reason;
-      existing.note = note;
-      existing.updated_at = now;
-    } else {
-      list.push({ target_type: reviewTarget.type, target_id: reviewTarget.id, reason, note, created_at: now, updated_at: now });
-    }
-    saveReviewNotes(list);
-    closeModal(noteDialogEl);
-    render();
-  }
-  function removeReviewNote() {
-    saveReviewNotes(loadReviewNotes().filter((n) => !(n.target_type === reviewTarget.type && n.target_id === reviewTarget.id)));
-    closeModal(noteDialogEl);
-    render();
-  }
-  function exportReviewNotes() {
-    const fields = ['target_type', 'target_id', 'reason', 'note', 'created_at'];
-    const csvRows = [fields.join(',')].concat(
-      loadReviewNotes().map((n) => fields.map((f) => {
-        const s = String(n[f] ?? '');
-        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-      }).join(',')),
-    );
-    const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'review-notes.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-  function clearReviewNotes() {
-    if (typeof confirm === 'function' && !confirm('确定清空全部本地存疑标注？此操作不可撤销。')) return;
-    saveReviewNotes([]);
-    render();
-  }
-
-  function reviewPage() {
-    const notes = loadReviewNotes().slice()
-      .sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')));
-    const list = notes.map((n) => `
-      <article class="review-note">
-        <p class="sentence">${esc(REVIEW_TYPE_LABEL[n.target_type] || n.target_type)} · <a class="link" href="${esc(reviewHref(n))}">${esc(n.target_id)}</a></p>
-        <div class="chips"><span class="chip">${esc(n.reason)}</span><span class="chip muted">${esc(n.updated_at || n.created_at)}</span></div>
-        ${n.note ? `<p class="bound">${esc(n.note)}</p>` : ''}
-        <div class="review-actions">
-          <a class="link" target="_blank" rel="noopener" href="${esc(makeGithubIssueUrl(n))}">一键向 GitHub 提 Issue 纠错 ↗</a>
-          <a class="link" href="${esc(reviewHref(n))}">回页面查看</a>
-        </div>
-      </article>`).join('');
-    return `
-      <p class="kicker">存疑</p>
-      <h1>本地存疑标注${notes.length ? `（${notes.length}）` : ''}</h1>
-      <p class="lede">按时间倒序列出这台浏览器里标过的存疑项。数据只存 localStorage，不上传、不改仓库。</p>
-      <p class="actions">${notes.length ? `<button type="button" class="link" data-export-notes>导出 review-notes.csv</button><button type="button" class="link" data-clear-notes>一键清空</button>` : ''}</p>
-      ${notes.length ? `<div class="review-list">${list}</div>` : '<p class="muted">还没有存疑标注。到主张、章节、对照或今地页点「标存疑」即可记录。</p>'}
-      <p class="muted">本地标注不会自动同步；如需沉淀，把导出的 review-notes.csv 放入 data/ 后重新构建，或直接点击条目下方的「一键向 GitHub 提 Issue 纠错」。</p>
-    `;
-  }
 
   let dataState = { file: '', q: '', fcol: '', fval: '', sort: null, desc: false };
   function dataTables() { return (DATA.raw && DATA.raw.tables) || []; }
@@ -2991,7 +2948,6 @@ ${n.note || '（请在此补充修正内容）'}
             <ul class="data-files">${group.map((t) => `<li><a class="link" href="#/data?file=${encodeURIComponent(t.file)}">${esc(t.file)}</a> <span class="muted">${t.columns.length} 列 · ${t.rows.length} 行${t.reign ? ` · ${esc(t.reign)}` : ''}</span></li>`).join('')}</ul>
           </section>`;
         }).join('')}
-        <p class="actions"><a class="link" href="#/review">本地存疑标注</a></p>
       `;
     }
     const table = dataTableByFile(file);
@@ -3063,17 +3019,19 @@ ${n.note || '（请在此补充修正内容）'}
     }
   });
 
-  noteDialogEl?.addEventListener('cancel', (event) => { event.preventDefault(); closeModal(noteDialogEl); });
-  noteDialogEl?.addEventListener('click', (event) => { if (event.target === noteDialogEl) closeModal(noteDialogEl); });
-  document.getElementById('note-cancel')?.addEventListener('click', () => closeModal(noteDialogEl));
-  document.getElementById('note-remove')?.addEventListener('click', removeReviewNote);
-  document.getElementById('note-form')?.addEventListener('submit', (event) => { event.preventDefault(); saveReviewNote(); });
 
   let renderGen = 0;
+  let prevView = null;
   async function render() {
     const gen = ++renderGen;
     closeDrawer();
     const { parts, query, path } = parseHash();
+    // #/images 是像与物的旧地址。站点公开发布过，外部可能还有老链接，
+    // 所以留一行改道，而不是让它落到「没有这个页面」。
+    if (parts[0] === 'images') {
+      location.replace(`#/hands${location.hash.includes('?') ? `?${location.hash.split('?')[1]}` : ''}`);
+      return;
+    }
     setNav(path === '/' ? '/' : `/${parts[0]}`);
     const view = parts[0] || '';
     const isHome = !view;
@@ -3108,7 +3066,6 @@ ${n.note || '（请在此补充修正内容）'}
     }
     else if (view === 'questions') html = questionsPage(query);
     else if (view === 'question') html = questionPage(parts[1]);
-    else if (view === 'images') html = imagesPage(query);
     else if (view === 'image') html = imagePage(parts[1]);
     else if (view === 'hands') html = handsPage(query);
     else if (view === 'sites') html = sitesPage(query);
@@ -3132,12 +3089,11 @@ ${n.note || '（请在此补充修正内容）'}
     else if (view === 'chronicle') html = chroniclePage(parts[1]);
     else if (view === 'overview') html = overviewPage(parts[1]);
     else if (view === 'data') html = dataPage(query);
-    else if (view === 'review') html = reviewPage();
     else html = `<h1>没有这个页面</h1><p><a href="#/">回首页</a></p>`;
     // 版心分档：读栏给纯文字页，表栏给分栏/年表，满栏只给卡片网格。
     // 原先只有朝代页和逐解收窄，其余一律 70rem 硬撑，右半边是空的。
-    const FULL_VIEWS = new Set(['sites', 'works', 'images', 'people', 'princes', 'princesses', 'empresses', 'data']);
-    const TABLE_VIEWS = new Set(['material', 'lanes', 'person', 'chronicle', 'claims', 'succession', 'search', 'sources', 'review', 'image', 'site', 'hands']);
+    const FULL_VIEWS = new Set(['sites', 'works', 'people', 'princes', 'princesses', 'empresses', 'data']);
+    const TABLE_VIEWS = new Set(['material', 'lanes', 'person', 'chronicle', 'claims', 'succession', 'search', 'sources', 'image', 'site', 'hands']);
     const isEmperorRoute = Boolean(DYNASTY.eras[view] || (view === 'person' && emperorByPerson.has(parts[1])));
     // 按内容性质分档，不按页面分：同一帝王的年号路由和旧人物路由共用 era 壳。
     main.dataset.layout = isHome || FULL_VIEWS.has(view)
@@ -3157,16 +3113,11 @@ ${n.note || '（请在此补充修正内容）'}
     void main.offsetWidth;
     main.classList.add('enter');
     const routeKey = location.hash || '#/';
-    const skipTop = /[?&](unit|qtype|era)=/.test(routeKey);
-    let saved = 0;
-    try { saved = Number(sessionStorage.getItem(`scroll:${routeKey}`) || 0); } catch (err) { saved = 0; }
-    if (skipTop) {
-      /* keep current offset for filter-only routes */
-    } else if (saved > 0) {
-      window.scrollTo(0, saved);
-    } else {
-      window.scrollTo(0, 0);
-    }
+    // 只有「同一页内换筛选」才保留当前滚动位置。
+    // 原先所有路由都恢复 sessionStorage 里的旧位置，换页回来会落在半空中，像页面坏了。
+    const skipTop = /[?&](src|vol|qtype|era|group|type)=/.test(routeKey) && prevView === view;
+    if (!skipTop) window.scrollTo(0, 0);
+    prevView = view;
     main.focus({ preventScroll: true });
     initOsdViewers();
     highlightToc();
@@ -3339,17 +3290,6 @@ ${n.note || '（请在此补充修正内容）'}
       renderDataTbody();
       return;
     }
-    const reviewBtn = event.target.closest('[data-review]');
-    if (reviewBtn) {
-      const raw = reviewBtn.getAttribute('data-review');
-      const sep = raw.indexOf(':');
-      openReviewDialog(raw.slice(0, sep), raw.slice(sep + 1));
-      return;
-    }
-    const exportBtn = event.target.closest('[data-export-notes]');
-    if (exportBtn) { exportReviewNotes(); return; }
-    const clearBtn = event.target.closest('[data-clear-notes]');
-    if (clearBtn) { clearReviewNotes(); return; }
     const citeBtn = event.target.closest('[data-cite-claim]');
     if (citeBtn) {
       const claim = claimById.get(citeBtn.getAttribute('data-cite-claim'));
@@ -3371,6 +3311,13 @@ ${n.note || '（请在此补充修正内容）'}
       render();
       return;
     }
+    const clampBtn = event.target.closest('[data-clamp]');
+    if (clampBtn) {
+      const box = clampBtn.closest('.clamp');
+      const open = box.classList.toggle('open');
+      clampBtn.textContent = open ? '收起' : '展开';
+      return;
+    }
     const claimBtn = event.target.closest('[data-claim]');
     if (claimBtn) {
       const claim = claimById.get(claimBtn.getAttribute('data-claim'));
@@ -3383,10 +3330,19 @@ ${n.note || '（请在此补充修正内容）'}
       location.hash = group === '全部' ? '#/people' : `#/people?group=${encodeURIComponent(group)}`;
       return;
     }
-    const unit = event.target.closest('[data-unit]');
-    if (unit) {
-      const id = unit.getAttribute('data-unit');
-      location.hash = id === '全部' ? '#/claims' : `#/claims?unit=${encodeURIComponent(id)}`;
+    const srcBtn = event.target.closest('[data-src]');
+    if (srcBtn) {
+      const id = srcBtn.getAttribute('data-src');
+      location.hash = id === '全部' ? '#/claims' : `#/claims?src=${encodeURIComponent(id)}`;
+      return;
+    }
+    const volBtn = event.target.closest('[data-vol]');
+    if (volBtn) {
+      const id = volBtn.getAttribute('data-vol');
+      const cur = parseHash().query.src || '';
+      location.hash = id === '全部'
+        ? `#/claims?src=${encodeURIComponent(cur)}`
+        : `#/claims?src=${encodeURIComponent(cur)}&vol=${encodeURIComponent(id)}`;
       return;
     }
     const qtype = event.target.closest('[data-qtype]');
@@ -3516,10 +3472,5 @@ ${n.note || '（请在此补充修正内容）'}
   });
 
   history.scrollRestoration = 'manual';
-  let lastHash = location.hash || '#/';
-  window.addEventListener('hashchange', () => {
-    try { sessionStorage.setItem(`scroll:${lastHash}`, String(window.scrollY)); } catch (err) { /* ignore */ }
-    lastHash = location.hash || '#/';
-    render();
-  });
+  window.addEventListener('hashchange', render);
   render();

@@ -147,10 +147,9 @@ check('材料页收齐三种材料', ['#/works', '#/hands', '#/jiedu']
 check('材料页按朝可下钻', materialOut.includes('#/works?era=') && materialOut.includes('#/jiedu?era='));
 check('首页不叠六期评传入口', !homeHtmlOut.includes('由浅入深读全朝') && !homeHtmlOut.includes('#/overview/periods'));
 check('首页不写结构化证据仪表', !homeHtmlOut.includes('尚无结构化证据'));
-check('首页醒目标明个人研究稿', homeHtmlOut.includes('AI 辅助个人研究库') && homeHtmlOut.includes('并非专家审定本'));
+check('研究稿声明已移除', !homeHtmlOut.includes('AI 辅助个人研究库') && !html.includes('并非专家审定本'));
 const descriptionTags = html.match(/<meta\s+name="description"\s+content="[^"]*">/g) || [];
-check('首页只有一条研究稿 description', descriptionTags.length === 1
-  && descriptionTags[0].includes('AI 辅助个人研究稿'));
+check('首页只有一条 description', descriptionTags.length === 1);
 check('转轴入口在首页', homeHtmlOut.includes('#/path'));
 const headerNav = html.match(/<nav class="nav" aria-label="主导航">[\s\S]*?<\/nav>/)?.[0] || '';
 const navItems = (headerNav.match(/<a\b/g) || []).length;
@@ -171,7 +170,7 @@ const pathPage = await go('#/path');
 check('转轴年页', pathPage.includes('这几处转过轴') && pathPage.includes('1912') && pathPage.includes('密储落地'));
 check('内禅转轴接到和珅分日章', pathPage.includes('#/chapter/jiaqing-04'));
 const periods = await go('#/overview/periods');
-check('全朝专题显示史料核对警示', periods.includes('研究草稿｜本章尚未完成全文史料核对'));
+check('全朝专题不再带研究稿警示', !periods.includes('研究草稿｜本章尚未完成全文史料核对'));
 const spine = await go('#/spine/power');
 check('继承主轴', spine.includes('谁坐龙椅') && spine.includes('明立太子'));
 const money = await go('#/spine/money');
@@ -260,7 +259,10 @@ check('样板章依据摘要不倾倒主张卡', chapter.includes('本章可回�
 const shortChapter = await go('#/chapter/qianlong-03');
 check('短章使用 reading 单栏且元信息收成一行', el('main').dataset.layout === 'reading'
   && !shortChapter.includes('class="chapter-toc"') && shortChapter.includes('class="chapter-meta-row"')
-  && (shortChapter.match(/class="chapter-meta-item/g) || []).length === 3);
+  && (shortChapter.match(/class="chapter-meta-item/g) || []).length === 2);
+// 依据页改两级筛选后，站内旧的 ?unit= 链接必须仍能落到正确的书和卷
+const legacyUnit = await go('#/claims?unit=QH-SU-KX-0001');
+check('旧的 ?unit= 依据链接仍可用', legacyUnit.includes('圣祖仁皇帝实录') && legacyUnit.includes('卷1'));
 check('两废章读这一句', /<aside class="read-line"[\s\S]*不能写成对质全文[\s\S]*<\/aside>/.test(chapter));
 const kx01 = await go('#/chapter/kangxi-01');
 check('即位章原文块', kx01.includes('source-quote') && kx01.includes('上即皇帝位') && kx01.includes('崩於寢宮'));
@@ -296,7 +298,7 @@ check('嘉庆和珅案形成分日证据闭环', heshenChapter.includes('五日�
   && heshenChapter.includes('本章可回查的卷'));
 check('和珅章读这一句', /<aside class="read-line"[\s\S]*擁戴自居[\s\S]*<\/aside>/.test(heshenChapter)
   && !/<aside class="read-line"[^>]*>[\s\S]*賜自尽[\s\S]*<\/aside>/.test(heshenChapter));
-check('混合证据等级章节仍显示史料核对警示', heshenChapter.includes('研究草稿｜本章尚未完成全文史料核对'));
+check('混合证据等级章节不再带研究稿警示', !heshenChapter.includes('研究草稿｜本章尚未完成全文史料核对'));
 const heshenPerson = await go('#/person/QH-P-000124');
 check('和珅人物页接入主张', heshenPerson.includes('钮祜禄·和珅')
   && heshenPerson.includes('QH-A-JQ-0006'));
@@ -331,7 +333,7 @@ check('觉迷录停讲不是销毁完成', juemilu.includes('停其講解') && j
 check('曾静死法不写乾隆元年', juemilu.includes('凌遲處死') && juemilu.includes('雍正十三年十二月') && juemilu.includes('不是乾隆元年十二月'));
 check('觉迷录读这一句', /<aside class="read-line"[\s\S]*將「十」字改為「于」字[\s\S]*不能写成已经证伪[\s\S]*<\/aside>/.test(juemilu)
   || /<aside class="read-line"[\s\S]*將「十」字改為「于」字[\s\S]*不能写成已证伪[\s\S]*<\/aside>/.test(juemilu));
-check('未完成全章核对的章节显示警示', juemilu.includes('研究草稿｜本章尚未完成全文史料核对'));
+check('未完成全章核对的章节不再带警示', !juemilu.includes('研究草稿｜本章尚未完成全文史料核对'));
 check('纯原文闭环章节不误标为研究草稿', !kx01.includes('研究草稿｜本章尚未完成全文史料核对'));
 const closedShortChapters = ['kangxi-13', 'yongzheng-08', 'nurhaci-04', 'huangtaiji-04', 'daoguang-04', 'kangxi-11', 'yongzheng-02', 'kangxi-06', 'kangxi-07', 'kangxi-10', 'kangxi-12', 'nurhaci-01', 'huangtaiji-01', 'shunzhi-01', 'qianlong-01', 'qianlong-06', 'jiaqing-01', 'daoguang-01', 'xianfeng-01', 'tongzhi-01', 'guangxu-01', 'xuantong-01', 'daoguang-02', 'jiaqing-02', 'qianlong-02', 'xianfeng-02', 'guangxu-02', 'kangxi-05', 'yongzheng-03', 'nurhaci-02', 'shunzhi-02', 'tongzhi-02', 'huangtaiji-02', 'xuantong-02', 'kangxi-04', 'kangxi-08', 'yongzheng-05', 'qianlong-04', 'qianlong-05', 'nurhaci-03', 'huangtaiji-03', 'shunzhi-03', 'jiaqing-03', 'daoguang-03', 'xianfeng-03', 'tongzhi-03', 'guangxu-03', 'xuantong-03', 'yongzheng-01', 'kangxi-09', 'yongzheng-06'];
 const closedShortStillDraft = closedShortChapters.filter((slug) => {
@@ -355,9 +357,6 @@ check('主张页公开读者核对状态但不暴露编辑身份', adoptedClaim.
   && !adoptedClaim.includes('zonglinxie-cyber') && !adoptedClaim.includes('2026-08-15'));
 const claimCf = await go('#/claim/QH-A-KX-0070');
 check('主张页同组异说并排区块', claimCf.includes('同组异说') && claimCf.includes('QH-CF-KX-INVEST-DAY'));
-const images = await go('#/images');
-check('旧画像路由是像与物别名', images.includes('画的、写的、用的、拍下来的')
-  && (images.match(/#\/image\//g) || []).length === 63);
 const imagePage = await go('#/image/QH-V-E04');
 check('图像详情页主图带灯箱属性', imagePage.includes('data-lightbox'));
 const sitePage = await go('#/site/QH-ST-0013');
@@ -373,8 +372,6 @@ check('数据浏览器表清单', dataList.includes('全部数据表')
 const princessTable = await go('#/data?file=yongzheng-princesses.csv');
 check('数据浏览器单表保留原始值与原始状态', princessTable.includes('yongzheng-princesses.csv')
   && princessTable.includes('怀恪公主') && princessTable.includes('S二手转述') && princessTable.includes('证据状态'));
-const reviewPage = await go('#/review');
-check('存疑页空态可打开', reviewPage.includes('本地存疑标注') && reviewPage.includes('还没有存疑标注'));
 
 // 灯箱高清变体：Wikimedia 缩略图应取最大档
 const { largestVariant, noOrphan } = await import(path.join(siteDir, 'templates.js'));
@@ -403,22 +400,15 @@ for (const chapterRow of reignData.chapters || []) {
   const draft = Boolean(chapterRow.draft);
   if (indexable) indexableChapters.push(chapterRow);
   else noindexChapters.push(chapterRow);
-  if (!page.includes(`<meta name="robots" content="${indexable ? 'index,follow' : 'noindex,follow'}">`)
+  if (!page.includes('<meta name="robots" content="noindex,follow">')
     || !page.includes('<link rel="canonical"') || !page.includes('application/ld+json')) {
     staticMissing.push(`${chapterRow.slug}:meta`);
   }
-  if (draft && !page.includes('研究草稿｜本章尚未完成全文史料核对')) {
-    staticMissing.push(`${chapterRow.slug}:draft-banner`);
-  }
-  if (draft && !page.includes('研究草稿（未完成整章史料核对）：')) {
-    staticMissing.push(`${chapterRow.slug}:draft-description`);
-  }
-  if (!draft && page.includes('研究草稿｜本章尚未完成全文史料核对')) {
-    staticMissing.push(`${chapterRow.slug}:unexpected-draft`);
+  if (page.includes('研究草稿｜本章尚未完成全文史料核对')) {
+    staticMissing.push(`${chapterRow.slug}:leftover-draft-banner`);
   }
 }
 const staticEvidence = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-07', 'index.html'), 'utf8');
-const sitemap = fs.readFileSync(path.join(siteDir, 'sitemap.xml'), 'utf8');
 check(`静态章节全量生成 ${reignData.chapters?.length || 0} 篇`, staticMissing.length === 0);
 check('静态证据页保留可回主张链接', staticEvidence.includes('href="./#/claim/QH-A-KX-0037"')
   && !staticEvidence.includes('<button type="button" class="link claim-ref"'));
@@ -445,23 +435,20 @@ check('觉迷录静态章内联冲突引文', yz04Static.includes('claim-compare
 check('觉迷录静态交叉引用保留标题', yz04Static.includes('传位十四子与改诏') && !yz04Static.includes('>相关章节<'));
 check('静态章顶栏是读者词', yz04Static.includes('说法对照') && yz04Static.includes('遗址今况')
   && yz04Static.includes('材料') && yz04Static.includes('十二帝'));
-check(`sitemap 只收收录列为是的章节 ${indexableChapters.length} 篇`,
-  indexableChapters.length >= 30
-  && indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
-  && noindexChapters.every((row) => !sitemap.includes(`/chapter/${row.slug}/`)));
+check('不再生成 sitemap', !fs.existsSync(path.join(siteDir, 'sitemap.xml')));
 const xf01Static = fs.readFileSync(path.join(siteDir, 'chapter', 'xianfeng-01', 'index.html'), 'utf8');
 const yz04StaticDraft = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');
-check('放行章即使未闭环也是 index', xf01Static.includes('name="robots" content="index,follow"')
-  && yz04StaticDraft.includes('研究草稿｜本章尚未完成全文史料核对')
-  && yz04StaticDraft.includes('name="robots" content="index,follow"'));
+check('章节页一律 noindex', xf01Static.includes('name="robots" content="noindex,follow"')
+  && yz04StaticDraft.includes('name="robots" content="noindex,follow"'));
 const nh02Static = fs.readFileSync(path.join(siteDir, 'chapter', 'nurhaci-02', 'index.html'), 'utf8');
-check('未放行章保持 noindex', nh02Static.includes('name="robots" content="noindex,follow"'));
-check('robots.txt 指向 sitemap', fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8').includes('/sitemap.xml'));
-check('sitemap 带 lastmod', sitemap.includes('<lastmod>'));
+check('未放行章同样 noindex', nh02Static.includes('name="robots" content="noindex,follow"'));
+const robotsTxt = fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8');
+// 仍是 Allow：改成 Disallow 的话爬虫读不到页面里的 noindex，旧收录反而撤不下来
+check('robots.txt 不投递 sitemap 但允许抓取', !robotsTxt.includes('sitemap')
+  && robotsTxt.includes('Allow: /'));
 check('人物分享页已生成', fs.existsSync(path.join(siteDir, 'person', 'QH-P-000001', 'index.html')));
-check('首页带 canonical 与结构化数据', html.includes('rel="canonical"')
-  && html.includes('"@type":"WebSite"') && html.includes('property="og:url"')
-  && html.includes('SearchAction'));
+check('首页 noindex 且保留 canonical', html.includes('rel="canonical"')
+  && html.includes('<meta name="robots" content="noindex,follow">'));
 check('进站即恢复手选主题', html.includes("localStorage.getItem('theme')")
   && kx01Static.includes("localStorage.getItem('theme')")
   && html.indexOf("localStorage.getItem('theme')") < html.indexOf('styles.css'));
@@ -533,6 +520,24 @@ const siteReaderText = (publicHome.sites || []).map((row) => [row['当时'], row
 check('今地文案不显示内部地点编号', !/\bQH-ST-\d+\b/.test(siteReaderText));
 const overviewReaderText = (reignData.overviews || []).map((row) => `${row.lede} ${row.bodyHtml.replace(/<[^>]+>/g, ' ')}`).join('\n');
 check('全朝专题不显示证据等级码或编辑术语', !/\bE1\b|原子主张|证据抽屉|深挖版|康雍深挖|骨架年份/.test(overviewReaderText));
+
+// qing-content.mjs 里的三条轴（转轴年 / 谁拍板 / 饷和兵）是手写常量，不跟数据走。
+// 内容可以手写，但它指向的章节必须真实存在，否则会悄悄变成死链。
+const contentSrc = fs.readFileSync(path.join(siteDir, 'qing-content.mjs'), 'utf8');
+const knownSlugs = new Set((reignData.chapters || []).map((row) => row.slug));
+const referencedSlugs = [...contentSrc.matchAll(/#\/chapter\/([\w-]+)/g)].map((m) => m[1]);
+const deadSlugs = [...new Set(referencedSlugs)].filter((slug) => !knownSlugs.has(slug));
+check(`手写常量里的章节链接都存在${deadSlugs.length ? `（死链：${deadSlugs.join('、')}）` : ''}`, deadSlugs.length === 0);
+
+// 被埋的页面：overview 这 5 篇曾经全站零入口。至少要能从一个页面走到。
+const overviewIndex = await go('#/overview');
+check('脉络目录列出全部专题', (reignData.overviews || [])
+  .every((row) => overviewIndex.includes(`#/overview/${row.slug}`)));
+const pathOut = await go('#/path');
+check('全朝专题有站内入口', pathOut.includes('href="#/overview"') || materialOut.includes('href="#/overview"'));
+
+// 存疑标注系统已移除，不该再有残留
+check('无存疑标注残留', !html.includes('标存疑') && !html.includes('note-dialog') && !html.includes('#/review'));
 
 console.log(failed ? `渲染测试 ${failed} 项失败` : '渲染测试全部通过');
 process.exit(failed ? 1 : 0);

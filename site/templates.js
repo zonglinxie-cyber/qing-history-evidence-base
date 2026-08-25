@@ -145,26 +145,6 @@ export function noEvidenceBanner(headline, explanation) {
   return `<aside class="x-banner"><p class="x-banner-head">${esc(headline)}</p>${ex}</aside>`;
 }
 
-export function researchDraftBanner(scope = 'chapter') {
-  const chapter = scope === 'chapter';
-  const headline = chapter ? '研究草稿｜本章尚未完成全文史料核对' : 'AI 辅助个人研究库｜并非专家审定本';
-  const text = chapter
-    ? '本章可能只有部分段落已对到原文，其余仍依赖后出史书或现代研究。请按正文中的「看依据」链接核对，不要把整章当作已成定论。'
-    : '全库只有部分条目已对到可回查的原文。请优先阅读每条主张的引文和出处，并将其他内容视为待继续完善的研究草稿。';
-  // 章节页的草稿提示留在正文旁边，该显眼；
-  // 首页的全库声明收成一行可展开——读者还没看到任何内容时不该先读免责。
-  if (!chapter) {
-    return `<details class="research-note" aria-label="研究状态">
-    <summary>${headline}</summary>
-    <p>${text}</p>
-  </details>`;
-  }
-  return `<aside class="research-banner research-banner-draft" role="note" aria-label="研究状态">
-    <p class="research-banner-head">${headline}</p>
-    <p>${text}</p>
-  </aside>`;
-}
-
 export function emperorCard(emperor, opts = {}) {
   const portrait = emperor.portrait;
   const eras = String(emperor['年号或通称'] || '').split('；').map((s) => s.trim()).filter(Boolean);
@@ -300,6 +280,5 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <p class="lede">${noOrphan(dynasty?.lede || '')}</p>
       </div>
       <p class="actions home-actions"><a class="link" href="#/path">276 年转轴</a> · <a class="link" href="#/material">材料</a> · <a class="link" href="#/how">怎么读</a></p>
-      ${researchDraftBanner('site')}
       <div class="grid cards">${emperors.map((row, i) => emperorCard(row, { ...opts, eager: i < 3 })).join('')}</div>`;
 }

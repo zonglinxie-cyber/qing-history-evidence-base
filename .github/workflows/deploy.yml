@@ -1,5 +1,6 @@
-# main 推送后自动发布到 gh-pages 分支（GitHub Pages 当前从该分支服务）。
-# 取代手工 npm run build + 手动同步 gh-pages 的流程。
+# 发布到 gh-pages 分支。已改为「只手动触发」：
+# 这个库是个人学习用，不再随每次 push 自动公开。
+# 需要更新线上版本时，到 Actions → Deploy Pages → Run workflow 手动跑。
 #
 # 前置条件（仓库 Settings）：
 #   Settings → Actions → General → Workflow permissions 需要 "Read and write"，
@@ -7,8 +8,7 @@
 name: Deploy Pages
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: pages
