@@ -257,7 +257,7 @@ check('样板章行内主张', chapter.includes('data-claim="QH-A-KX-0124"') || 
 check('样板章目录', chapter.includes('chapter-toc') && chapter.includes('data-scroll'));
 check('样板章上下篇', chapter.includes('chapter-nav') && chapter.includes('上一篇') && chapter.includes('下一篇'));
 check('样板章依据摘要不倾倒主张卡', chapter.includes('本章可回查的卷') && !chapter.includes('thread-block'));
-const shortChapter = await go('#/chapter/xuantong-03');
+const shortChapter = await go('#/chapter/qianlong-03');
 check('短章使用 reading 单栏且元信息收成一行', el('main').dataset.layout === 'reading'
   && !shortChapter.includes('class="chapter-toc"') && shortChapter.includes('class="chapter-meta-row"')
   && (shortChapter.match(/class="chapter-meta-item/g) || []).length === 3);
@@ -333,6 +333,12 @@ check('觉迷录读这一句', /<aside class="read-line"[\s\S]*將「十」字�
   || /<aside class="read-line"[\s\S]*將「十」字改為「于」字[\s\S]*不能写成已证伪[\s\S]*<\/aside>/.test(juemilu));
 check('未完成全章核对的章节显示警示', juemilu.includes('研究草稿｜本章尚未完成全文史料核对'));
 check('纯原文闭环章节不误标为研究草稿', !kx01.includes('研究草稿｜本章尚未完成全文史料核对'));
+const closedShortChapters = ['kangxi-13', 'yongzheng-08', 'nurhaci-04', 'huangtaiji-04', 'daoguang-04', 'kangxi-11', 'yongzheng-02', 'kangxi-06', 'kangxi-07', 'kangxi-10', 'kangxi-12', 'nurhaci-01', 'huangtaiji-01', 'shunzhi-01', 'qianlong-01', 'qianlong-06', 'jiaqing-01', 'daoguang-01', 'xianfeng-01', 'tongzhi-01', 'guangxu-01', 'xuantong-01', 'daoguang-02', 'jiaqing-02', 'qianlong-02', 'xianfeng-02', 'guangxu-02', 'kangxi-05', 'yongzheng-03', 'nurhaci-02', 'shunzhi-02', 'tongzhi-02', 'huangtaiji-02', 'xuantong-02', 'kangxi-04', 'kangxi-08', 'yongzheng-05', 'qianlong-04', 'qianlong-05', 'nurhaci-03', 'huangtaiji-03', 'shunzhi-03', 'jiaqing-03', 'daoguang-03', 'xianfeng-03', 'tongzhi-03', 'guangxu-03', 'xuantong-03', 'yongzheng-01', 'kangxi-09', 'yongzheng-06'];
+const closedShortStillDraft = closedShortChapters.filter((slug) => {
+  const page = fs.readFileSync(path.join(siteDir, 'chapter', slug, 'index.html'), 'utf8');
+  return page.includes('研究草稿｜本章尚未完成全文史料核对');
+});
+check('范围已钉的短解读章不误标为研究草稿', closedShortStillDraft.length === 0);
 const goldenFailures = [];
 for (const row of reignData.questions || []) {
   const out = await go(`#/question/${row.question_id}`);
@@ -444,8 +450,10 @@ check(`sitemap 只收收录列为是的章节 ${indexableChapters.length} 篇`,
   && indexableChapters.every((row) => sitemap.includes(`/chapter/${row.slug}/`))
   && noindexChapters.every((row) => !sitemap.includes(`/chapter/${row.slug}/`)));
 const xf01Static = fs.readFileSync(path.join(siteDir, 'chapter', 'xianfeng-01', 'index.html'), 'utf8');
+const yz04StaticDraft = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');
 check('放行章即使未闭环也是 index', xf01Static.includes('name="robots" content="index,follow"')
-  && xf01Static.includes('研究草稿｜本章尚未完成全文史料核对'));
+  && yz04StaticDraft.includes('研究草稿｜本章尚未完成全文史料核对')
+  && yz04StaticDraft.includes('name="robots" content="index,follow"'));
 const nh02Static = fs.readFileSync(path.join(siteDir, 'chapter', 'nurhaci-02', 'index.html'), 'utf8');
 check('未放行章保持 noindex', nh02Static.includes('name="robots" content="noindex,follow"'));
 check('robots.txt 指向 sitemap', fs.readFileSync(path.join(siteDir, 'robots.txt'), 'utf8').includes('/sitemap.xml'));

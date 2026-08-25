@@ -1,6 +1,6 @@
 # 清史证据库 · Phase 0 项目包
 
-版本：`0.3.2`（[`CHANGELOG.md`](CHANGELOG.md) 由构建自动维护）
+版本：`0.3.164`（[`CHANGELOG.md`](CHANGELOG.md) 由构建自动维护）
 建立日期：2026-08-12
 当前状态：**个人零预算版持续扩充；实时覆盖与审核数字见 [`STATUS.md`](STATUS.md)**
 
