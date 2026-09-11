@@ -12,6 +12,48 @@ export function esc(value) {
   }[ch]));
 }
 
+/** 去掉标签后的可见字数，用来判断章节走短壳还是长壳。 */
+export function htmlPlainTextLength(html) {
+  const named = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+  const text = String(html || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, code) => {
+      if (code[0] !== '#') return named[code.toLowerCase()] ?? entity;
+      const value = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+      return Number.isFinite(value) ? String.fromCodePoint(value) : entity;
+    })
+    .replace(/\s/g, '');
+  return Array.from(text).length;
+}
+
+export function chapterIsShort(chapter) {
+  return Boolean(chapter && htmlPlainTextLength(chapter.bodyHtml || '') < 2000);
+}
+
+export function extractLeadingEvidenceDrawers(html, limit = 2) {
+  let body = String(html || '');
+  const drawers = [];
+  for (let i = 0; i < limit; i += 1) {
+    const match = body.match(/^\s*(<details class="evidence-drawer[^"]*"[\s\S]*?<\/details>)/);
+    if (!match) break;
+    drawers.push(match[1].replace('class="evidence-drawer', 'class="chapter-meta-item evidence-drawer'));
+    body = body.slice(match[0].length);
+  }
+  return { drawers, body };
+}
+
+export function chapterToc(html) {
+  const items = [];
+  const re = /<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g;
+  let match;
+  while ((match = re.exec(html))) {
+    const title = match[2].replace(/<[^>]+>/g, '').trim();
+    if (title === '边界' || title === '尚未解决') continue;
+    items.push({ id: match[1], title });
+  }
+  return items;
+}
+
 /** 句末两字加标点不拆行，避免「理。」这类孤字。 */
 export function noOrphan(text) {
   const s = String(text ?? '');

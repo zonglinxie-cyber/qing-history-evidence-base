@@ -7,7 +7,7 @@ import { loadCsv } from './lib/csv.mjs';
 import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
 import { EDITORIAL_COPY, readerCopy, readerProse, readerMetadata, stripInternalComments } from './lib/reader.mjs';
 import { buildIndex } from '../site/search.js';
-import { homeHtml, isChapterIndexable, isChapterEvidenceClosed, researchDraftBanner } from '../site/templates.js';
+import { homeHtml, isChapterIndexable, isChapterEvidenceClosed, researchDraftBanner, chapterIsShort, extractLeadingEvidenceDrawers, chapterToc } from '../site/templates.js';
 import { pinyin } from 'pinyin-pro';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -496,6 +496,17 @@ function staticChapterBody(html, { claims, conflictSets } = {}) {
 }
 
 function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, draft, claims, conflictSets, assetStamp = '11' }) {
+  const prepared = staticChapterBody(chapter.bodyHtml, { claims, conflictSets });
+  const short = chapterIsShort(chapter);
+  const compact = short ? extractLeadingEvidenceDrawers(prepared) : { drawers: [], body: prepared };
+  const body = compact.body;
+  const toc = short ? [] : chapterToc(body);
+  const compactMeta = short && (draft || compact.drawers.length) ? `
+      <div class="chapter-meta-row" aria-label="本章研究说明">
+        ${draft ? `<details class="chapter-meta-item research-meta"><summary>研究状态</summary>${researchDraftBanner('chapter')}</details>` : ''}
+        ${compact.drawers.join('')}
+      </div>` : '';
+  const layout = short ? 'reading' : 'chapter';
   const canonical = new URL(`chapter/${encodeURIComponent(chapter.slug)}/`, siteBaseUrl).href;
   const image = portrait?.['预览文件'] ? new URL(portrait['预览文件'], siteBaseUrl).href : '';
   const robots = indexable ? 'index,follow' : 'noindex,follow';
@@ -554,17 +565,22 @@ function staticChapterHtml({ chapter, units, portrait, prev, next, indexable, dr
       <a href="./">十二帝</a><a href="./#/material">材料</a><a href="./#/lanes">说法对照</a><a href="./#/sites">遗址今况</a><a href="./#/how">怎么读</a>
     </nav>
   </header>
-  <main id="main" tabindex="-1">
+  <main id="main" tabindex="-1" data-layout="${layout}">
     <article>
       <div class="chapter-shell">
       <div class="reading chapter-head">
         <p class="kicker">${escHtml(chapter.era)}</p>
         <h1>${escHtml(chapter.title)}</h1>
         <p class="lede">${escHtml(chapter.lede)}</p>
-${draft ? `        ${researchDraftBanner('chapter')}\n` : ''}        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
+        ${short ? compactMeta : (draft ? researchDraftBanner('chapter') : '')}
+        <p class="crumb"><a class="link" href="#/chapter/${escHtml(chapter.slug)}">打开交互版</a></p>
       </div>
+      ${toc.length ? `<nav class="chapter-toc" aria-label="本章目录">
+        <p class="toc-label">本章目录</p>
+        <ol>${toc.map((item) => `<li><a class="link" href="#${escHtml(item.id)}">${escHtml(item.title)}</a></li>`).join('')}</ol>
+      </nav>` : ''}
       <div class="chapter-body">
-      <div class="md">${staticChapterBody(chapter.bodyHtml, { claims, conflictSets })}</div>
+      <div class="md">${body}</div>
       ${evidence}
       ${nav}
       </div>
@@ -1225,11 +1241,12 @@ function buildDynasty({ dynasty, data }) {
   }
   // 注入朝代配置：app.js 启动时同步读取 #dynasty-config，决定数据块与专题路由
   // 资源戳同时覆盖 styles.css，否则改样式后线上 ?v= 不变、浏览器吃旧缓存
-  // 资源戳原来只算数据和 styles.css，不含 app.js/templates.js/qing-content.mjs：
-  // 只改 JS 时 ?v= 不变，回访读者拿到的是缓存里的旧脚本。
+  // 资源戳覆盖交互脚本与样式。search.js 与 app.js 同为运行时模块，漏算时
+  // 只改检索实现 ?v= 不变，回访读者会吃到缓存里的旧索引逻辑。
   const assetStamp = createHash('sha256')
     .update(fs.readFileSync(path.join(siteDir, 'app.js')))
     .update(fs.readFileSync(path.join(siteDir, 'templates.js')))
+    .update(fs.readFileSync(path.join(siteDir, 'search.js')))
     .update(fs.readFileSync(path.join(siteDir, 'qing-content.mjs')))
     .update(fs.readFileSync(path.join(dataOutDir, 'home.json')))
     .update(fs.readFileSync(path.join(dataOutDir, `d-${dynasty.code}.json`)))

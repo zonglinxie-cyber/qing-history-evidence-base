@@ -12,6 +12,9 @@ import {
   siteEraLabel,
   featuredSites as pickFeaturedSites,
   sortedSites as sortSites,
+  chapterIsShort,
+  extractLeadingEvidenceDrawers,
+  chapterToc,
 } from './templates.js';
 import { normalize, lookup as lookupIndex, buildIndex } from './search.js';
 import { EMPEROR_READS, EMPRESS_IDS, HEIR_THREADS, SOURCE_GROUPS, PATH_NODES, SPINE_POWER, SPINE_MONEY, ERA_PINNED, JIEDU_FEATURED, SITE_DETAILS } from './qing-content.mjs';
@@ -81,6 +84,7 @@ const VIEW_CHUNKS = {
   sources: ['home', 'catalog'],
   source: ['home', 'catalog', REIGN_CHUNK],
   works: ['home', REIGN_CHUNK],
+  jiedu: ['home'],
   how: ['home'],
   changelog: ['home', 'release'],
   path: ['home', REIGN_CHUNK],
@@ -123,16 +127,23 @@ async function loadChapterBody(slug) {
   if (!slug) return;
   const row = (DATA.chapters || []).find((item) => item.slug === slug);
   if (row?.bodyHtml) return;
-  const res = await fetch(`data/chapter/${encodeURIComponent(slug)}.json${ASSET_V}`);
-  if (!res.ok) {
+  const fail = () => {
     if (row) {
       row.bodyHtml = `<p class="warn">正文加载失败，<button type="button" class="link" data-retry-chapter="${esc(slug)}">点此重试</button></p>`;
     }
-    return;
+  };
+  try {
+    const res = await fetch(`data/chapter/${encodeURIComponent(slug)}.json${ASSET_V}`);
+    if (!res.ok) {
+      fail();
+      return;
+    }
+    const payload = await res.json();
+    if (row) row.bodyHtml = payload.bodyHtml;
+    else (DATA.chapters ||= []).push(payload);
+  } catch {
+    fail();
   }
-  const payload = await res.json();
-  if (row) row.bodyHtml = payload.bodyHtml;
-  else (DATA.chapters ||= []).push(payload);
 }
 
 function eraPage(slug) {
@@ -248,14 +259,6 @@ function eraPage(slug) {
     });
   }
 
-  const ROLE_GROUPS = [
-    { role: '默认朝服像', title: '朝服像', hint: '' },
-    { role: '其他真迹', title: '其他真迹', hint: '' },
-    { role: '相关史迹', title: '相关史迹', hint: '今貌不能倒推当时战场。' },
-    { role: '御笔书法', title: '御笔书法', hint: '碑是刻出来的，纸上才是手写。' },
-    { role: '奏折朱批', title: '奏折与朱批', hint: '红笔是皇帝批的，黑字是臣工写的。' },
-  ];
-
   function mediaImg(src, alt, lightbox = '') {
     return imgTag(src, alt, {
       width: 600,
@@ -321,30 +324,6 @@ function eraPage(slug) {
           ${safeUrl(row['文件页']) ? `<a class="link" href="${esc(safeUrl(row['文件页']))}" target="_blank" rel="noopener">${esc(sourcePageLabel(row))}</a>` : ''}
         </p>
       </article>`;
-  }
-
-  function groupedMedia(list) {
-    return ROLE_GROUPS.map(({ role, title, hint }) => {
-      const rows = list.filter((row) => row['展示角色'] === role);
-      if (!rows.length) return '';
-      const pics = rows.filter(canEmbed);
-      const texts = rows.filter((row) => !canEmbed(row));
-      return `
-        <h2>${esc(title)}</h2>
-        ${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
-        ${pics.length ? `<div class="thumbs">${pics.map(thumbCard).join('')}</div>` : ''}
-        ${texts.map(textMediaCard).join('')}
-        ${pics.filter((row) => row['释文']).map((row) => `
-          <article class="doc-card">
-            <strong>${esc(row['对象标题'])}</strong>
-            ${transcriptionBlock(row)}
-            <p class="actions">
-              <a class="link" href="#/image/${esc(row.visual_id)}">看全文</a>
-              <a class="link" href="${esc(safeUrl(row['文件页']))}" target="_blank" rel="noopener">${esc(sourcePageLabel(row))}</a>
-            </p>
-          </article>`).join('')}
-      `;
-    }).join('');
   }
 
   function personName(id) {
@@ -616,6 +595,27 @@ function eraPage(slug) {
     const loc = claim['卷页/档号/图像定位'] || '';
     const id = claim['Assertion ID'] || '';
     return [book, juan, day, seq, loc, id].filter(Boolean).join('，');
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+    return new Promise((resolve, reject) => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        if (!document.execCommand('copy')) reject(new Error('copy failed'));
+        else resolve();
+      } catch (err) {
+        reject(err);
+      } finally {
+        ta.remove();
+      }
+    });
   }
 
   function claimCard(claim) {
@@ -2056,47 +2056,6 @@ function eraPage(slug) {
     `;
   }
 
-  function htmlPlainTextLength(html) {
-    const named = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
-    const text = String(html || '')
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, code) => {
-        if (code[0] !== '#') return named[code.toLowerCase()] ?? entity;
-        const value = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
-        return Number.isFinite(value) ? String.fromCodePoint(value) : entity;
-      })
-      .replace(/\s/g, '');
-    return Array.from(text).length;
-  }
-
-  function chapterIsShort(chapter) {
-    return Boolean(chapter && htmlPlainTextLength(chapter.bodyHtml || '') < 2000);
-  }
-
-  function extractLeadingEvidenceDrawers(html, limit = 2) {
-    let body = String(html || '');
-    const drawers = [];
-    for (let i = 0; i < limit; i++) {
-      const match = body.match(/^\s*(<details class="evidence-drawer[^"]*"[\s\S]*?<\/details>)/);
-      if (!match) break;
-      drawers.push(match[1].replace('class="evidence-drawer', 'class="chapter-meta-item evidence-drawer'));
-      body = body.slice(match[0].length);
-    }
-    return { drawers, body };
-  }
-
-  function chapterToc(html) {
-    const items = [];
-    const re = /<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g;
-    let match;
-    while ((match = re.exec(html))) {
-      const title = match[2].replace(/<[^>]+>/g, '').trim();
-      if (title === '边界' || title === '尚未解决') continue;
-      items.push({ id: match[1], title });
-    }
-    return items;
-  }
-
   function expandConflicts(html) {
     return String(html || '').replace(
       /<div class="claim-compare conflict-embed" data-conflict="([^"]+)"(?: data-label="([^"]*)")?><\/div>/g,
@@ -2140,16 +2099,13 @@ function eraPage(slug) {
     const claimCount = units.reduce((n, unit) => (
       n + (DATA.claims || []).filter((row) => row['来源实体 ID'] === unit.source_unit_id).length
     ), 0);
-    const home = chapter.era === '康熙'
-      ? '#/kangxi'
-      : chapter.era === '雍正'
-        ? '#/yongzheng'
-        : chapter.person_id
-          ? `#/person/${chapter.person_id}`
-          : '#/';
-    const homeLabel = (chapter.era === '康熙' || chapter.era === '雍正')
-      ? `${chapter.era}朝`
-      : (chapter.era || '人物');
+    const emperor = emperorByPerson.get(chapter.person_id);
+    const home = emperor?.eraSlug
+      ? `#/${emperor.eraSlug}`
+      : chapter.person_id
+        ? `#/person/${chapter.person_id}`
+        : '#/';
+    const homeLabel = chapter.era ? `${chapter.era}朝` : '人物';
     const expandedBody = expandConflicts(chapter.bodyHtml || '');
     const short = chapterIsShort(chapter);
     const compact = short ? extractLeadingEvidenceDrawers(expandedBody) : { drawers: [], body: expandedBody };
@@ -3136,8 +3092,8 @@ ${n.note || '（请在此补充修正内容）'}
     else html = `<h1>没有这个页面</h1><p><a href="#/">回首页</a></p>`;
     // 版心分档：读栏给纯文字页，表栏给分栏/年表，满栏只给卡片网格。
     // 原先只有朝代页和逐解收窄，其余一律 70rem 硬撑，右半边是空的。
-    const FULL_VIEWS = new Set(['sites', 'works', 'images', 'people', 'princes', 'princesses', 'empresses', 'data']);
-    const TABLE_VIEWS = new Set(['material', 'lanes', 'person', 'chronicle', 'claims', 'succession', 'search', 'sources', 'review', 'image', 'site', 'hands']);
+    const FULL_VIEWS = new Set(['sites', 'works', 'people', 'princes', 'princesses', 'empresses', 'data']);
+    const TABLE_VIEWS = new Set(['material', 'lanes', 'person', 'chronicle', 'claims', 'succession', 'search', 'sources', 'review', 'image', 'site', 'hands', 'images']);
     const isEmperorRoute = Boolean(DYNASTY.eras[view] || (view === 'person' && emperorByPerson.has(parts[1])));
     // 按内容性质分档，不按页面分：同一帝王的年号路由和旧人物路由共用 era 壳。
     main.dataset.layout = isHome || FULL_VIEWS.has(view)
@@ -3355,12 +3311,12 @@ ${n.note || '（请在此补充修正内容）'}
       const claim = claimById.get(citeBtn.getAttribute('data-cite-claim'));
       const unit = claim ? unitById.get(claim['来源实体 ID']) : null;
       const text = claim ? citationText(claim, unit) : '';
-      const done = () => { citeBtn.textContent = '已复制'; };
-      if (text && navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(text).then(done).catch(done);
-      } else {
-        done();
+      const done = (ok) => { citeBtn.textContent = ok ? '已复制' : '复制失败'; };
+      if (!text) {
+        done(false);
+        return;
       }
+      copyText(text).then(() => done(true)).catch(() => done(false));
       return;
     }
     const retryChapter = event.target.closest('[data-retry-chapter]');

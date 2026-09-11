@@ -1706,14 +1706,16 @@ a.img-fallback.yellow,
   padding-left: 1.2em;
 }
 .chapter-toc li { margin: 0 0 4px; }
-.chapter-toc button.link {
+.chapter-toc button.link,
+.chapter-toc a.link {
   font-family: var(--serif);
   color: var(--muted);
   text-decoration: none;
   text-align: left;
   line-height: 1.5;
 }
-.chapter-toc button.link:hover { color: var(--vermilion); }
+.chapter-toc button.link:hover,
+.chapter-toc a.link:hover { color: var(--vermilion); }
 .chapter-toc ol {
   list-style: none;
   padding-left: 0;

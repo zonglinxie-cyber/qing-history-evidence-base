@@ -261,6 +261,7 @@ const shortChapter = await go('#/chapter/qianlong-03');
 check('短章使用 reading 单栏且元信息收成一行', el('main').dataset.layout === 'reading'
   && !shortChapter.includes('class="chapter-toc"') && shortChapter.includes('class="chapter-meta-row"')
   && (shortChapter.match(/class="chapter-meta-item/g) || []).length === 3);
+check('短章面包屑走年号路由', shortChapter.includes('#/qianlong') && shortChapter.includes('乾隆朝'));
 check('两废章读这一句', /<aside class="read-line"[\s\S]*不能写成对质全文[\s\S]*<\/aside>/.test(chapter));
 const kx01 = await go('#/chapter/kangxi-01');
 check('即位章原文块', kx01.includes('source-quote') && kx01.includes('上即皇帝位') && kx01.includes('崩於寢宮'));
@@ -356,8 +357,11 @@ check('主张页公开读者核对状态但不暴露编辑身份', adoptedClaim.
 const claimCf = await go('#/claim/QH-A-KX-0070');
 check('主张页同组异说并排区块', claimCf.includes('同组异说') && claimCf.includes('QH-CF-KX-INVEST-DAY'));
 const images = await go('#/images');
+const imagesLayout = el('main').dataset.layout;
 check('旧画像路由是像与物别名', images.includes('画的、写的、用的、拍下来的')
   && (images.match(/#\/image\//g) || []).length === 63);
+await go('#/hands');
+check('旧画像路由与像与物共用 table 版心', imagesLayout === 'table' && el('main').dataset.layout === 'table');
 const imagePage = await go('#/image/QH-V-E04');
 check('图像详情页主图带灯箱属性', imagePage.includes('data-lightbox'));
 const sitePage = await go('#/site/QH-ST-0013');
@@ -377,7 +381,10 @@ const reviewPage = await go('#/review');
 check('存疑页空态可打开', reviewPage.includes('本地存疑标注') && reviewPage.includes('还没有存疑标注'));
 
 // 灯箱高清变体：Wikimedia 缩略图应取最大档
-const { largestVariant, noOrphan } = await import(path.join(siteDir, 'templates.js'));
+const { largestVariant, noOrphan, chapterIsShort, htmlPlainTextLength } = await import(path.join(siteDir, 'templates.js'));
+check('短章判定按正文纯文本长度', htmlPlainTextLength('<p>一二三</p>') === 3
+  && chapterIsShort({ bodyHtml: '<p>' + '字'.repeat(1999) + '</p>' })
+  && !chapterIsShort({ bodyHtml: '<p>' + '字'.repeat(2000) + '</p>' }));
 const thumb = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Example.jpg/960px-Example.jpg';
 check('largestVariant 取最大档', largestVariant(thumb).includes('/1280px-Example.jpg'));
 check('largestVariant 本地图取 1280 档', largestVariant('media/QH-V-E04.jpg') === 'media/QH-V-E04@2x.jpg');
@@ -441,6 +448,12 @@ check('静态章无同组异说相关异说死文本', deadConflictCopy.length =
 const kx01Static = fs.readFileSync(path.join(siteDir, 'chapter', 'kangxi-01', 'index.html'), 'utf8');
 check('康熙即位章静态导语不把崩地写成畅春园', !kx01Static.includes('崩逝那天人在畅春园') && kx01Static.includes('寝宫'));
 const yz04Static = fs.readFileSync(path.join(siteDir, 'chapter', 'yongzheng-04', 'index.html'), 'utf8');
+const xt03Static = fs.readFileSync(path.join(siteDir, 'chapter', 'xuantong-03', 'index.html'), 'utf8');
+check('静态短章使用 reading 单栏且元信息收成一行', xt03Static.includes('data-layout="reading"')
+  && !xt03Static.includes('class="chapter-toc"') && xt03Static.includes('class="chapter-meta-row"'));
+check('静态长章保留 chapter 版心与目录锚点', yz04Static.includes('data-layout="chapter"')
+  && yz04Static.includes('class="chapter-toc"')
+  && (yz04Static.match(/href="chapter\/yongzheng-04\/#/g) || []).length >= 15);
 check('觉迷录静态章内联冲突引文', yz04Static.includes('claim-compare') && yz04Static.includes('將「十」字改為「于」字') && !yz04Static.includes('在交互版查看相关异说'));
 check('觉迷录静态交叉引用保留标题', yz04Static.includes('传位十四子与改诏') && !yz04Static.includes('>相关章节<'));
 check('静态章顶栏是读者词', yz04Static.includes('说法对照') && yz04Static.includes('遗址今况')
