@@ -1,4 +1,11 @@
 scheme_code,scheme_label,term_code,中文标签,英文标签,定义,上位词,逆关系,是否启用,排序
+source_level,来源性质分级,contemporary_official,同时代·官方,contemporary official,同时代产生的官方文本：原始档案、官修实录与会典方略则例、御制与敕编刊本。御制自辩类（《大义觉迷录》等）只作「当时这样说」，不得当客观事实。,,,true,1
+source_level,来源性质分级,contemporary_private,同时代·私撰,contemporary private,同时代产生但非官方：地方志、日记、书信、文集、碑传、外国记录。须与所述事件同期；有立场、传闻、后修与版本差异。,,,true,2
+source_level,来源性质分级,later,后出,later compilation,《清史稿》、民国及后出笔记、校注、现代论文与专题史；百科、自媒体、影视只作线索发现，不得作终审证据。,,,true,3
+correction_status,勘误状态,open,待处理,open,已登记但尚未改动源文件,,,true,1
+correction_status,勘误状态,fixed,已修正,fixed,源文件已改，勘误内容与修正一并留档,,,true,2
+correction_status,勘误状态,rejected,不成立,rejected,复核后认为原表述无误，写明理由,,,true,3
+correction_status,勘误状态,duplicate,重复,duplicate,与既有勘误条目重复,,,true,4
 name_type,名称类型,birth_name,本名,Birth name,出生或早年正式使用的名字,,,true,10
 name_type,名称类型,childhood_name,幼名,Childhood name,幼年使用的称呼或名字,,,true,20
 name_type,名称类型,taboo_form,避讳前写法,Pre-taboo form,因避讳而改变前的历史写法,,,true,30
@@ -46,15 +53,6 @@ evidence_stance,证据立场,supports,支持,Supports,该证据直接或间接�
 evidence_stance,证据立场,contradicts,反驳,Contradicts,该证据与主张相冲突,,,true,20
 evidence_stance,证据立场,contextualizes,提供语境,Contextualizes,该证据帮助解释但不直接证明主张,,,true,30
 evidence_stance,证据立场,mentions_only,仅提及,Mentions only,材料只提到相关对象而不支持主张,,,true,40
-evidence_directness,证据直接性,explicit,明确记载,Explicit,来源直接陈述该事实,,,true,10
-evidence_directness,证据直接性,inferred,推定,Inferred,由来源内容推论而非直接陈述,,,true,20
-evidence_directness,证据直接性,contextual,语境性,Contextual,仅提供背景语境,,,true,30
-evidence_directness,证据直接性,argument_from_silence,以沉默为据,Argument from silence,以材料未记载某事作为论证的一部分,,,true,40
-evidence_strength,证据强度,primary,一手直接,Primary,与事件或制度形成过程直接相关的一手材料,,,true,10
-evidence_strength,证据强度,strong,强,Strong,与命题高度相关且来源链条清楚,,,true,20
-evidence_strength,证据强度,moderate,中,Moderate,具有支持力但存在间接性或版本局限,,,true,30
-evidence_strength,证据强度,weak,弱,Weak,只能提供有限线索或来源质量较低,,,true,40
-evidence_strength,证据强度,unrated,未评级,Unrated,尚未由审核者给出强度判断,,,true,50
 certainty,确定性,exact,确定,Exact,证据支持精确陈述,,,true,10
 certainty,确定性,approximate,约略,Approximate,时间数量或描述只能给出近似值,,,true,20
 certainty,确定性,uncertain,不确定,Uncertain,有明确不确定性但仍可提出候选,,,true,30
@@ -64,11 +62,6 @@ certainty,确定性,unknown,未知,Unknown,目前无法判断,,,true,60
 rights_color,权利颜色,green,绿,Green,已确认公版开放许可或书面授权；仍须遵守对象级条件,,,true,10
 rights_color,权利颜色,yellow,黄,Yellow,仅可查询或权利未完全确认；默认只保存自建元数据并外链,,,true,20
 rights_color,权利颜色,red,红,Red,明确禁止或当前条件不允许计划中的获取展示或商业使用,,,true,30
-source_level,来源等级,A1,原始同时代档案,A1 primary contemporary archive,事件或制度运行中形成的原始档案,,,true,10
-source_level,来源等级,A2,官修汇编与制度文献,A2 official compilation,官修实录会典史馆材料等；仍需注意修纂目的与时间差,,,true,20
-source_level,来源等级,B,权威整理与学术研究,B scholarly or authoritative synthesis,可靠整理本馆藏说明与同行研究,,,true,30
-source_level,来源等级,C,通行数字文本与参考工具,C reference or digital text,便于发现但版本OCR或权利需再核验,,,true,40
-source_level,来源等级,D,未核传闻与大众内容,D unverified popular content,只能做线索不可进入正式事实层,,,true,50
 review_status,审核状态,not_started,未开始,Not started,尚未分派审核,,,true,10
 review_status,审核状态,needs_source,待补来源,Needs source,没有满足要求的具体来源与定位,,,true,20
 review_status,审核状态,first_checked,一校完成,First checked,文字和基础元数据已完成一校,,,true,30
@@ -93,6 +86,7 @@ image_nature,图像性质,later_historical_art,后世历史艺术,Later historic
 image_nature,图像性质,modern_illustration,现代插画,Modern illustration,现代人工创作的说明性或艺术性图像,,,true,30
 image_nature,图像性质,ai_reconstruction,AI 再现,AI reconstruction,由生成式模型制作的假想视觉再现；不得伪装成史料,,,true,40
 image_nature,图像性质,document_scan,文献影像,Document scan,书页档案或文献载体的数字影像,,,true,50
+image_nature,图像性质,modern_scene,现代实景影像,Modern scene photo,现代拍摄的实景照片，记录当下地貌或建筑；不作史料,,,true,60
 task_status,任务状态,not_started,未开始,Not started,任务尚未启动,,,true,10
 task_status,任务状态,in_progress,进行中,In progress,任务已启动且正在推进,,,true,20
 task_status,任务状态,blocked,阻塞,Blocked,任务因明确前置条件无法继续,,,true,30
@@ -262,3 +256,35 @@ assertion_predicate,主张谓词,reported_in_memorial,奏折转述,reported_in_m
 assertion_predicate,主张谓词,reported_in_diary,日记转述,reported_in_diary,私人日记或笔记中的记述,,,true,730
 assertion_predicate,主张谓词,reported_in_treaty,条约转述,reported_in_treaty,条约或协定文本中的条款,,,true,740
 assertion_predicate,主张谓词,issued_edict,申谕约束,issued_edict,申谕约束某群体或行为,,,true,750
+assertion_kind,主张类型,institutional_statement,制度陈述,Institutional statement,关于官职与机构的设置、职掌与人事制度的陈述,,,true,80
+relationship_type,关系类型,grandparent_of,为其祖辈,Grandparent of,主体是客体的祖辈（隔代血亲）,kinship,grandchild_of,true,260
+relationship_type,关系类型,grandchild_of,为其孙辈,Grandchild of,主体是客体的孙辈,kinship,grandparent_of,true,270
+relationship_type,关系类型,daughter_fostered_by,其女受抚,Daughter fostered by,主体之女由客体抚育,kinship,,true,280
+assertion_predicate,主张谓词,issued,诏命颁给,issued,,,,true,1050
+assertion_predicate,主张谓词,established,设置官制,established,,,,true,1060
+assertion_predicate,主张谓词,built,营建宫室陵寝,built,,,,true,1070
+assertion_predicate,主张谓词,came_to_marriage,来归成婚,came_to_marriage,,,,true,1080
+assertion_predicate,主张谓词,bestowed_marriage,赐婚,bestowed_marriage,,,,true,1090
+assertion_predicate,主张谓词,appointed_regent,命辅政,appointed_regent,,,,true,1100
+assertion_predicate,主张谓词,departed_on_southern_tour,南巡,departed_on_southern_tour,,,,true,1110
+assertion_predicate,主张谓词,received_in_audience,召见入觐,received_in_audience,,,,true,1120
+assertion_predicate,主张谓词,invested_as,封授爵级,invested_as,,,,true,1130
+assertion_predicate,主张谓词,married_daughter_to,主婚下嫁,married_daughter_to,,,,true,1140
+assertion_predicate,主张谓词,praised_as,御制褒扬,praised_as,,,,true,1150
+assertion_predicate,主张谓词,enshrined_in_taimiao,升祔配享太庙,enshrined_in_taimiao,,,,true,1160
+assertion_predicate,主张谓词,ritual_performed,谒陵行祭,ritual_performed,,,,true,1170
+assertion_predicate,主张谓词,commissioned_seal,刻制宝玺,commissioned_seal,,,,true,1180
+assertion_predicate,主张谓词,reviewed_troops,阅兵,reviewed_troops,,,,true,1190
+assertion_predicate,主张谓词,acted_as,代理职务,acted_as,,,,true,1200
+assertion_predicate,主张谓词,accused,诬奏构陷,accused,,,,true,1210
+assertion_predicate,主张谓词,battle_unfavorable,交战不利,battle_unfavorable,,,,true,1220
+assertion_predicate,主张谓词,granted_title,赐号,granted_title,,,,true,1230
+assertion_predicate,主张谓词,reported_in_annals,本纪所记,reported_in_annals,,,,true,1240
+assertion_predicate,主张谓词,reported_in_biography,列传所载,reported_in_biography,,,,true,1250
+assertion_predicate,主张谓词,reported_in_table,表所记,reported_in_table,,,,true,1260
+assertion_predicate,主张谓词,reported_in_document,文书所载,reported_in_document,,,,true,1270
+assertion_predicate,主张谓词,reported_in_rescript,朱批所谕,reported_in_rescript,,,,true,1280
+assertion_predicate,主张谓词,reported_in_speech,传记记言,reported_in_speech,,,,true,1290
+assertion_predicate,主张谓词,reported_in_chronicle,编年所记,reported_in_chronicle,,,,true,1300
+assertion_predicate,主张谓词,submitted_memorial,合疏入奏,submitted_memorial,,,,true,1310
+assertion_predicate,主张谓词,ordered,下令处置,ordered,,,,true,1320

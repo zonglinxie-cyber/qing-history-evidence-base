@@ -1,0 +1,12 @@
+chapter_id,slug,person_id,era,title,lede,file,unit_ids,related,sort,收录
+QH-CH-JQ-05,jiaqing-05,QH-P-000054,嘉庆,后妃表：两后与关键生母,孝淑是元后，嘉庆二年崩；孝和六年册后。宣宗生母是孝淑，不是孝和。昌陵因孝淑葬太平峪而起。,emperors/jiaqing/05-empresses.md,,#/chapter/jiaqing-06；#/chapter/jiaqing-07；#/chapter/jiaqing-10,79,否
+QH-CH-JQ-06,jiaqing-06,QH-P-000054,嘉庆,皇子表：缺号第二子,卷165仁宗系缺第二子绵宁／旻宁，子孙在宣宗系。五子生母按卷221总说分栏。,emperors/jiaqing/06-prince-table.md,,#/chapter/jiaqing-05；#/chapter/jiaqing-10；#/person/QH-P-000055,80,否
+QH-CH-JQ-07,jiaqing-07,QH-P-000054,嘉庆,皇女、和硕、固伦,卷166仁宗九女；未封五，受封含追封四。慧安、慧愍是追封。,emperors/jiaqing/07-princess-table.md,,#/chapter/jiaqing-05；#/chapter/jiaqing-06,81,否
+QH-CH-JQ-08,jiaqing-08,QH-P-000054,嘉庆,本纪里的教匪,元年湖北教匪起，七年十二月会报川陕楚荡平。本纪作教匪，白莲教是后出归类。军费两亿两未回户部。,emperors/jiaqing/08-white-lotus.md,,#/chapter/jiaqing-03；#/chapter/jiaqing-04；#/chapter/jiaqing-09,82,否
+QH-CH-JQ-09,jiaqing-09,QH-P-000054,嘉庆,癸酉之变：滑县、禁门、罪己,十八年滑县李文成、禁门陈爽、罪己诏是三件事。本纪数十人与则例七十余众并存。,emperors/jiaqing/09-tianli-guiyou.md,QH-SU-JQ-GZ-0001A,#/chapter/jiaqing-02；#/chapter/jiaqing-10；#/chapter/daoguang-04；#/site/QH-ST-0042,83,否
+QH-CH-JQ-10,jiaqing-10,QH-P-000054,嘉庆,崩于行宫、启匣、葬昌陵,二十五年七月己卯崩于避暑山庄行宫；道光元年三月葬昌陵。启匣朱谕与太后传旨分层。,emperors/jiaqing/10-changling-and-death.md,QH-SU-DG-XZSL-0001A；QH-SU-DG-XZSL-0001B,#/chapter/daoguang-04；#/site/QH-ST-0032；#/site/QH-ST-0005,84,否
+QH-CH-JQ-11,jiaqing-11,QH-P-000054,嘉庆,画像权利、朱批、器用,三件绿色图像：朝服像、朱批折、对菊横披。专玺清单未见。朱批档号与批者待核。,emperors/jiaqing/11-portraits-objects-vermilion.md,,#/image/QH-V-E07；#/image/QH-V-E07B；#/image/QH-V-E07C；#/chapter/jiaqing-12,85,否
+QH-CH-JQ-12,jiaqing-12,QH-P-000054,嘉庆,实录、圣训、起居注、御制,实录374卷、圣训110卷、文集50卷、诗集180卷、起居注出版本二十二册。正文未拆卷。,emperors/jiaqing/12-imperial-works.md,,#/works；#/chapter/jiaqing-02,86,否
+QH-CH-JQ-13,jiaqing-13,QH-P-000054,嘉庆,此期遗址：圆明园与山庄,圆明园此期是园居，不是1860废墟。山庄是崩地，昌陵是葬地，木兰是围场。,emperors/jiaqing/13-sites-yuanmingyuan.md,,#/site/QH-ST-0004；#/site/QH-ST-0005；#/site/QH-ST-0010；#/site/QH-ST-0032；#/site/QH-ST-0042,87,否
+QH-CH-JQ-14,jiaqing-14,QH-P-000054,嘉庆,学术史与争议清单,干支异文、和珅分日、天理教人数、训政与密匣分层。关文发1993、Naquin1976已核书名，页码不写。,emperors/jiaqing/14-scholarship-and-disputes.md,,#/chapter/jiaqing-04；#/chapter/jiaqing-09,88,否
+QH-CH-JQ-15,jiaqing-15,QH-P-000054,嘉庆,军机、经略与教门对手,四年董诰、庆桂、永瑆入军机。额勒登保、德楞泰、勒保是经略线。教匪不是朝中政党。,emperors/jiaqing/15-people-network.md,QH-SU-JQ-NET-0016A,#/chapter/jiaqing-04；#/chapter/jiaqing-08；#/chapter/jiaqing-09,89,否

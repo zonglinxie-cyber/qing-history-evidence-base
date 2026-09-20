@@ -1,0 +1,36 @@
+work_id,emperor_id,文献名称,文献类型,卷数,open_state,已确认锚点,source_unit_ids,证据状态,备注
+QH-W-001,QH-E-01,太祖高皇帝实录,实录,首卷3＋正文10卷,L0,无,,S二手索引,前三朝实录存在版本层叠；康熙重修本与崇德初修本差异待核
+QH-W-002,QH-E-01,满洲实录,实录/图说,8卷,L3,有,QH-SU-NH-MZSL-0001A；QH-SU-NH-MZSL-0001B,S二手索引,本库已钉卷一十三副遗甲与尼堪外兰两条短引（乾隆重绘层，不作崇德旧本）；图像层仍待核。
+QH-W-003,QH-E-01,太祖高皇帝圣训,圣训,4卷,L0,无,,S二手索引,
+QH-W-004,QH-E-02,太宗文皇帝实录,实录,首卷3＋正文65卷,L0,无,,S二手索引,天聪年间与崇德年间的纪年体制不同，需分开引用
+QH-W-005,QH-E-02,太宗文皇帝圣训,圣训,6卷,L0,无,,S二手索引,
+QH-W-006,QH-E-03,世祖章皇帝实录,实录,首卷3＋正文144卷,L0,无,,S二手索引,顺治出家说不可据实录记载；实录对多尔衮的叙述存在后世修订
+QH-W-007,QH-E-03,世祖章皇帝圣训,圣训,6卷,L3,有,QH-SU-SZ-SX-0001A；QH-SU-SZ-SX-0001B；QH-SU-SZ-SX-0001C；QH-SU-SZ-SX-0001D,S二手索引,康熙序、乾隆序皆不是顺治自撰，也不是实录。条数同称，不是另开正文。
+QH-W-011,QH-E-04,圣祖仁皇帝实录,实录,首卷3＋正文300卷,L3,有,QH-SU-KX-0001；QH-SU-KX-0300A；QH-SU-KX-0300；QH-SU-KX-0300C；QH-SU-KX-0234A；QH-SU-KX-0234B；QH-SU-KX-0234C；QH-SU-KX-0234D；QH-SU-KX-0234E；QH-SU-KX-0237A；QH-SU-KX-0058A；QH-SU-KX-0251A；QH-SU-KX-0251B；QH-SU-KX-0251C；QH-SU-KX-0056A；QH-SU-KX-0048；QH-SU-KX-SZSL-0001A；QH-SU-KX-SZSL-0002A；QH-SU-KX-SZSL-0002B；QH-SU-KX-SZSL-0002C,S二手索引,已开条次均补 ctext chapter 稳定卷页。卷48册谥诏、卷107二月甲申随驾、卷170正月甲戌疏与得旨、卷183五月癸卯回顾已钉到日。维基文库卷之四十八本次未见正文。不镜像全书。
+QH-W-012,QH-E-04,圣祖仁皇帝圣训,圣训,60卷,L3,有,QH-SU-KX-SX-0001A；QH-SU-KX-SX-0001B,S二手索引,雍正序，不是康熙自撰，也不是实录。后出四十卷本QH-W-073不是同一部。
+QH-W-022,QH-E-05,世宗宪皇帝实录,实录,首卷3＋正文159卷,L3,有,QH-SU-YZ-QSL-0001A；QH-SU-YZ-QSL-0001B；QH-SU-YZ-QSL-0001C；QH-SU-YZ-QSL-0058A；QH-SU-YZ-QSL-0058B；QH-SU-YZ-QSL-0116A；QH-SU-YZ-QSL-0159A；QH-SU-YZ-QSL-0039A；QH-SU-YZ-QSL-0062A；QH-SU-YZ-QSL-0120A；QH-SU-YZ-QSL-0082A；QH-SU-YZ-QSL-0081A；QH-SU-YZ-QSL-0086A；QH-SU-YZ-QSL-0087A,S二手索引,已开条次均补 ctext chapter 稳定卷页。即位礼、甲午宾天、崩逝、年案、隆科多六月调回与革爵、十月狱辞、七年投书追记、华夷谕颁布、不诛、军需密办、十年三月铸印、十年恤赠已钉韩国站条次。七年实录无军机房字。十年三月铸印未见改称句。十年恤赠未见始设句。会典未开。刻本朱批≠原折。崩逝条未写地点与死因。
+QH-W-023,QH-E-05,世宗宪皇帝圣训,圣训,36卷,L3,有,QH-SU-YZ-SX-0001A；QH-SU-YZ-SX-0001B；QH-SU-YZ-SX-0001C；QH-SU-YZ-SX-0001D；QH-SU-YZ-SX-0001E；QH-SU-YZ-SX-0001F；QH-SU-YZ-SX-0001G；QH-SU-YZ-SX-0001H；QH-SU-YZ-SX-0001I；QH-SU-YZ-SX-0001J；QH-SU-YZ-SX-0001K；QH-SU-YZ-SX-0001L；QH-SU-YZ-SX-0001M；QH-SU-YZ-SX-0001N；QH-SU-YZ-SX-0001O；QH-SU-YZ-SX-0001P；QH-SU-YZ-SX-0001Q；QH-SU-YZ-SX-0001R；QH-SU-YZ-SX-0001S；QH-SU-YZ-SX-0001T；QH-SU-YZ-SX-0001U；QH-SU-YZ-SX-0001V；QH-SU-YZ-SX-0001W；QH-SU-YZ-SX-0001X；QH-SU-YZ-SX-0001Y；QH-SU-YZ-SX-0001Z；QH-SU-YZ-SX-0002A；QH-SU-YZ-SX-0002B；QH-SU-YZ-SX-0002C；QH-SU-YZ-SX-0002D；QH-SU-YZ-SX-0002E；QH-SU-YZ-SX-0002F；QH-SU-YZ-SX-0002G；QH-SU-YZ-SX-0002H；QH-SU-YZ-SX-0002I；QH-SU-YZ-SX-0002J；QH-SU-YZ-SX-0002K；QH-SU-YZ-SX-0002L；QH-SU-YZ-SX-0002M；QH-SU-YZ-SX-0002N；QH-SU-YZ-SX-0002O；QH-SU-YZ-SX-0002P；QH-SU-YZ-SX-0002Q；QH-SU-YZ-SX-0002R；QH-SU-YZ-SX-0002S；QH-SU-YZ-SX-0002T；QH-SU-YZ-SX-0002U；QH-SU-YZ-SX-0002V；QH-SU-YZ-SX-0002W；QH-SU-YZ-SX-0002X；QH-SU-YZ-SX-0002Y；QH-SU-YZ-SX-0002Z；QH-SU-YZ-SX-0003A；QH-SU-YZ-SX-0003B；QH-SU-YZ-SX-0003C；QH-SU-YZ-SX-0003D；QH-SU-YZ-SX-0003E；QH-SU-YZ-SX-0003F；QH-SU-YZ-SX-0003G；QH-SU-YZ-SX-0004A；QH-SU-YZ-SX-0004B；QH-SU-YZ-SX-0004C；QH-SU-YZ-SX-0004D；QH-SU-YZ-SX-0004E；QH-SU-YZ-SX-0004F；QH-SU-YZ-SX-0004G；QH-SU-YZ-SX-0004H；QH-SU-YZ-SX-0004I；QH-SU-YZ-SX-0004J；QH-SU-YZ-SX-0004K；QH-SU-YZ-SX-0004L；QH-SU-YZ-SX-0004M；QH-SU-YZ-SX-0004N；QH-SU-YZ-SX-0004O；QH-SU-YZ-SX-0004P；QH-SU-YZ-SX-0004Q；QH-SU-YZ-SX-0004R；QH-SU-YZ-SX-0004S；QH-SU-YZ-SX-0004T；QH-SU-YZ-SX-0004U；QH-SU-YZ-SX-0004V；QH-SU-YZ-SX-0004W；QH-SU-YZ-SX-0004X；QH-SU-YZ-SX-0004Y；QH-SU-YZ-SX-0004Z；QH-SU-YZ-SX-0005A；QH-SU-YZ-SX-0005B；QH-SU-YZ-SX-0005C；QH-SU-YZ-SX-0005D；QH-SU-YZ-SX-0005E；QH-SU-YZ-SX-0005F；QH-SU-YZ-SX-0005G；QH-SU-YZ-SX-0005H；QH-SU-YZ-SX-0005I；QH-SU-YZ-SX-0005J；QH-SU-YZ-SX-0005K；QH-SU-YZ-SX-0005L；QH-SU-YZ-SX-0005M；QH-SU-YZ-SX-0005N；QH-SU-YZ-SX-0005O；QH-SU-YZ-SX-0005P；QH-SU-YZ-SX-0005Q；QH-SU-YZ-SX-0005R；QH-SU-YZ-SX-0005S；QH-SU-YZ-SX-0005T；QH-SU-YZ-SX-0005U；QH-SU-YZ-SX-0005V；QH-SU-YZ-SX-0005W；QH-SU-YZ-SX-0005X；QH-SU-YZ-SX-0005Y；QH-SU-YZ-SX-0005Z；QH-SU-YZ-SX-0006A；QH-SU-YZ-SX-0006B；QH-SU-YZ-SX-0006C；QH-SU-YZ-SX-0006D；QH-SU-YZ-SX-0006E；QH-SU-YZ-SX-0006F；QH-SU-YZ-SX-0006G；QH-SU-YZ-SX-0006H；QH-SU-YZ-SX-0006I；QH-SU-YZ-SX-0006J；QH-SU-YZ-SX-0006K；QH-SU-YZ-SX-0006L；QH-SU-YZ-SX-0006M；QH-SU-YZ-SX-0006N；QH-SU-YZ-SX-0006O；QH-SU-YZ-SX-0006P；QH-SU-YZ-SX-0006Q；QH-SU-YZ-SX-0006R,S二手索引,四库刻本层。甲寅奉安不得与丁酉安奉并篇。不是实录。不得写成三十六卷已开。
+QH-W-028,QH-E-06,高宗纯皇帝实录,实录,首卷5＋正文1500卷,L0,无,,S二手索引,实录卷帙浩大，通行检索需明确时间范围；1796—1799太上皇训政期记录口径需注意
+QH-W-029,QH-E-06,高宗纯皇帝圣训,圣训,300卷,L0,无,,S二手索引,
+QH-W-035,QH-E-07,仁宗睿皇帝实录,实录,首卷4＋正文374卷,L0,无,,S二手索引,训政期记录口径需标明
+QH-W-036,QH-E-07,仁宗睿皇帝圣训,圣训,110卷,L0,无,,S二手索引,
+QH-W-039,QH-E-08,宣宗成皇帝实录,实录,首卷5＋正文476卷,L3,有,QH-SU-DG-XZSL-0001A；QH-SU-DG-XZSL-0001B；QH-SU-DG-XZSL-0002A,S二手索引,本库已钉卷一承德启匣、扈从请即位，以及卷476圆明园慎德堂再启匣与崩逝条。
+QH-W-040,QH-E-08,宣宗成皇帝圣训,圣训,130卷,L0,无,,S二手索引,
+QH-W-043,QH-E-09,文宗显皇帝实录,实录,首卷4＋正文356卷,L3,有,QH-SU-XF-WZSL-0001A,S二手索引,本库已钉同治朝进呈序：秋狝木兰未及回銮、阅六年书成三百五十六卷。实录日级正文未开。
+QH-W-044,QH-E-09,文宗显皇帝圣训,圣训,110卷,L0,无,,S二手索引,
+QH-W-047,QH-E-10,穆宗毅皇帝实录,实录,首卷4＋正文374卷,L0,无,,S二手索引,祺祥年号仅拟用未实施
+QH-W-048,QH-E-10,穆宗毅皇帝圣训,圣训,160卷,L0,无,,S二手索引,
+QH-W-051,QH-E-11,德宗景皇帝实录,实录,首卷4＋正文597卷,L3,有,QH-SU-GX-DZSL-0001A；QH-SU-GX-DZSL-0001B；QH-SU-GX-DZSL-0001C,S二手索引,本库已钉卷1懿旨立嗣、卷102崇厚订约十八条、卷106金顺奏约必不可允。成书于民国，编纂立场需注意。
+QH-W-052,QH-E-11,德宗景皇帝圣训,圣训,145卷,L0,无,,S二手索引,
+QH-W-053,QH-E-12,宣统政纪,政纪,首卷1＋正文70卷,L0,无,,S二手索引,不是「宣统帝实录」；溥仪无清朝庙号谥号
+QH-W-054,ALL,清实录（全帙）,实录汇编,4433卷(含首卷),L1,无,,S二手索引,已核圣祖三百卷、世宗一百五十九卷分卷目录（维基文库、ctext wiki、韩国站朝次页）。不是全书正文已开。各朝专条仍各自计打开程度。韩国站电子文本与影印本对应关系需逐条核验。
+QH-W-056,QH-E-04,康熙起居注（出版本）,起居注,全三册,L0,无,,S二手索引,出版本为替代层；未打开逐日原文，不拆主张；咸安宫最早出处待此层
+QH-W-057,QH-E-05,雍正起居注册（出版本）,起居注,全五册,L0,无,,S二手索引,同康熙起居注口径；未打开逐日原文，不拆主张；继位日与实录对读时记差异
+QH-W-058,QH-E-06,乾隆帝起居注（出版本）,起居注,全四十二册,L0,无,,S二手索引,与实录互证时记两层差异
+QH-W-059,QH-E-07,嘉庆帝起居注（出版本）,起居注,全二十二册,L0,无,,S二手索引,训政期记录需单独看
+QH-W-060,QH-E-08,清代起居注册·道光朝,起居注,100 卷,L0,无,,S二手索引,与实录互证时记两层差异
+QH-W-061,QH-E-09,清代起居注册·咸丰朝,起居注,57 卷,L0,无,,S二手索引,避走热河时期记录需核
+QH-W-062,QH-E-10,清代起居注册·同治朝,起居注,43 卷,L0,无,,S二手索引,垂帘期与亲政期记录分层
+QH-W-063,QH-E-11,清代起居注册·光绪朝,起居注,80 卷,L0,无,,S二手索引,戊戌前后记录需核
+QH-W-064,QH-E-12,宣统帝起居注（出版本）,起居注,待核,L0,无,,S二手索引,摄政王监国期记录需核
+QH-W-073,QH-E-04,圣祖仁皇帝圣训（四十卷本登记）,圣训,40卷,L0,无,,S二手索引,四十卷本正文未见；不得把六十卷序写成四十卷已开。

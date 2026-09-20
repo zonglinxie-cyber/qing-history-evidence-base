@@ -110,4 +110,6 @@ export const KIND_TO_FIELD = {
   overview: 'overviews',
   emperor_timeline: 'emperorTimeline',
   person_portraits: 'personPortraits',
+  ziguangge_heroes: 'ziguanggeHeroes',
+  ziguangge_batches: 'ziguanggeBatches',
 };

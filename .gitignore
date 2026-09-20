@@ -2,6 +2,33 @@ node_modules/
 scripts/node_modules
 .DS_Store
 *.part
+__pycache__/
 .workbuddy/
+.workbuddy-ai/
 .zcode/
+.cursor/
+*.qoder.site
 
+# 大体积本地资产，不入库：
+# media-originals/ 是站点 WebP 的未压缩原件（约 500MB），site/media/ 才是发布物；
+# outputs/ 是整改过程的截图与台账，按日期命名，可随时由构建与脚本重出。
+media-originals/
+outputs/
+
+# Natural Earth 原始 GeoJSON 缓存：3.5MB，不必入库。
+# site/basemap.js 是由它抽稀后的产物，已入库并带完整来源与再生成说明。
+data/import/natural-earth/
+
+# 构建派生，源真相是 data/ 与 content/
+site/data/
+site/chapter/
+site/person/
+site/lane/
+site/site/
+site/media-manifest.js
+site/sitemap.xml
+
+# 历法核对的工作表：每次 npm run build 由 scripts/check-calendar-baseline.mjs 整表重写，
+# 人工批注请写在 data/review-notes.csv，不要写在这两张表里（写了会被覆盖）。
+data/calendar-audit.csv
+data/calendar-worksheet.csv

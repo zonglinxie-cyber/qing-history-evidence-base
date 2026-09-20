@@ -1,0 +1,97 @@
+visual_id,来源表,对象ID,对象标题,图像性质分类,认定等级,权利颜色,展示角色,有分区,绑定主张数,许可,时态边界
+QH-V-E01,emperor-portraits.csv,QH-E-01,清太祖天命皇帝朝服像,后世历史艺术,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。入关前汗像按清宫朝服像程式追绘，不能直接当成生前写真。
+QH-V-E02,emperor-portraits.csv,QH-E-02,清太宗崇德皇帝朝服像,后世历史艺术,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。汗位在1626，称帝在1636，不是一次即位。
+QH-V-E03,emperor-portraits.csv,QH-E-03,清世祖顺治皇帝朝服像,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。朝服正像用于身份识别，不证明出家说或其他私生活叙事。
+QH-V-E04,emperor-portraits.csv,QH-E-04,清圣祖康熙皇帝朝服像,历史原件,题名明确,绿,默认朝服像,是,0,Public domain,十二帝网格与康熙人物页默认图。便服写字像另见 QH-V-E04B。
+QH-V-E04B,emperor-portraits.csv,QH-E-04,康熙帝便服写字像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。不替代朝服正像作为默认识别图。
+QH-V-E05,emperor-portraits.csv,QH-E-05,清世宗雍正皇帝朝服像轴,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。角色扮演图册另见 QH-V-E05B。
+QH-V-E05B,emperor-portraits.csv,QH-E-05,雍正帝道装像（扮装图册之一）,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。不是标准御容，禁止作为十二帝默认头像。
+QH-V-E06,emperor-portraits.csv,QH-E-06,清高宗乾隆帝朝服像,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。全身朝服坐像，脚在踏凳上。英文文件名那张是晚年近景，源图无下半身，另见 QH-V-E06K。故宫数字文物库故00006461 是缪炳泰题名、1
+QH-V-E07,emperor-portraits.csv,QH-E-07,清仁宗嘉庆皇帝朝服像,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。1796—1799训政期的权力状态不能从此像读出。
+QH-V-E08,emperor-portraits.csv,QH-E-08,清宣宗道光皇帝朝服像,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。园居行乐图另见 QH-V-E08B。
+QH-V-E08B,emperor-portraits.csv,QH-E-08,道光帝园居像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。非朝服正像。
+QH-V-E09,emperor-portraits.csv,QH-E-09,清文宗咸丰皇帝朝服像,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。读书行乐图另见 QH-V-E09B。
+QH-V-E09B,emperor-portraits.csv,QH-E-09,咸丰帝读书像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。非标准朝服像。
+QH-V-E10,emperor-portraits.csv,QH-E-10,清穆宗同治皇帝朝服像,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。写字行乐图另见 QH-V-E10B。
+QH-V-E10B,emperor-portraits.csv,QH-E-10,同治帝写字像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。非标准御容。
+QH-V-E11,emperor-portraits.csv,QH-E-11,清德宗光绪皇帝朝服像,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。常服历史照片另见 QH-V-E11B。
+QH-V-E11B,emperor-portraits.csv,QH-E-11,光绪帝常服照片,历史原件,题名明确,绿,其他真迹,否,0,Public domain,历史照片；不是朝服定妆。1906年是出版线索，不作为精确拍摄日；Denby是出版物作者，不能据此登记为摄影者。
+QH-V-E12,emperor-portraits.csv,QH-E-12,宣统帝朝服照片,历史原件,题名明确,绿,默认朝服像,否,0,Public domain,十二帝网格默认图。溥仪没有与前十一帝同系列的清宫朝服轴，故用朝服照片代替。不得标为1908—1912在位期御照，除非另有日期证据。
+QH-V-E12B,emperor-portraits.csv,QH-E-12,溥仪在紫禁城,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。退位后小朝廷时期照片，不可误标为清朝在位期御照。
+QH-V-E01C,emperor-portraits.csv,QH-E-01,明金战争图（或与萨尔浒相关的后世战争画）,后世历史艺术,可能,绿,相关史迹,否,0,Public domain,相关史迹视觉。不是战场遗址照片，也不是同时代战报附图。
+QH-V-E01D,emperor-portraits.csv,QH-E-01,新宾兴京一带今貌（赫图阿拉/兴京周边）,现代实景影像,很可能,绿,相关史迹,否,0,CC0,相关史迹。现代地貌，不能倒推1619年战场。CC0。
+QH-V-E01E,emperor-portraits.csv,QH-E-01,乾隆御制《太祖大破明师于萨尔浒山之战书事》,文献影像,题名明确,黄,相关史迹,否,0,馆藏数字影像待逐项核权,黄色资源：只展示短引文和外链，不嵌入台北故宫高清图。
+QH-V-E03C,emperor-portraits.csv,QH-E-03,摄政王多尔衮令旨,历史原件,题名明确,绿,奏折朱批,是,0,Public domain,相关文书。幼帝时期军政文书常由摄政王发出，不得标成皇帝亲批。
+QH-V-E04C,emperor-portraits.csv,QH-E-04,康熙御书兰亭碑,历史原件,题名明确,绿,御笔书法,是,1,CC BY 3.0,御笔书法。照片依 CC BY 3.0 署名 Commons 文件页作者。碑刻是复制传播层，须与纸本墨迹区分。
+QH-V-E04D,emperor-portraits.csv,QH-E-04,康熙朝宫中档奏折（原件入口）,历史原件,馆藏著录认定,黄,奏折朱批,是,2,馆藏影像待逐项核权,黄色资源，能浏览不等于可复制，点原站核原折与朱批。
+QH-V-E05C,emperor-portraits.csv,QH-E-05,雍正朱批谕旨（刻本转引）与宫中档原件入口,历史原件,馆藏著录认定,黄,奏折朱批,是,1,原件影像待逐项核权；刻本文本可作公版线索,黄色资源。原件图像外链；刻本只作发现和短引。
+QH-V-E06B,emperor-portraits.csv,QH-E-06,乾隆帝佛装像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。不是朝服定妆，也不是普通生活照。
+QH-V-E06C,emperor-portraits.csv,QH-E-06,乾隆帝狩猎图,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。木兰秋狝视觉，不是朝会定妆。
+QH-V-E06D,emperor-portraits.csv,QH-E-06,乾隆帝戎装骑马像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。大阅/戎装礼仪像。
+QH-V-E06E,emperor-portraits.csv,QH-E-06,乾隆御书兰亭碑,历史原件,题名明确,绿,御笔书法,是,1,CC BY 3.0,御笔书法。照片依 CC BY 3.0 署名。
+QH-V-E06F,emperor-portraits.csv,QH-E-06,乾隆御制萨尔浒之战书事（文本）,文献影像,题名明确,黄,御笔书法,否,0,馆藏数字影像待逐项核权,黄色资源。短引文可展示，高清书页外链台北故宫。
+QH-V-E06G,emperor-portraits.csv,QH-E-06,乾隆朝宫中档奏折（原件入口）,历史原件,馆藏著录认定,黄,奏折朱批,否,0,馆藏影像待逐项核权,黄色资源，能浏览不等于可复制，点原站核原折与朱批。
+QH-V-E04E,emperor-portraits.csv,QH-E-04,康熙行书九日对菊诗轴,历史原件,题名明确,绿,御笔书法,否,0,Public domain,御笔书法。纸本立轴，不是碑刻。
+QH-V-E05D,emperor-portraits.csv,QH-E-05,雍正行书苏轼赤壁怀古词轴,历史原件,题名明确,绿,御笔书法,否,0,Public domain,御笔书法。写的是苏轼的词，不是雍正自己作的。
+QH-V-E05E,emperor-portraits.csv,QH-E-05,雍正御笔「中正仁和」匾,历史原件,题名明确,绿,御笔书法,否,0,CC BY-SA 3.0,御笔匾额，养心殿常见四字，照片须署名。
+QH-V-E06H,emperor-portraits.csv,QH-E-06,乾隆行书「三希堂」匾,历史原件,题名明确,绿,御笔书法,否,0,Public domain,御笔。三希堂因收藏三件法书得名。
+QH-V-E07B,emperor-portraits.csv,QH-E-07,嘉庆朝朱批奏折,历史原件,题名明确,绿,奏折朱批,是,0,Public domain,朱批原件照片。红笔是皇帝的，黑字是臣工的。
+QH-V-E08C,emperor-portraits.csv,QH-E-08,道光朝朱批奏折,历史原件,题名明确,绿,奏折朱批,是,0,Public domain,朱批原件照片。红笔是皇帝的。
+QH-V-E09C,emperor-portraits.csv,QH-E-09,咸丰朝朱批奏折,历史原件,题名明确,绿,奏折朱批,是,0,Public domain,朱批原件照片。
+QH-V-E10C,emperor-portraits.csv,QH-E-10,载湉入承大统诏（同治十三年）,历史原件,题名明确,绿,奏折朱批,是,1,Public domain,诏书原件照片。不是同治亲笔诗稿，是朝廷文书。
+QH-V-E11C,emperor-portraits.csv,QH-E-11,光绪朝朱批奏折,历史原件,题名明确,绿,奏折朱批,是,0,Public domain,朱批原件照片。亲政前后的批笔须另核。
+QH-V-E11D,emperor-portraits.csv,QH-E-11,兴学育才上谕（光绪年间）,历史原件,题名明确,绿,奏折朱批,否,0,CC BY-SA 4.0,陈列中的上谕照片。朝廷文书，不一定是载湉亲笔。
+QH-V-E12C,emperor-portraits.csv,QH-E-12,清帝退位诏书（文本）,文献影像,题名明确,黄,奏折朱批,否,0,Public domain,黄色资源。先读文本。原件手稿照片还没找到可嵌入的绿图。
+QH-V-E04F,emperor-portraits.csv,QH-E-04,康熙南巡图卷七局部（无锡至苏州）,历史原件,馆藏著录认定,绿,其他真迹,否,0,Public domain,其他真迹。王翚等绘南巡长卷的局部。不是朝服定妆，也不能当成某一天的写生新闻。
+QH-V-E04G,emperor-portraits.csv,QH-E-04,康熙帝马上出行像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。马上出行，不是朝会坐像。人物认定目前主要依据文件题名。
+QH-V-E04H,emperor-portraits.csv,QH-E-04,康熙五十七年两广总督杨琳奏十三行事,历史原件,题名明确,绿,奏折朱批,是,0,Public domain,朱批奏折原件照片，黑字是总督写的，红笔才是皇帝批的，具体朱批文字对着原件读，不在这里臆录。
+QH-V-E05F,emperor-portraits.csv,QH-E-05,雍正帝洋装猎虎图,历史原件,题名明确,绿,其他真迹,否,0,CC BY-SA 4.0,其他真迹。不是朝服定妆。照片许可是 CC BY-SA 4.0，须按 Commons 文件页署名。
+QH-V-E05G,emperor-portraits.csv,QH-E-05,《硃批谕旨》御制序（雍正十年三月初一日）,文献影像,馆藏著录认定,黄,奏折朱批,是,1,Public domain,黄色资源。先读他自己怎么说批折。原折图像外链清档，不镜像。
+QH-V-E05H,emperor-portraits.csv,QH-E-05,朱批孙继宗摺：所奏知道了（兼问不识字）,文献影像,馆藏著录认定,黄,奏折朱批,否,0,Public domain,黄色资源。这是刻本里的朱批，不是网上段子。原折图像仍须回清档。
+QH-V-E06I,emperor-portraits.csv,QH-E-06,乾隆帝文殊菩萨装像,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。文殊化身像，不是朝服定妆。佛装唐卡另见 QH-V-E06B。
+QH-V-E06J,emperor-portraits.csv,QH-E-06,乾隆帝半身冬装像,历史原件,题名明确,绿,其他真迹,否,0,CC BY-SA 4.0,其他真迹。便服半身，不是朝袍正像。照片许可 CC BY-SA 4.0，须署名 Commons 文件页作者 ahxxm。
+QH-V-E06K,emperor-portraits.csv,QH-E-06,乾隆帝朝服像（晚年近景）,历史原件,题名明确,绿,其他真迹,否,0,Public domain,其他真迹。半身近景，源图没有脚，不能当十二帝网格默认图。全身轴见 QH-V-E06。
+QH-V-E05I,emperor-portraits.csv,QH-E-05,雍正朱批马会伯摺（湖北巡抚马会伯奏）,历史原件,馆藏著录认定,绿,奏折朱批,是,0,Public domain,朱批原件照。红笔是雍正亲笔，黑字是马会伯奏。
+QH-V-E06L,emperor-portraits.csv,QH-E-06,杨廷璋等奏进平定准部铜板图样摺,历史原件,馆藏著录认定,绿,奏折朱批,是,0,Public domain,黑字奏折原件照；「旨」起两列为引收谕，非本件朱批。
+QH-V-E07C,emperor-portraits.csv,QH-E-07,颙琰楷书对菊一首横披,历史原件,题名明确,绿,御笔书法,否,0,Public domain,御笔书法。纸本横披，不是碑刻。
+QH-V-E09D,emperor-portraits.csv,QH-E-09,咸丰御笔清华园匾,历史原件,很可能,绿,御笔书法,否,0,CC0,御笔书法。匾额为咸丰御笔三字。
+QH-V-E12D,emperor-portraits.csv,QH-E-12,溥仪书法康德十年写本,历史原件,很可能,绿,御笔书法,否,0,Public domain,退位后书迹，非在位时期御笔；展示须注明时态。
+QH-V-E04I,emperor-portraits.csv,QH-E-04,康熙期官窑刻龙纹盘,历史原件,馆藏著录认定,绿,其他真迹,否,0,Public domain,用过的物品层：御窑瓷器是宫廷日用器，刻龙纹为官样。
+QH-V-E06M,emperor-portraits.csv,QH-E-06,乾隆期玉玺,历史原件,馆藏著录认定,绿,其他真迹,否,0,CC0,用过的物品层：玺为权力信物；具体印文与用途以馆藏著录为准。
+QH-V-E08D,emperor-portraits.csv,QH-E-08,道光帝龙袍,历史原件,馆藏著录认定,绿,其他真迹,否,0,CC BY-SA 4.0,用过的物品层：传世的道光朝袍服；织绣为江宁/苏州织造官办。
+QH-V-E05J,emperor-portraits.csv,QH-E-05,雍正期珐琅彩孔雀纹碗,历史原件,馆藏著录认定,绿,其他真迹,否,0,CC BY 4.0,用过的物品层：珐琅彩为宫内珐琅作绘烧，产量极少。
+QH-V-E10D,emperor-portraits.csv,QH-E-10,同治期官窑瓷,历史原件,馆藏著录认定,绿,其他真迹,否,0,CC0,用过的物品层：同治朝御窑器；大婚瓷为其大宗。
+QH-V-E11E,emperor-portraits.csv,QH-E-11,光绪期龙凤双喜碗,历史原件,馆藏著录认定,绿,其他真迹,否,0,Public domain,用过的物品层：龙凤双喜纹为大婚样；年代与大婚相合。
+QH-PP-0001,person-portraits.csv,QH-P-000180,李鸿章画像（Hubert Vos 油画）,历史原件,,,,否,0,Public domain,人物页展示；晚年油画像，非照片层。；本表缺权利颜色/认定等级列
+QH-PP-0002,person-portraits.csv,QH-P-000181,胡光墉坐像,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0003,person-portraits.csv,QH-P-000177,恭亲王奕訢像（Felice Beato 摄）,历史原件,,,,否,0,Public domain,人物页展示；辛酉赢方主角之一。；本表缺权利颜色/认定等级列
+QH-PP-0004,person-portraits.csv,QH-P-000171,袁世凯画像（Hubert Vos 油画）,历史原件,,,,否,0,Public domain,人物页展示；晚年油画像。；本表缺权利颜色/认定等级列
+QH-PP-0005,person-portraits.csv,QH-P-000184,曾国藩像（平定粤匪功臣像）,历史原件,,,,否,0,Public domain,人物页展示；功臣像为战后绘，非写真。；本表缺权利颜色/认定等级列
+QH-PP-0006,person-portraits.csv,QH-P-000185,左宗棠像（1875 年摄于兰州）,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0007,person-portraits.csv,QH-P-000183,岑春煊银盐照片,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0008,person-portraits.csv,QH-P-000182,叶志超部战事画报,历史原件,,,,否,0,Public domain,人物页展示；无叶志超本人写真，以同时期战事画报代之，性质已标画报。；本表缺权利颜色/认定等级列
+QH-PP-0009,person-portraits.csv,QH-P-000165,慈禧太后便服照（勋龄摄）,历史原件,,,,否,0,Public domain,人物页展示；御用摄影师所摄传世清晰照片；与慈安朝服像并观时注意画像与照片性质不同。；本表缺权利颜色/认定等级列
+QH-PP-0010,person-portraits.csv,QH-P-000166,孝贞显皇后朝服像（局部）,历史原件,,,,否,0,Public domain,人物页展示；朝服像为礼仪御容而非写真。；本表缺权利颜色/认定等级列
+QH-PP-0011,person-portraits.csv,QH-P-000163,叶名琛被俘后照片,历史原件,,,,否,0,Public domain,人物页展示；摄于被俘囚禁期间，非官式肖像。；本表缺权利颜色/认定等级列
+QH-PP-0012,person-portraits.csv,QH-P-000169,林则徐像（关乔昌油画）,历史原件,,,,否,0,Public domain,人物页展示；同时期广州画家所绘；具体绘制年份待核。；本表缺权利颜色/认定等级列
+QH-PP-0013,person-portraits.csv,QH-P-000170,关天培像,历史原件,,,,否,0,Public domain,人物页展示；虎门殉国后流传画像；写实程度待核。；本表缺权利颜色/认定等级列
+QH-PP-0014,person-portraits.csv,QH-P-000168,谭嗣同照片,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0015,person-portraits.csv,QH-P-000173,张之洞朝服照,历史原件,,,,否,0,Public domain,人物页展示；拍照着朝服不等于宫廷御容程式。；本表缺权利颜色/认定等级列
+QH-PP-0016,person-portraits.csv,QH-P-000175,丁汝昌照片,历史原件,,,,否,0,Public domain,人物页展示；源图仅约200×317像素；放大受限于原件。；本表缺权利颜色/认定等级列
+QH-PP-0017,person-portraits.csv,QH-P-000164,僧格林沁照片,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0018,person-portraits.csv,QH-P-000167,肃顺照片,历史原件,,,,否,0,Public domain,人物页展示；辛酉政变前留影；拍摄信息依文件页待核。；本表缺权利颜色/认定等级列
+QH-PP-0019,person-portraits.csv,QH-P-000162,传为洪秀全的版画像,历史原件,,,,否,0,Public domain,人物页展示；形象系西方人想象与本人相貌无关；Commons 原题即作 Alleged。；本表缺权利颜色/认定等级列
+QH-PP-0020,person-portraits.csv,QH-P-000049,年羹尧像,历史原件,,,,否,0,Public domain,人物页展示；后世摹绘本非写真。；本表缺权利颜色/认定等级列
+QH-PP-0021,person-portraits.csv,QH-P-000124,和珅像,历史原件,,,,否,0,Public domain,人物页展示；绘制年代依文件页待核。；本表缺权利颜色/认定等级列
+QH-PP-0022,person-portraits.csv,QH-P-000092,张廷玉像,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0023,person-portraits.csv,QH-P-000103,鄂尔泰像,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0024,person-portraits.csv,QH-P-000127,吕留良像（《清代学者像传》摹绘）,后世历史艺术,,,,否,0,Public domain,人物页展示；后世摹绘非写真。；本表缺权利颜色/认定等级列
+QH-PP-0025,person-portraits.csv,QH-P-000149,吴三桂像,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0026,person-portraits.csv,QH-P-000143,孝贤纯皇后朝服像（局部）,历史原件,,,,否,0,Public domain,人物页展示；朝服像为礼仪御容。；本表缺权利颜色/认定等级列
+QH-PP-0027,person-portraits.csv,QH-P-000145,令妃朝服像（《心写治平》卷局部）,历史原件,,,,否,0,Public domain,人物页展示；绘的是令妃位分；追封皇后在其身后。；本表缺权利颜色/认定等级列
+QH-PP-0028,person-portraits.csv,QH-P-000011,怡亲王允祥像,历史原件,,,,否,0,Public domain,人物页展示；断代依文件页待核馆藏。；本表缺权利颜色/认定等级列
+QH-PP-0029,person-portraits.csv,QH-P-000014,果亲王允礼像,历史原件,,,,否,0,Public domain,人物页展示；郎世宁绘本另有册页本待核关系。；本表缺权利颜色/认定等级列
+QH-PP-0030,person-portraits.csv,QH-P-000172,汤若望版画像,历史原件,,,,否,0,Public domain,人物页展示；欧洲流传的汤若望标准版画。；本表缺权利颜色/认定等级列
+QH-PP-0031,person-portraits.csv,QH-P-000095,陈廷敬像（禹之鼎绘）,历史原件,,,,否,0,Public domain,人物页展示；禹之鼎为康熙朝肖像名家。；本表缺权利颜色/认定等级列
+QH-PP-0032,person-portraits.csv,QH-P-000090,李光地像,历史原件,,,,否,0,Public domain,人物页展示。；本表缺权利颜色/认定等级列
+QH-PP-0033,person-portraits.csv,QH-P-000097,于成龙像,历史原件,,,,否,0,Public domain,人物页展示；康熙朝有两位于成龙；此图对应何人待核。；本表缺权利颜色/认定等级列

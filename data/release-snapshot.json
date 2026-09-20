@@ -1,19 +1,23 @@
 {
-  "version": "0.6.0",
-  "fingerprint": "33eb93e69ea409a4",
+  "version": "0.7.2",
+  "fingerprint": "5f46a424a74b782a",
   "metrics": {
     "emperors": 12,
     "emperorsWithClaims": 12,
-    "chapters": 58,
-    "claims": 881,
-    "adopted": 826,
-    "pending": 55,
-    "people": 177,
-    "sourceIndex": 91,
-    "questions": 83,
-    "sourceBoundChapters": 58,
-    "indexableChapters": 36,
-    "evidenceClosedChapters": 55
+    "chapters": 101,
+    "claims": 1041,
+    "adopted": 891,
+    "pending": 150,
+    "people": 178,
+    "sourceIndex": 105,
+    "questions": 86,
+    "sourceBoundChapters": 90,
+    "indexableChapters": 44,
+    "evidenceClosedChapters": 79,
+    "northStar": 891,
+    "assertionCoverageEras": 3,
+    "assertionRules": 77,
+    "reviewBacklog": 65
   },
-  "updatedAt": "2026-08-25"
+  "updatedAt": "2026-09-11"
 }

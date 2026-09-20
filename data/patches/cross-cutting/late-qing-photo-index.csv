@@ -1,0 +1,20 @@
+photo_id,visual_id,person_id,对象标题,摄影者,年代,许可,权利颜色,图像性质分类,时态边界,使用说明
+QH-PH-0001,QH-V-E11B,QH-P-000058,光绪帝常服照片,摄影者佚名（未详）；刊载于 Charles Denby《China and Her People》,约1906年前后刊载；拍摄日期待核,Public domain,绿,历史原件,清朝在位期或退位后须看对象标题,历史照片；不是朝服定妆。1906年是出版线索，不作为精确拍摄日；Denby是出版物作者，不能据此登记为摄影者。
+QH-PH-0002,QH-V-E12,QH-P-000059,宣统帝朝服照片,佚名摄影师,二十世纪前期；文件页说明指向复辟朝服照,Public domain,绿,历史原件,清朝在位期或退位后须看对象标题,十二帝网格默认图。溥仪没有与前十一帝同系列的清宫朝服轴，故用朝服照片代替。不得标为1908—1912在位期御照，除非另有日期证据。
+QH-PH-0003,QH-V-E12B,QH-P-000059,溥仪在紫禁城,作者未明（退位后小朝廷时期摄影师）,1914—1924年间（退位后小朝廷时期）,Public domain,绿,历史原件,清朝在位期或退位后须看对象标题,其他真迹。退位后小朝廷时期照片，不可误标为清朝在位期御照。
+QH-PH-0004,QH-V-E01D,QH-P-000051,新宾兴京一带今貌（赫图阿拉/兴京周边）,见 Commons 文件页,21世纪,CC0,绿,现代实景影像,清朝在位期或退位后须看对象标题,相关史迹。现代地貌，不能倒推1619年战场。CC0。
+QH-PH-0005,QH-V-E05E,QH-P-000002,雍正御笔「中正仁和」匾,爱新觉罗·胤禛书；见 Commons 摄影署名,雍正年间书；照片约2007年,CC BY-SA 3.0,绿,历史原件,清朝在位期或退位后须看对象标题,御笔匾额，养心殿常见四字，照片须署名。
+QH-PH-0006,QH-V-E11D,QH-P-000058,兴学育才上谕（光绪年间）,清廷（佚名）；见 Commons 文件页摄影署名,光绪年间文书；照片约2023年,CC BY-SA 4.0,绿,历史原件,清朝在位期或退位后须看对象标题,陈列中的上谕照片。朝廷文书，不一定是载湉亲笔。
+QH-PH-0007,QH-V-E04H,QH-P-000001,康熙五十七年两广总督杨琳奏十三行事,杨琳具奏；玄烨朱批（广州市国家档案馆藏，档号待核）,康熙五十七年,Public domain,绿,历史原件,清朝在位期或退位后须看对象标题,朱批奏折原件照片，黑字是总督写的，红笔才是皇帝批的，具体朱批文字对着原件读，不在这里臆录。
+QH-PH-0008,QH-PP-0002,QH-P-000181,胡光墉坐像,作者不详,约1870年代,Public domain,,历史原件,人物页展示。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0009,QH-PP-0003,QH-P-000177,恭亲王奕訢像（Felice Beato 摄）,Felice Beato,1869,Public domain,,历史原件,人物页展示；辛酉赢方主角之一。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0010,QH-PP-0006,QH-P-000185,左宗棠像（1875 年摄于兰州）,作者不详,1875,Public domain,,历史原件,人物页展示。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0011,QH-PP-0007,QH-P-000183,岑春煊银盐照片,作者不详,清末,Public domain,,历史原件,人物页展示。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0012,QH-PP-0009,QH-P-000165,慈禧太后便服照（勋龄摄）,裕勋龄（宫廷摄影师）,约1890,Public domain,,历史原件,人物页展示；御用摄影师所摄传世清晰照片；与慈安朝服像并观时注意画像与照片性质不同。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0013,QH-PP-0011,QH-P-000163,叶名琛被俘后照片,摄影者不详,约1858—1859（被俘后）,Public domain,,历史原件,人物页展示；摄于被俘囚禁期间，非官式肖像。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0014,QH-PP-0014,QH-P-000168,谭嗣同照片,摄影者不详,清末,Public domain,,历史原件,人物页展示。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0015,QH-PP-0015,QH-P-000173,张之洞朝服照,摄影者不详,1909年前,Public domain,,历史原件,人物页展示；拍照着朝服不等于宫廷御容程式。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0016,QH-PP-0016,QH-P-000175,丁汝昌照片,摄影者不详,1895年前,Public domain,,历史原件,人物页展示；源图仅约200×317像素；放大受限于原件。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0017,QH-PP-0017,QH-P-000164,僧格林沁照片,摄影者不详,1865年前,Public domain,,历史原件,人物页展示。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0018,QH-PP-0018,QH-P-000167,肃顺照片,摄影者不详（文件页标注 P. Pogojeff）,1861年前,Public domain,,历史原件,人物页展示；辛酉政变前留影；拍摄信息依文件页待核。,person-portraits 无权利颜色列；Commons 标 Public domain 仍须逐件复核拍摄者去世年。
+QH-PH-0019,QH-V-E12D,QH-P-000059,溥仪书法康德十年写本,爱新觉罗·溥仪书（伪满时期书写，见 Commons 著录）,约1944年（伪满康德十年）,Public domain,绿,历史原件,康德十年=1944，伪满纪年，非清朝在位御笔,已在 emperor-portraits 注明退位后。不得写入宣统朝御笔总目。

@@ -1,17 +1,21 @@
 {
   "name": "qing-history-phase0",
-  "version": "0.6.0",
+  "version": "0.7.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/validate-data.mjs && node scripts/build-release.mjs && node scripts/build-site.mjs && node scripts/build-data-browser.mjs && node scripts/build-status.mjs",
+    "build": "node scripts/check-calendar-baseline.mjs && node scripts/validate-data.mjs && node scripts/build-release.mjs --render-only && node scripts/build-site.mjs",
+    "build:basemap": "node scripts/build-basemap.mjs --fetch",
     "release": "node scripts/build-release.mjs",
-    "watch": "node scripts/build-site.mjs --watch",
+    "watch": "node scripts/check-calendar-baseline.mjs && node scripts/build-site.mjs --watch",
     "status": "node scripts/build-status.mjs",
     "validate": "node scripts/validate-data.mjs",
+    "check:calendar": "node scripts/check-calendar-baseline.mjs",
+    "errata": "node scripts/log-correction.mjs",
     "validate:strict": "STRICT=1 node scripts/validate-data.mjs",
     "self-review": "node scripts/self-review.mjs",
-    "test": "node scripts/test-reader.mjs && node scripts/test-validate-fixtures.mjs && node scripts/test-render.mjs",
+    "test": "node scripts/test-reader.mjs && node scripts/test-validate-fixtures.mjs && node scripts/test-render.mjs && node scripts/test-studio.mjs && node scripts/test-review.mjs",
+    "test:browser": "node scripts/test-browser.mjs",
     "cache-media": "node scripts/cache-media.mjs",
     "optimize-media": "node scripts/optimize-media.mjs"
   },
@@ -19,7 +23,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "csv-parse": "^5.6.0",
+    "csv-parse": "^7.0.2",
     "pinyin-pro": "^3.29.1"
   }
 }

@@ -1,0 +1,9 @@
+overview_id,slug,title,file,lede,sort
+QH-OV-06,titles,庙号谥号年号总表,emperors/timeline/庙号谥号尊号年号.md,从十二帝表抽出的称号总表；尊号几乎空白；溥仪庙谥故意留空,60
+QH-OV-07,family-index,后妃皇子公主总索引,emperors/timeline/后妃皇子公主总索引.md,康雍深挖表已接；其余各帝只接到研究卡与人物档，不造新 ID,70
+QH-OV-08,sites-tombs,陵寝祭祀宫苑遗址,emperors/timeline/陵寝祭祀宫苑遗址.md,已有史迹 48 处；慕陵惠陵太庙堂子无独立行,80
+QH-OV-09,document-types,朱批上谕诏书文种,emperors/reading/文献类型-朱批上谕诏书.md,文种分层：折、批、谕、诏、懿旨、起居注、实录,90
+QH-OV-10,manchu-sources,满文史料门类,emperors/reading/满文史料门类.md,只登记本库已有入口，不写满文释读,100
+QH-OV-11,photo-rights,近现代照片与版权,emperors/reading/近现代照片与版权.md,光绪以后照片与伪满书迹分时态；Commons 公版仍须逐件核,110
+QH-OV-12,conflict-ops,冲突组操作入口,emperors/disputes/冲突组操作入口.md,不重复 docs/23；只写皇帝代理怎么挂组、怎么提勘误,120
+QH-OV-13,calendar-use,历日与满汉纪年,emperors/timeline/历日与满汉纪年.md,CAL-001 怎么用；机器校验与具书核录的界限,130

@@ -1,0 +1,5 @@
+chapter_id,slug,person_id,era,title,lede,file,unit_ids,related,sort,收录
+QH-CH-KX-17,kangxi-17,QH-P-000001,康熙,御容、南巡图与器用,朝服、便服、南巡长卷、马上出行是四套功能。战图未入库。冠服从画像上读，器用从一件官窑盘上读，玺印没有康熙原件。,emperors/kangxi/17-portraits-and-objects.md,QH-SU-KX-0300A,#/chapter/kangxi-12；#/chapter/kangxi-11；#/chapter/kangxi-18；#/image/QH-V-E04,62,是
+QH-CH-KX-18,kangxi-18,QH-P-000001,康熙,朱批：杨琳折与朱书废谕,红笔要分朱批和朱书上谕。杨琳折是看得见的一件；辛亥废太子是实录里的御笔朱书。汇编、原折、照片三层不要并。,emperors/kangxi/18-vermilion-rescripts.md,QH-SU-KX-0251B,#/chapter/kangxi-02；#/chapter/kangxi-05；#/chapter/kangxi-17；#/image/QH-V-E04H,63,是
+QH-CH-KX-16,kangxi-16,QH-P-000001,康熙,景陵、热河与塞外行围,崩在寝宫，坟在景陵。昌瑞山陵与景陵两名并存。本纪写热河，遗址写山庄。木兰设场句未开。黄河永定河不重复。,emperors/kangxi/16-jingling-and-beyond-the-pass.md,QH-SU-QSG-0006；QH-SU-YZ-QSG-0009E；QH-SU-QSG-0214,#/chapter/kangxi-01；#/chapter/kangxi-03；#/site/QH-ST-0021；#/site/QH-ST-0005；#/site/QH-ST-0010,61,是
+QH-CH-KX-19,kangxi-19,QH-P-000001,康熙,四辅臣、南书房与朋党对手,前八年是四辅臣。鳌拜大罪三十贷死。索额图、明珠只证职名与外戚边。,emperors/kangxi/19-people-network.md,QH-SU-KX-NET-0006A,#/chapter/kangxi-01；#/chapter/kangxi-02；#/chapter/shunzhi-11,64,否

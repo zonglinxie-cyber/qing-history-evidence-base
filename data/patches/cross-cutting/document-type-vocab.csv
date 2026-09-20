@@ -1,0 +1,15 @@
+scheme_code,scheme_label,term_code,中文标签,英文标签,定义,上位词,逆关系,是否启用,排序
+document_genre,文献文种,vermillion_rescript,朱批,vermillion rescript,皇帝在奏折原件上的朱笔批答。红墨不等于朱批；印文、引谕、全篇朱笔诏书须另标。,,,true,10
+document_genre,文献文种,palace_memorial,奏折,palace memorial,臣工进呈的折件。与朱批是同一物理件上的两层，不得把折文写成上谕。,,,true,20
+document_genre,文献文种,edict_shangyu,上谕,edict,以皇帝名义颁发的指令。实录所载上谕是官修层，不是原件。,documentary_genre,,true,30
+document_genre,文献文种,zhao_proclamation,诏书,proclamation,即位、大赦、遗诏、退位等礼仪性诏书。用宝≠朱批。,documentary_genre,,true,40
+document_genre,文献文种,yiyu,懿旨,empress-dowager edict,皇太后名义的旨。同光垂帘常见。不得与皇帝上谕混写主体。,documentary_genre,,true,50
+document_genre,文献文种,zhuyu,朱谕,vermillion edict,不批在奏折上、而以朱笔直接书写的谕。咸丰赞襄遗诏在 reading 标朱谕。,documentary_genre,,true,60
+document_genre,文献文种,tingji,廷寄,court letter,军机处封发的寄信上谕。本库尚无独立文种行。,documentary_genre,,true,70
+document_genre,文献文种,qijuzhu,起居注,court diary,逐日记注。出版本是替代层，不是原档。imperial-works 已登记九朝出版本，皆 L0。,,,true,80
+document_genre,文献文种,shilu,实录,veritable records,嗣皇帝敕修的编年。前三朝有重修层。韩国站/ctext 是数字文本层。,,,true,90
+document_genre,文献文种,shengxun,圣训,sacred instructions,分类辑录谕旨。序多嗣皇帝所撰，不是当朝自撰。,,,true,100
+document_genre,文献文种,yuzhi,御制,imperial composition,以皇帝署名的诗文、论序。自辩类只作「当时这样说」。,,,true,110
+document_genre,文献文种,chizhuan,敕撰/敕编,imperially commissioned,奉敕编纂。作者是馆臣，不是皇帝亲笔。,,,true,120
+document_genre,文献文种,manchu_dangse,满文档案,Manchu archive,满文原档及其译编。译编含现代整理层，见 docs/24 SRC-061/065。,,,true,130
+document_genre,文献文种,yudie,玉牒,imperial genealogy,宗人府屡修谱牒。世表/公主表不是玉牒。QH-W-055 仅目录级。,,,true,140

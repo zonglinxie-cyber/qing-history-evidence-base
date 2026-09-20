@@ -44,7 +44,10 @@ function diffMetrics(previous = {}, current = {}) {
     .map(([key, label]) => {
       const oldValue = previous[key];
       const newValue = current[key];
-      if (oldValue === newValue || oldValue === undefined) return null;
+      if (oldValue === newValue) return null;
+      // 新增/移除指标也要报出来，否则只会落成一句「指标组合更新」，读的人不知道变了什么。
+      if (oldValue === undefined) return `${label}：新增 ${newValue}`;
+      if (newValue === undefined) return `${label}：移除（原 ${oldValue}）`;
       return `${label}：${oldValue} → ${newValue}`;
     })
     .filter(Boolean);
@@ -73,7 +76,7 @@ function formatChangelogEntry(version, date, changes) {
 function prependChangelogEntry(version, date, changes) {
   const header = `# 更新日志
 
-> 本页由 \`npm run build\` 根据数据覆盖变化自动维护；版本号见根目录 \`VERSION\`。请勿手改数字行。
+> 本页由 \`npm run release\` 根据数据覆盖变化自动维护；版本号见根目录 \`VERSION\`。请勿手改数字行。
 
 `;
   let body = '';
@@ -91,7 +94,7 @@ function updateReadmeVersion(version) {
   const readme = fs.readFileSync(readmePath, 'utf8');
   const next = readme.replace(
     /^版本：`[^`]+`.*$/m,
-    `版本：\`${version}\`（[\`CHANGELOG.md\`](CHANGELOG.md) 由构建自动维护）`,
+    `版本：\`${version}\`（[\`CHANGELOG.md\`](CHANGELOG.md) 由显式 release 命令维护）`,
   );
   if (next !== readme) fs.writeFileSync(readmePath, next);
 }
@@ -115,6 +118,15 @@ function ensureInitialChangelog(version, metrics) {
   ]);
 }
 
+if (process.argv.includes('--render-only')) {
+  const version = readVersion();
+  const entries = parseChangelog(fs.readFileSync(changelogPath, 'utf8'));
+  const updatedAt = entries.find(e => e.version === version)?.date || '';
+  fs.mkdirSync(path.dirname(releaseJsonPath), { recursive: true });
+  fs.writeFileSync(releaseJsonPath, JSON.stringify({ version, updatedAt, entries }, null, 2) + '\n');
+  console.log('Projected release.json without modifying release sources');
+  process.exit(0);
+}
 const metrics = collectReleaseMetrics();
 const fingerprint = fingerprintMetrics(metrics);
 let version = readVersion();

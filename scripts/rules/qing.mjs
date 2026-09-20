@@ -6,13 +6,13 @@ export function check(ctx) {
     errors,
     emperors, cards, people, units, claims, chapters,
     empressTimeline, princes, princesses, heirChain, historicSites,
-    works, emperorTimeline, families,
+    works, emperorTimeline, families, conflictSets,
   } = ctx;
   const chronicle = ctx.chronicle || [];
 
-  // 分流：结构性规则（外键、枚举、必填、清史稿卷次、序列、今地编号格式）走 errors 永远阻断；
+  // 分流：结构性规则（外键、枚举、必填、清史稿卷次、序列、今地编号格式）走 errors，永远阻断；
   // 编辑判断/证据质量断言（不得写成X、必须保留冲突组、人数应为N、必须保持审核中等）走 assertions，
-  // 由 validate-data.mjs 统一决定：默认按 warning 不阻断，STRICT=1 时按 error 阻断。
+  // 默认只打印提示、不阻断构建；STRICT=1（npm run validate:strict）时按 error 阻断。
   const assertions = ctx.assertions || errors;
 
   const sourceUnitIds = new Set(units.map((r) => r.source_unit_id));
@@ -349,7 +349,7 @@ export function check(ctx) {
   }
 
   // 储位链：分日绑定与事件类型
-  const heirTypes = new Set(['立储', '择吉下谕', '驻跸', '宣示罪状拘执', '废储颁示', '削爵', '削爵幽禁', '奏保被杖', '议储不许', '释放', '复立', '再废锢禁', '告庙', '上书请复立', '薨逝', '上谕转述']);
+  const heirTypes = new Set(['立储', '择吉下谕', '驻跸', '宣示罪状拘执', '废储颁示', '削爵', '削爵幽禁', '奏保被杖', '议储不许', '释放', '复立', '再废锢禁', '告庙', '上书请复立', '薨逝', '上谕转述', '不豫回驻', '口谕继位', '遗诏继位', '崩逝', '即位礼']);
   const dingchou = heirChain.find((row) => row.event_id === 'QH-HS-0003');
   const dingyou = heirChain.find((row) => row.event_id === 'QH-HS-0004');
   if (!dingchou || !dingyou || dingchou['原纪年'] === dingyou['原纪年']) {
@@ -373,6 +373,27 @@ export function check(ctx) {
   if (dingchou['来源单元'] !== 'QH-SU-KX-0234B' || dingyou['来源单元'] !== 'QH-SU-KX-0234D') {
     assertions.push('丁丑拘执与丁酉颁废的主来源必须是实录条次');
   }
+  const successionSet = (conflictSets || []).find((row) => row.conflict_set_id === 'QH-CF-KX-SUCCESSION');
+  const successionAnchors = String(successionSet?.['判断依据主张'] || '');
+  if (!/QH-A-KX-0033/.test(successionAnchors) || !/QH-A-KX-0028/.test(successionAnchors) || /QH-A-KX-0001/.test(successionAnchors)) {
+    assertions.push('QH-CF-KX-SUCCESSION 必须挂口谕与遗诏，不得把顺治十八年即位条当依据');
+  }
+  const oralHeir = heirChain.find((row) => row.event_id === 'QH-HS-0024');
+  const testamentHeir = heirChain.find((row) => row.event_id === 'QH-HS-0025');
+  const deathHeir = heirChain.find((row) => row.event_id === 'QH-HS-0026');
+  const accessionHeir = heirChain.find((row) => row.event_id === 'QH-HS-0027');
+  if (!oralHeir || oralHeir['来源单元'] !== 'QH-SU-KX-0300A' || oralHeir['主张 ID'] !== 'QH-A-KX-0033') {
+    assertions.push('储位链口谕必须绑定圣祖实录卷300第1/2条');
+  }
+  if (!testamentHeir || testamentHeir['来源单元'] !== 'QH-SU-KX-0300' || testamentHeir['主张 ID'] !== 'QH-A-KX-0028') {
+    assertions.push('储位链遗诏必须绑定圣祖实录卷300第2/2条');
+  }
+  if (!deathHeir || deathHeir['地点'] !== '寝宫' || deathHeir['主张 ID'] !== 'QH-A-KX-0037') {
+    assertions.push('储位链崩逝必须写寝宫，不得改成畅春园');
+  }
+  if (!accessionHeir || accessionHeir['来源单元'] !== 'QH-SU-YZ-QSL-0001A' || accessionHeir['主张 ID'] !== 'QH-A-YZ-0039') {
+    assertions.push('储位链即位礼必须绑定世宗实录卷1辛丑条');
+  }
   if (/剋母|狂易|疯/.test(`${claimById.get('QH-A-KX-0086')?.['客体 ID 或值'] || ''}${claimById.get('QH-A-KX-0089')?.['客体 ID 或值'] || ''}`)) {
     assertions.push('实录拘执/颁废主张不得把剋母或狂易写成客体事实');
   }
@@ -390,7 +411,7 @@ export function check(ctx) {
     }
   }
 
-  for (const id of ['QH-A-KX-0121', 'QH-A-KX-0122', 'QH-A-KX-0123']) {
+  for (const id of ['QH-A-KX-0121', 'QH-A-KX-0122', 'QH-A-KX-0123', 'QH-A-YZ-0039']) {
     if (claimById.get(id)?.['状态'] !== '审核中') {
       assertions.push(`${id} 必须保持审核中`);
     }
@@ -427,5 +448,51 @@ export function check(ctx) {
     if (/设军机处（军机房）/.test(row.event || '') && !/不择一|待补|待开/.test(row.event || '')) {
       assertions.push(`${row.timeline_id} 不得把军机处七年说写成定点`);
     }
+  }
+
+  // 对外对齐：有值才检查格式与互斥；空值合法。十二帝与康雍核心必须有 Wikidata。
+  const qidRe = /^Q[1-9][0-9]*$/;
+  const cbdbRe = /^[0-9]{5,7}$/;
+  const ctextRe = /^[1-9][0-9]*$/;
+  const seenQid = new Map();
+  const seenCbdb = new Map();
+  const seenCtext = new Map();
+  for (const row of people) {
+    const qid = String(row.wikidata_qid || '').trim();
+    const cbdb = String(row.cbdb_id || '').trim();
+    const ctext = String(row.ctext_entity || '').trim();
+    if (qid) {
+      if (!qidRe.test(qid)) errors.push(`${row.person_id} wikidata_qid 格式无效: ${qid}`);
+      if (seenQid.has(qid)) errors.push(`${row.person_id} 与 ${seenQid.get(qid)} 重复 wikidata_qid ${qid}`);
+      else seenQid.set(qid, row.person_id);
+    }
+    if (cbdb) {
+      if (!cbdbRe.test(cbdb)) errors.push(`${row.person_id} cbdb_id 格式无效: ${cbdb}`);
+      if (seenCbdb.has(cbdb)) errors.push(`${row.person_id} 与 ${seenCbdb.get(cbdb)} 重复 cbdb_id ${cbdb}`);
+      else seenCbdb.set(cbdb, row.person_id);
+    }
+    if (ctext) {
+      if (!ctextRe.test(ctext)) errors.push(`${row.person_id} ctext_entity 格式无效: ${ctext}`);
+      if (seenCtext.has(ctext)) errors.push(`${row.person_id} 与 ${seenCtext.get(ctext)} 重复 ctext_entity ${ctext}`);
+      else seenCtext.set(ctext, row.person_id);
+    }
+  }
+  if (people.find((row) => row.person_id === 'QH-P-000002')?.wikidata_qid === 'Q17751') {
+    errors.push('雍正帝 QH-P-000002 不得写成 Q17751，应为 Q317839');
+  }
+  const mustHaveQid = new Set([
+    ...ctx.crosswalk.map((row) => row.person_id),
+    'QH-P-000003', 'QH-P-000004', 'QH-P-000007', 'QH-P-000008',
+    'QH-P-000011', 'QH-P-000012', 'QH-P-000016',
+    'QH-P-000023', 'QH-P-000024', 'QH-P-000025', 'QH-P-000026', 'QH-P-000029',
+    'QH-P-000036', 'QH-P-000037', 'QH-P-000038',
+    'QH-P-000045', 'QH-P-000046', 'QH-P-000047', 'QH-P-000048', 'QH-P-000049',
+    'QH-P-000060', 'QH-P-000061',
+  ]);
+  const peopleById = new Map(people.map((row) => [row.person_id, row]));
+  for (const id of mustHaveQid) {
+    const row = peopleById.get(id);
+    if (!row) errors.push(`${id} 应对齐但人物档缺失`);
+    else if (!String(row.wikidata_qid || '').trim()) errors.push(`${id} 必须有 wikidata_qid`);
   }
 }

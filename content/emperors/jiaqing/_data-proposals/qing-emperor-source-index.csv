@@ -1,0 +1,9 @@
+index_id,emperor_id,资源名称,资源类型,卷次或范围,访问网址,证据用途,再利用策略,核查日期,状态,open_state
+IDX-JQ-01,QH-E-07,《清史稿》卷214后妃传仁宗段,公版后出史书,孝淑至诸妃,https://zh.wikisource.org/wiki/清史稿/卷214,后妃时态与昌陵选址,必要短引文；不作玉牒,2026-09-12,本轮已打开,L0
+IDX-JQ-02,QH-E-07,《清史稿》卷165皇子世表五仁宗系,公版后出世表,穆郡王至绵愉,https://zh.wikisource.org/wiki/清史稿/卷165,缺号第二子,必要短引文；不作玉牒,2026-09-12,本轮已打开,L0
+IDX-JQ-03,QH-E-07,《清史稿》卷166公主表仁宗系,公版后出公主表,第一女至第九女,https://zh.wikisource.org/wiki/清史稿/卷166,九女封号与追封,必要短引文；不作玉牒,2026-09-12,本轮已打开,L0
+IDX-JQ-04,QH-E-07,《清史稿》卷221诸王七仁宗诸子,公版后出列传,五子总说,https://zh.wikisource.org/wiki/清史稿/卷221,生母总说与穆郡王,必要短引文,2026-09-12,本轮已打开,L0
+IDX-JQ-05,QH-E-07,《清史稿》卷16教匪陈德癸酉崩葬,公版后出本纪,元年至二十五年选条,https://zh.wikisource.org/wiki/清史稿/卷16,年表骨架,必要短引文；不作实录,2026-09-12,本轮已打开,L0
+IDX-JQ-06,QH-E-07,关文发《嘉庆帝传》,后出专传,吉林文史出版社1993,https://lswh.scnu.edu.cn/a/20161130/359.html,学术史入口,只登记书目；不镜像,2026-09-12,书名出版社已核,L0
+IDX-JQ-07,QH-E-07,"Naquin, Millenarian Rebellion in China",后出专书,Yale University Press 1976,https://yalebooks.yale.edu/,1813年教门研究入口,只登记书目；页码不写,2026-09-12,书名出版年已核,L0
+IDX-JQ-08,QH-E-07,《钦定平定教匪纪略》,官修方略,嘉庆朝敕编,https://zh.wikisource.org/wiki/清史稿,教匪官修对照入口,未开卷；不引正文,2026-09-12,入口待开,L0

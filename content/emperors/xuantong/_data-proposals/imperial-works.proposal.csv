@@ -1,0 +1,7 @@
+work_id,emperor_id,文献名称,文献类型,编纂者/作者,成书年代,卷数,内容概述,证据状态,来源入口,备注,排序,dedicated_chapter,open_state,source_unit_ids
+QH-W-090,QH-E-12,宣统皇帝退位诏,诏书,隆裕太后懿旨系统,1912-02-12,1件,王朝终结文本。文种是懿旨。签署链条待原件。,E1单源回查,https://zh.wikisource.org/wiki/宣統皇帝退位詔,不得写成幼帝亲笔；文本层已有 SRC-035,531,xuantong-01,L3,QH-SU-XT-TWZ-0001A
+QH-W-091,QH-E-12,清室优待条件,契约/官文书,中华民国北京临时政府与清廷,1912-02-12,甲乙丙三项,辞位后的尊号、岁用、暂居宫禁、陵寝、私产等条款。,E1单源回查,https://zh.wikisource.org/wiki/清室優待條件,原件待核；本末转录与公报排印用词或有出入,532,xuantong-05,L2,QH-SU-XT-YD-0001A；QH-SU-XT-BM-0001A
+QH-W-092,QH-E-12,修正清室优待条件,民国法令,中华民国临时执政府,1924-11-04,待核公报全文,馆方页摘即日移出宫禁。全文待核。,S二手索引,https://www.dpm.org.cn/classify_detail/156786.html,不是1912年合同本文,533,xuantong-05,L1,QH-SU-XT-YD-0002A
+QH-W-093,QH-E-12,故宫物品点查报告,点查目录,清室善后委员会编,1925年起刊,6编28册（书志通行）,出宫后宫中物品登录。,S二手索引,https://www.nlc.cn/,不镜像；不抽未核件号,534,xuantong-09,L0,
+QH-W-094,QH-E-12,我的前半生,回忆录,署名爱新觉罗·溥仪；李文达参与1964定本,1964定本；2007全本,1册（各版页数不同）,改造语境中的自述。不能回写退位诏。,S二手索引,https://www.qzcbs.com/,现代作品；红/黄；只登记版本,535,xuantong-11,L0,
+QH-W-095,QH-E-12,Twilight in the Forbidden City,同时代私撰,Reginald F. Johnston,1934,1册,小朝廷英语教师的记录。有立场。,S二手索引,,中译本与页码待核；不伪造 URL,536,xuantong-11,L0,

@@ -37,11 +37,11 @@ jobs:
       - name: 构建站点
         run: npm run build
 
-      - name: 构建产物可重复
-        run: git diff --exit-code -- STATUS.md site/
-
       - name: 渲染冒烟测试
         run: npm test
+
+      - name: 真实浏览器冒烟测试
+        run: npm run test:browser
 
       - name: 发布到 gh-pages
         uses: peaceiris/actions-gh-pages@v4

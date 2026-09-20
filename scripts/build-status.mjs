@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
 import { DATA_MANIFEST } from './lib/schema.mjs';
-import { isChapterIndexable, isChapterEvidenceClosed } from '../site/templates.js';
+import { collectQualityMetrics, formatBytes } from './lib/quality-metrics.mjs';
+import { isChapterIndexable, isChapterEvidenceClosed } from '../site/reading.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const data = (name) => loadCsv(path.join(root, 'data', name));
@@ -59,9 +60,29 @@ const evidenceClosedChapters = chapters.filter((row) => {
   return isChapterEvidenceClosed(chapterStatus, unitCount);
 }).length;
 
+const quality = collectQualityMetrics();
+
 const md = `# 当前状态
 
 > 本页由 \`npm run status\` 根据 CSV 自动生成，请勿手改数字。
+
+## 北极星与质量
+
+> 只计 data/review-records.json 中有检查人、日期、说明且证据指纹仍匹配的录文对照记录。没有记录不等于史实错误，也不自动继承旧自审采纳。
+
+| 指标 | 当前值 | 说明 |
+|---|---:|---|
+| **北极星 · 已登记逐条录文对照** | **${quality.northStar}** | 占全部 ${quality.claimsTotal} 条主张的 ${quality.adoptedRate}% |
+| 引文与定位已登记 | ${quality.registered} | 只说明字段和引用齐全 |
+| 需重新复核 | ${quality.needsReview} | 依据改变或缺项 |
+| 断言覆盖朝次 | ${quality.assertionCoverageEras} 朝 | 已覆盖：${quality.assertionCoveredReigns.join('、') || '无'}（不设覆盖率目标） |
+| 编辑断言条数 | ${quality.assertionRules} | 手写在 \`scripts/rules/qing.mjs\`，默认只提示、不阻断构建 |
+| 待人工抽查积压 | ${quality.reviewBacklog} | 空闲时抽看，不影响发布 |
+| 派生数据体积 | ${formatBytes(quality.dataBytes)} / ${quality.dataFiles} 文件 | \`site/data\` |
+| 媒体体积 | ${formatBytes(quality.mediaBytes)} / ${quality.mediaFiles} 文件 | \`site/media\`，零预算天花板 |
+| 构建 commit | \`${quality.buildCommit || '未知'}\` | 部署漂移比对基准 |
+
+校验默认只输出提示，不阻断构建（结构与外键类 error 除外）；需要严格自查时跑 \`npm run validate:strict\`。
 
 ## 核心覆盖
 
@@ -71,13 +92,13 @@ const md = `# 当前状态
 | 人物档 | ${people.length} |
 | 来源索引 | ${sourceIndex.length} |
 | 结构化主张 | ${claims.length} |
-| 正式采纳主张 | ${status['已采纳'] || 0} |
+| 历史编辑采纳记录 | ${status['已采纳'] || 0} |
 | 审核中主张 | ${status['审核中'] || 0} |
 | 有主张的帝王 | ${emperorsWithClaims.size} / ${emperors.length} |
 | 可读章节 | ${chapters.length} |
 | 绑定来源单元的章节 | ${sourceBoundChapters} / ${chapters.length} |
-| 进入 sitemap 的章节 | ${indexableChapters} / ${chapters.length} |
-| 证据闭环、可去掉草稿横幅的章节 | ${evidenceClosedChapters} / ${chapters.length} |
+| 内部推荐章节（收录列） | ${indexableChapters} / ${chapters.length} |
+| 证据闭环章节 | ${evidenceClosedChapters} / ${chapters.length} |
 | 黄金问题 | ${questions.length} |
 
 ## 文献打开程度
@@ -97,7 +118,7 @@ ${Object.entries(timelineState).map(([key, value]) => `- ${key}：${value} 条`)
 
 ## 建议顺手抽查
 
-共 ${reviewItems.length} 条（来自各章「待用户抽查」）。主张已由「AI 自审」批量复核（npm run self-review），本栏仅作人工顺手的第二层抽看，不再卡发布。
+共 ${reviewItems.length} 条（来自各章「待用户抽查」）。self-review 只检查登记与变化，不代表来源复核。整站保持 noindex，内部推荐列不控制搜索引擎。
 
 ${reviewItems.length
   ? reviewItems.map((row) => `- [ ] [${row.slug}] ${row.item}`).join('\n')
@@ -114,4 +135,4 @@ fs.writeFileSync(path.join(root, 'STATUS.md'), md);
 if (uncitedAdopted.length) {
   console.warn(`WARN 已采纳主张未被章节引用：${uncitedAdopted.map((row) => row['Assertion ID']).join('、')}`);
 }
-console.log(`Wrote STATUS.md (claims ${claims.length}, chapters ${chapters.length}, source-bound ${sourceBoundChapters}, indexable ${indexableChapters}, review-items ${reviewItems.length})`);
+console.log(`Wrote STATUS.md (northStar ${quality.northStar}, claims ${claims.length}, chapters ${chapters.length}, source-bound ${sourceBoundChapters}, indexable ${indexableChapters}, review-items ${reviewItems.length}, assertion-coverage ${quality.assertionCoverageEras} era)`);

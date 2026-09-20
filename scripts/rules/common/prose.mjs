@@ -4,7 +4,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { EMPEROR_READS } from '../../../site/qing-content.mjs';
+import { EMPEROR_READS } from '../../../site/qing-content.js';
 
 // 硬锚点：卷页、ID、书名号、引文。中文纪年不算锚点——评述句里也会写「三年」「十七世纪」。
 const ANCHOR = /卷[0-9一二三四五六七八九十百千]+|QH-[A-Z]+-|《[^》]+》|「[^」]+」|『[^』]+』/;
@@ -37,7 +37,7 @@ function clip(s) {
   return one.length > 60 ? `${one.slice(0, 57)}…` : one;
 }
 
-const PROSE_SECTIONS = ['骨架', '怎么读这件事', '分日讲解', '读这一句'];
+const PROSE_SECTIONS = ['骨架', '要点', '怎么读这件事', '分日讲解', '读这一句'];
 const EMPTY_PRAISE = /体现了|构成了|重要方面|重要组成部分|重要政策|重要事件|同一.{0,6}的两面/;
 const DATE_OR_BOOK = /卷[0-9一二三四五六七八九十百千]+|《[^》]+》|[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]|[0-9]{3,4}\s*年|[十]?[一二三四五六七八九十]+\s*年/;
 const HABIT_META = /仍有争议|证据分量|不能并列|不等于已经|本身不能证明|名字本身说明/;
@@ -50,15 +50,15 @@ function collectReadTexts(read) {
   const out = [];
   if (read.body) out.push(['body', read.body]);
   if (read.evidenceNote) out.push(['史料说明', read.evidenceNote]);
-  for (const row of read.problems || []) out.push(['当时要解决什么', row.text || '']);
-  for (const row of read.habits || []) out.push(['习惯', row.text || '']);
-  for (const row of read.policy || []) out.push([`施政·${row.key || ''}`, row.text || '']);
+  for (const row of read.problems || []) out.push(['一朝要务', row.text || '']);
+  for (const row of read.habits || []) out.push(['文书所见', row.text || '']);
+  for (const row of read.policy || []) out.push([`施政大端·${row.key || ''}`, row.text || '']);
   for (const row of read.beats || []) {
-    out.push(['三拍·当时', row.problem || '']);
-    out.push(['三拍·做了', row.did || '']);
-    out.push(['三拍·留下', row.left || '']);
+    out.push(['一事始末·缘起', row.problem || '']);
+    out.push(['一事始末·举措', row.did || '']);
+    out.push(['一事始末·遗留', row.left || '']);
   }
-  for (const line of read.later || []) out.push(['后人怎么评', line]);
+  for (const line of read.later || []) out.push(['后世评说', line]);
   return out.filter(([, text]) => text);
 }
 
@@ -76,10 +76,10 @@ export function checkReaderProse({ questions, warnings }) {
           warnings.push(`${personId} ${slot} 读者层露出内部编号或编辑词：${clip(bare)}`);
         }
       }
-      if (slot === '习惯' && HABIT_META.test(text)) {
-        warnings.push(`${personId} 习惯条写成了审核说明：${clip(text)}`);
+      if (slot === '文书所见' && HABIT_META.test(text)) {
+        warnings.push(`${personId} 文书所见条写成了审核说明：${clip(text)}`);
       }
-      if (/^三拍|^当时要解决什么|^习惯/.test(slot) && PSYCH.test(text) && !DATE_OR_BOOK.test(text) && !ANCHOR.test(text)) {
+      if (/^一事始末|^一朝要务|^文书所见/.test(slot) && PSYCH.test(text) && !DATE_OR_BOOK.test(text) && !ANCHOR.test(text)) {
         warnings.push(`${personId} ${slot} 无文本锚点的心理句：${clip(text)}`);
       }
     }

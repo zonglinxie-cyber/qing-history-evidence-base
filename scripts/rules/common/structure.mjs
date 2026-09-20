@@ -47,7 +47,7 @@ export function check(ctx) {
     emperors, portraits, crosswalk, people, sources, sourceIndex, tasks, vocab,
     units, claims, questions, chapters, lanes, empressTimeline,
     heirChain, historicSites, works, conflictSets, emperorTimeline,
-    imageRegions, iiifManifests,
+    imageRegions, iiifManifests, personPortraits,
   } = ctx;
 
   const emperorIds = new Set(emperors.map((r) => r.emperor_id));
@@ -166,20 +166,28 @@ export function check(ctx) {
   for (const unit of units) {
     if (!sourceIds.has(unit.source_entity_id)) errors.push(`${unit.source_unit_id} 引用了未知来源 ${unit.source_entity_id}`);
     if (!httpsOk(unit['直接记录网址'])) errors.push(`${unit.source_unit_id} 直接记录网址无效`);
+    const stable = String(unit.stable_locator || '').trim();
+    if (stable && !httpsOk(stable)) errors.push(`${unit.source_unit_id} 稳定卷页不是 HTTPS`);
+    const shilu = unit['史料名'] === '圣祖仁皇帝实录' || unit['史料名'] === '世宗宪皇帝实录';
+    if (shilu && !stable) errors.push(`${unit.source_unit_id} 已开实录条次缺少稳定卷页`);
+    const chapter = stable.match(/[?&]chapter=(\d+)/)?.[1];
+    if (chapter && (CTEXT_PLACEHOLDER_RES.has(chapter) || /^(\d)\1{5,}$/.test(chapter))) {
+      errors.push(`${unit.source_unit_id} 使用明显占位的 CText chapter=${chapter}`);
+    }
   }
   const predicates = new Set(
-    (vocab || []).filter((r) => r.scheme_code === 'assertion_predicate' && r['是否启用'] !== 'false').map((r) => r.term_code),
+    (vocab || []).filter((r) => ['assertion_predicate', 'relationship_type'].includes(r.scheme_code) && r['是否启用'] !== 'false').map((r) => r.term_code),
   );
   const enabledLabels = (scheme) => new Set(
     (vocab || []).filter((r) => r.scheme_code === scheme && r['是否启用'] !== 'false').map((r) => r['中文标签']),
   );
+  // 2026-09-11 精简：证据立场／证据直接性／证据强度 三列已删除。
+  // 删因（复算留档）：证据立场 支持 892/892（零信息）、证据直接性 明确记载 888/892、
+  // 证据强度 中 819 / 强 73 且从未用过「弱」——三列对读者是噪声，对机器是恒真。留档见 .workbuddy/backup/2026-09-11-before-column-prune/
   const claimEnums = new Map([
     ['主张类型', enabledLabels('assertion_kind')],
     ['确定性', enabledLabels('certainty')],
     ['状态', enabledLabels('assertion_status')],
-    ['证据立场', enabledLabels('evidence_stance')],
-    ['证据直接性', enabledLabels('evidence_directness')],
-    ['证据强度', enabledLabels('evidence_strength')],
   ]);
   const rangesByOriginalExpression = new Map();
   for (const claim of claims) {
@@ -189,7 +197,10 @@ export function check(ctx) {
       if (!knownPersonIds.has(personId)) errors.push(`${claim['Assertion ID']} 引用了未知客体人物 ${personId}`);
     }
     if (!claim['卷页/档号/图像定位'] || !claim['支持引文']) errors.push(`${claim['Assertion ID']} 缺少定位或支持引文`);
-    if (!claim['公历下界'] || !claim['公历上界']) errors.push(`${claim['Assertion ID']} 缺少公历对照`);
+    // 没有可核定的日期时必须说明原因，不能为通过校验而补造日期。
+    if ((!claim['公历下界'] || !claim['公历上界']) && (!String(claim['原始时间表达'] || '').trim() || !String(claim['公历说明'] || '').trim())) {
+      errors.push(`${claim['Assertion ID']} 缺少公历对照，须保留原始时间并说明公历未定原因`);
+    }
     for (const [column, allowed] of claimEnums) {
       if (!allowed.has(claim[column])) {
         errors.push(`${claim['Assertion ID']} ${column} 未登记: ${claim[column] || '空'}`);
@@ -212,7 +223,7 @@ export function check(ctx) {
     }
     const pred = claim['谓词/关系'];
     if (pred && predicates.size && !predicates.has(pred)) {
-      warnings.push(`${claim['Assertion ID']} 谓词未登记: ${pred}`);
+      errors.push(`${claim['Assertion ID']} 谓词未登记: ${pred}`);
     }
   }
   for (const [key, entry] of rangesByOriginalExpression) {
@@ -355,6 +366,10 @@ export function check(ctx) {
     if (!site['事件'] || !site['当时'] || !site['今日'] || !site['今地说明'] || !site['边界'] || !site['卡片钩子']) {
       errors.push(`${site.site_id} 缺少事件、当时、今日、说明、边界或钩子`);
     }
+    const lng = Number(site['经度']);
+    const lat = Number(site['纬度']);
+    if (Number.isNaN(lng) || lng < 70 || lng > 140) errors.push(`${site.site_id} 经度无效: ${site['经度']}`);
+    if (Number.isNaN(lat) || lat < 15 || lat > 56) errors.push(`${site.site_id} 纬度无效: ${site['纬度']}`);
     if (site['首页'] && !/^\d+$/.test(site['首页'])) {
       errors.push(`${site.site_id} 首页序号必须是正整数`);
     }
@@ -433,6 +448,16 @@ export function check(ctx) {
     if (row.visual_id && !visualIds.has(row.visual_id)) {
       errors.push(`${row.region_id} 引用了未知画像 ${row.visual_id}`);
     }
+    // 区域坐标是归一化的，出界会让覆盖框跑到图外面去，而且只在浏览器里才看得出来。
+    const box = ['x', 'y', 'w', 'h'].map((key) => Number(row[key]));
+    if (box.some((value) => !Number.isFinite(value))) {
+      errors.push(`${row.region_id} 区域坐标不是数字: ${row.x},${row.y},${row.w},${row.h}`);
+    } else {
+      const [x, y, w, h] = box;
+      if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > 1.0001 || y + h > 1.0001) {
+        errors.push(`${row.region_id} 区域越界: x=${x} y=${y} w=${w} h=${h}（须在 0–1 内且 x+w、y+h 不超过 1）`);
+      }
+    }
     if (row.assertion_id && !claimById.has(row.assertion_id)) {
       errors.push(`${row.region_id} 引用了未知主张 ${row.assertion_id}`);
     }
@@ -442,6 +467,50 @@ export function check(ctx) {
       errors.push(`iiif ${row.visual_id} 引用了未知画像`);
     }
   }
+
+  // 图像分类（2026-09-11 接通）。
+  // 病根：词表早就定义了 image_nature / depiction_identification，数据层却从未接上——
+  //   实测 63 幅帝像的 `图像性质` 用了 35 个自由取值、`对象认定状态` 用了 50 个（48 个只出现一次），
+  //   命中词表 0 行。分类列一旦不可统计就等于没有分类，也回答不了「站里有没有 AI 图」。
+  // 修法：两级并存——`图像性质` 保留细目（自由文本、描述性），`图像性质分类` 受词表约束（可统计）。
+  // 口径与 correction_status 一致：取值从词表读、不写死；非法取值阻断（列是机器要读的），
+  // 漏填只提示（宁可有记录，不要没记录）。
+  const IMAGE_NATURE = enabledLabels('image_nature');
+  const DEPICTION_ID = enabledLabels('depiction_identification');
+  const IMAGE_KINDS = [
+    ['portraits', portraits || [], '认定等级'],
+    ['person_portraits', personPortraits || [], null],
+    ['sites', historicSites || [], null],
+  ];
+  for (const [kind, rows, levelCol] of IMAGE_KINDS) {
+    for (const row of rows) {
+      const id = row.visual_id || row.site_id || kind;
+      const nature = String(row['图像性质分类'] || '').trim();
+      if (!nature) {
+        warnings.push(`${id} 未填「图像性质分类」，无法按图类统计`);
+      } else if (IMAGE_NATURE.size && !IMAGE_NATURE.has(nature)) {
+        errors.push(`${id} 图像性质分类无效: ${nature}（应为 ${[...IMAGE_NATURE].join('／')}）`);
+      }
+      // AI 图红线（三条底线之一：AI 生成图须标注）。
+      // 标为「AI 再现」的记录必须写明生成方式，否则读者会把生成图当成史料。
+      // 这是合规项、按 error 处理，不是文风建议。全库现有 0 条，规则在此待命。
+      if (nature === 'AI 再现') {
+        const note = `${row['使用说明'] || ''}${row['画面解析'] || ''}${row['对象标题'] || ''}`;
+        if (!/AI|生成式|模型|合成/.test(note)) {
+          errors.push(`${id} 标为「AI 再现」但未写明生成方式；AI 生成图必须标注，不得伪装成史料`);
+        }
+      }
+      if (levelCol) {
+        const level = String(row[levelCol] || '').trim();
+        if (!level) {
+          warnings.push(`${id} 未填「${levelCol}」`);
+        } else if (DEPICTION_ID.size && !DEPICTION_ID.has(level)) {
+          errors.push(`${id} ${levelCol}无效: ${level}（应为 ${[...DEPICTION_ID].join('／')}）`);
+        }
+      }
+    }
+  }
+
   const taskIds = new Set((tasks || []).map((row) => row.task_id));
   for (const row of tasks || []) {
     for (const id of splitIds(row['前置任务'])) {

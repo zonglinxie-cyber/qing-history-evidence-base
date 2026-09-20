@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './csv.mjs';
 import { DATA_MANIFEST } from './schema.mjs';
-import { isChapterIndexable, isChapterEvidenceClosed } from '../../site/templates.js';
+import { collectQualityMetrics } from './quality-metrics.mjs';
+import { isChapterIndexable, isChapterEvidenceClosed } from '../../site/reading.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const data = (name) => loadCsv(path.join(root, 'data', name));
@@ -12,14 +13,20 @@ const data = (name) => loadCsv(path.join(root, 'data', name));
 export const METRIC_LABELS = [
   ['chapters', '可读章节'],
   ['claims', '结构化主张'],
-  ['adopted', '正式采纳主张'],
+  ['adopted', '历史编辑采纳记录'],
   ['pending', '审核中主张'],
   ['people', '人物档'],
   ['sourceIndex', '来源索引'],
   ['questions', '黄金问题'],
   ['sourceBoundChapters', '绑定来源单元的章节'],
-  ['indexableChapters', '进入 sitemap 的章节'],
+  ['indexableChapters', '内部推荐章节'],
   ['evidenceClosedChapters', '证据闭环章节'],
+  // 质量指标：纳入指纹，让质量变化自动进 CHANGELOG 并递增版本号。
+  // 只放可从数据确定性推导的项；体积、commit 等环境相关值不进指纹。
+  ['northStar', '北极星·已登记逐条录文对照'],
+  ['assertionCoverageEras', '断言覆盖朝次'],
+  ['assertionRules', '编辑断言条数'],
+  ['reviewBacklog', '待人工抽查积压'],
 ];
 
 export function collectReleaseMetrics() {
@@ -49,6 +56,8 @@ export function collectReleaseMetrics() {
     return isChapterEvidenceClosed(chapterStatus, unitCount);
   }).length;
 
+  const quality = collectQualityMetrics();
+
   return {
     emperors: emperors.length,
     emperorsWithClaims: emperorsWithClaims.size,
@@ -62,5 +71,9 @@ export function collectReleaseMetrics() {
     sourceBoundChapters,
     indexableChapters,
     evidenceClosedChapters,
+    northStar: quality.northStar,
+    assertionCoverageEras: quality.assertionCoverageEras,
+    assertionRules: quality.assertionRules,
+    reviewBacklog: quality.reviewBacklog,
   };
 }

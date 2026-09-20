@@ -1,0 +1,11 @@
+chapter_id,slug,person_id,era,title,lede,file,unit_ids,related,sort,收录
+QH-CH-XT-04,xuantong-04,QH-P-000059,宣统,即位与监国摄政,立嗣与监国同日；太和殿即位礼在其后；诏由摄政王处分而称诏行之。礼法兼祧、政治前任、年号起点不是一件事。,emperors/xuantong/04-accession-and-regency.md,QH-SU-XT-QSG-0025B；QH-SU-XT-QSG-0025E；QH-SU-XT-QSG-0025F；QH-SU-XT-QSG-0025J,#/chapter/xuantong-01；#/chapter/xuantong-02；#/site/QH-ST-0034,128,是
+QH-CH-XT-05,xuantong-05,QH-P-000059,宣统,小朝廷与出宫,1912年暂居宫禁是契约履行，不是宣统续年。1924年修正条件要求即日移出宫禁。,emperors/xuantong/05-small-court-and-expulsion.md,QH-SU-XT-TWZ-0001A；QH-SU-XT-BM-0001A；QH-SU-XT-YD-0001A；QH-SU-XT-YD-0002A；QH-SU-XT-SHWY-0001A,#/chapter/xuantong-01；#/image/QH-V-E12B；#/site/QH-ST-0027,129,是
+QH-CH-XT-06,xuantong-06,QH-P-000059,宣统,陵寝：惠陵对照与未入关陵,东西陵名单止于惠陵，另补崇陵。溥仪无清朝陵名，华龙不是关陵。,emperors/xuantong/06-tombs-and-huiling.md,QH-SU-XT-QSG-0025G；QH-SU-XT-QSG-0025H；QH-SU-XT-QSG-0086A；QH-SU-XT-QSG-0022A,#/site/QH-ST-0034；#/site/QH-ST-0028；#/chapter/xuantong-02,130,是
+QH-CH-XT-07,xuantong-07,QH-P-000059,宣统,婉容文绣：退位后婚姻,1922年小朝廷旧制成婚，不得写成在位册立。本纪无后。无子女。,emperors/xuantong/07-wanrong-wenxiu.md,QH-SU-XT-QSG-0025A,#/chapter/xuantong-01,131,否
+QH-CH-XT-08,xuantong-08,QH-P-000059,宣统,照片与图像权利,无清宫朝服轴。默认图是时态待核的朝服照片。二十世纪照片从严核权。,emperors/xuantong/08-portraits-and-photos.md,QH-SU-XT-TWZ-0001A,#/image/QH-V-E12；#/image/QH-V-E12B；#/image/QH-V-E12C,132,否
+QH-CH-XT-09,xuantong-09,QH-P-000059,宣统,器物与国宝播迁三层,小朝廷流转、出宫点查、1933年南迁是三件事。南迁不是溥仪带走那一批。,emperors/xuantong/09-objects-and-treasures.md,QH-SU-XT-YD-0001A；QH-SU-XT-SHWY-0001A,#/site/QH-ST-0035；#/chapter/xuantong-01,133,否
+QH-CH-XT-10,xuantong-10,QH-P-000059,宣统,谕旨：无典型朱批,军国机务称诏行之；批本处在责任内阁时裁撤；退位是懿旨。,emperors/xuantong/10-edicts-and-rescripts.md,QH-SU-XT-QSG-0025E；QH-SU-XT-QSG-0025I；QH-SU-XT-QSG-0025J；QH-SU-XT-TWZ-0001A,#/chapter/xuantong-01；#/chapter/xuantong-02,134,否
+QH-CH-XT-11,xuantong-11,QH-P-000059,宣统,《我的前半生》史料批判,1964定本与2007全本是回忆录版本层，不能回写退位诏。,emperors/xuantong/11-wodeqianbansheng.md,QH-SU-XT-TWZ-0001A,#/works；#/chapter/xuantong-02,135,否
+QH-CH-XT-12,xuantong-12,QH-P-000059,宣统,学术史与争议分层,先分在位、小朝廷、复辟、伪满四层，再对话起草说、照片时态、回忆录与陵名。,emperors/xuantong/12-historiography-and-disputes.md,QH-SU-XT-TWZ-0001A；QH-SU-XT-QSG-0086A,#/chapter/xuantong-01；#/site/QH-ST-0027,136,否
+QH-CH-XT-13,xuantong-13,QH-P-000059,宣统,监国、内阁与退位对手,近臣首先是载沣称诏。袁世凯是组阁交涉对象。复辟伪满不并入在位。,emperors/xuantong/13-people-network.md,QH-SU-XT-QSG-0025B,#/chapter/xuantong-01；#/chapter/xuantong-04；#/person/QH-P-000171,137,否

@@ -1,0 +1,8 @@
+timeline_id,emperor_id,year,reign_year,event,status,source_refs,claim_ids
+TL-XT-007,QH-E-12,1908,光绪三十四年十月癸酉,入承大统；载沣监国,E1单源回查,IDX-138,QH-A-XT-0016；QH-A-XT-0017
+TL-XT-008,QH-E-12,1908,光绪三十四年十一月壬寅,宣布监国摄政王礼节总目,E1单源回查,IDX-138,
+TL-XT-009,QH-E-12,1908,光绪三十四年十二月乙丑,定崇陵,E1单源回查,IDX-138,QH-A-XT-0019
+TL-XT-010,QH-E-12,1909,宣统元年闰二月丁酉,修崇陵,E1单源回查,IDX-138,QH-A-XT-0020
+TL-XT-011,QH-E-12,1911,宣统三年四月戊寅,责任内阁；裁批本处,E1单源回查,IDX-138,QH-A-XT-0021
+TL-XT-012,QH-E-12,1911,宣统三年十月庚戌,载沣缴监国摄政王章,E1单源回查,IDX-138,QH-A-XT-0022
+TL-XT-013,QH-E-12,1924,民国十三年十一月,修正优待条件；出宫,S二手转述,IDX-131,QH-A-XT-0027
