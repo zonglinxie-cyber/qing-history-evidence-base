@@ -211,9 +211,13 @@ function main() {
   }
   const fit = fitGanzhiAnchor(exactSamples.filter((s) => s.exact));
 
-  // 外部锚点：offset 使 (day + offset) % 60 === 甲子 的序号 0
+  // 外部锚点：offset 使锚点日的干支序号等于 EXTERNAL_ANCHOR.ganzhi。
+  // offset 必须由 date 与 ganzhi 两者共同推出——只从 date 硬推等于把「甲子」写死在两处，
+  // 改上面声明的 ganzhi 不会有任何反应，反证也就失去意义。
   const anchorDay = toEpochDay(EXTERNAL_ANCHOR.date);
-  const externalOffset = (((-(anchorDay % 60)) % 60) + 60) % 60;
+  const anchorIndex = GANZHI_INDEX.get(EXTERNAL_ANCHOR.ganzhi);
+  if (anchorIndex == null) throw new Error(`EXTERNAL_ANCHOR.ganzhi「${EXTERNAL_ANCHOR.ganzhi}」不是六十甲子之一`);
+  const externalOffset = (((anchorIndex - anchorDay) % 60) + 60) % 60;
   const anchorChecks = EXTERNAL_ANCHOR.checks.map(([d, gz, src]) => {
     const got = ganzhiOfIndex(ganzhiIndexOfDay(toEpochDay(d), externalOffset));
     return { date: d, expect: gz, got, ok: got === gz, src };
@@ -529,7 +533,10 @@ function main() {
   console.log(`C11 月内干支序：受检 ${c11Pairs} 对，矛盾 ${c11Bad} 对（此项不依赖任何锚点，命中即硬矛盾）`);
   if (!anchorOk) {
     console.log('');
-    console.log('⚠ 外部锚点反证未通过——上述 C6 结论不可用，须先修锚点。');
+    console.error('⚠ 外部锚点反证未通过——上述 C6 结论不可用，须先修锚点。');
+    // 上面声明「不设异常数量门槛」，那是针对数据侧的 C1–C11 计数；锚点反证失败是工具自身
+    // 失效——干支算术或年号表错了，此时整套判定无意义，必须让构建与 CI 停下来。
+    process.exitCode = 1;
   }
   console.log('');
   console.log('已写出 data/calendar-audit.csv 与 data/calendar-worksheet.csv');

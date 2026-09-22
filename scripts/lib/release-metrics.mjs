@@ -46,15 +46,21 @@ export function collectReleaseMetrics() {
   const pending = claims.filter((row) => row['状态'] === '审核中').length;
   const sourceBoundChapters = chapters.filter((row) => String(row.unit_ids || '').trim()).length;
   const indexableChapters = chapters.filter((row) => isChapterIndexable(row)).length;
+  const unreadable = [];
   const evidenceClosedChapters = chapters.filter((row) => {
     const unitCount = String(row.unit_ids || '').split(/[；;]/).map((id) => id.trim()).filter(Boolean).length;
     let markdown = '';
     try {
       markdown = fs.readFileSync(path.join(root, 'content', row.file), 'utf8');
-    } catch { /* empty */ }
+    } catch {
+      unreadable.push(row.slug || row.file);
+    }
     const chapterStatus = (markdown.match(/^状态：\s*(.+)$/m)?.[1] || '').replace(/`/g, '').trim();
     return isChapterEvidenceClosed(chapterStatus, unitCount);
   }).length;
+  if (unreadable.length) {
+    console.error(`[release-metrics] ${unreadable.length} 章正文读不到，证据收束章数少计：${unreadable.slice(0, 5).join(' ')}`);
+  }
 
   const quality = collectQualityMetrics();
 

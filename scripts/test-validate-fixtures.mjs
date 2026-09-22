@@ -135,6 +135,38 @@ checkName('区域越界须阻断',
 checkName('区域负值须阻断',
   regionErrors({ x: -0.1, y: 0.2, w: 0.3, h: 0.4 }).some((m) => /区域越界/.test(m)));
 
+// 章节落盘路径：构建把 slug 直接拼成 site/data/chapter/<slug>.json，把 file 拼成 content/ 下的读取位置，
+// 所以这两个值越界不是显示问题，而是让表格里的字符串决定写文件的地方。
+const REAL_CHAPTER_FILE = 'emperors/kangxi/01-accession-and-testament.md';
+function chapterErrors(row) {
+  const found = [];
+  check({
+    ...baseFixture,
+    errors: found,
+    warnings: [],
+    tasks: [],
+    imageRegions: [],
+    iiifManifests: [],
+    crosswalk: [{ person_id: 'QH-P-000001', canonical_name: '示例人物' }],
+    chapters: [{
+      chapter_id: 'CH-FIXTURE',
+      slug: 'kangxi-01',
+      file: REAL_CHAPTER_FILE,
+      title: '标题',
+      lede: '导语',
+      收录: '是',
+      person_id: 'QH-P-000001',
+      ...row,
+    }],
+  });
+  return found.filter((message) => /slug 须为|file 须为/.test(message));
+}
+checkName('合法 slug 与 file 不报路径错误', chapterErrors({}).length === 0);
+checkName('slug 含路径分隔符须阻断', chapterErrors({ slug: '../escape' }).length === 1);
+checkName('slug 含大写或空格须阻断', chapterErrors({ slug: 'Kangxi 01' }).length === 1);
+checkName('file 越出 content/ 须阻断', chapterErrors({ file: '../../etc/passwd' }).length === 1);
+checkName('file 绝对路径须阻断', chapterErrors({ file: '/tmp/x.md' }).length === 1);
+
 for (const scheme of ['assertion_predicate', 'relationship_type']) {
   const e=[];
   check({...baseFixture, errors:e, warnings:[], tasks:[], imageRegions:[], iiifManifests:[],

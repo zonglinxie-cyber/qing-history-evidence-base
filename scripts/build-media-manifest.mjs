@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { isVariant, stemOf } from '../site/media-paths.js';
 
 // 读图片头拿像素尺寸。只解析文件头，不解码整张图——全库 800 个文件要秒级跑完。
 // 支持 JPEG（SOF 段）、PNG（IHDR）、WebP（VP8/VP8L/VP8X）。
@@ -37,17 +38,7 @@ export function imageSize(buf) {
   return null;
 }
 
-// 变体档（-480 / -960 / @2x）与主图同比例，只需主图一条。
-export function isVariant(name) {
-  return /-(?:480|960)\.|@2x\./i.test(name);
-}
-
-// 同一张图的各档（主图 + -480 / -960 / @2x）共用一个 stem。
-// 与 site/templates.js 里 mediaSrcset() 的取 stem 规则必须一致。
-export function stemOf(name) {
-  const m = name.match(/^(.*?)(?:-(?:480|960)|@2x)?\.[A-Za-z0-9]+$/);
-  return 'media/' + (m ? m[1] : name);
-}
+// 变体档与 stem 的识别规则在 site/media-paths.js，与浏览器侧 srcset 共用同一份。
 
 // Only advertise image variants that are actually shipped with this site.
 export function buildMediaManifest() {

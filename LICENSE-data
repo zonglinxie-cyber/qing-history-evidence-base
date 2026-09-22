@@ -8,10 +8,15 @@ Creative Commons Attribution 4.0 International (CC BY 4.0)。
 - data/ 下由本项目自建的结构化记录（人物档、主张、来源单元、词表、台账元数据等）；
 - content/ 下的证据型文章正文；
 - schema/、docs/ 中的模型与规范文本；
-- site/data/ 下由上述内容构建生成的 JSON。
+- site/data/ 下由上述内容构建生成的 JSON；
+- site/qing-content.js、site/live-content.js、site/reader-picks.js 中手写的叙述文本
+  （帝王小传、原典选读主题、讲解稿、精选卡文案）。这些是内容而非物质：它们以 JS
+  常量存放只为让浏览器直接读取，许可随文本走，不随文件后缀走。
 
 ## 不覆盖
 
+- 通用展示逻辑（site/app.js、templates.js、studio.js、reading.js、search.js 与
+  scripts/ 下的构建与校验代码）中的界面文案与代码本身，按 LICENSE 以 MIT 授权；
 - 馆藏图像、档案影像及其扫描/摄影件：权利逐件登记于
   data/source-rights-ledger.csv 与 data/emperor-portraits.csv，
   以登记许可为准（CC0、CC BY、仅外链或禁用）；

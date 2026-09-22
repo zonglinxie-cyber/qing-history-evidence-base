@@ -67,6 +67,8 @@ AI 负责查资料、核对和编辑，不要求用户逐条审核，也不要�
 | `content/emperors/yongzheng/01-accession-and-early-reign.md` | 雍正即位、生母、年隆与军机 |
 | `site/` | 本地研究稿工作台。首页只拉 `data/home.json`；人物、康熙、来源、检索按路由再拉对应 JSON。打开前先运行 `npm run build` |
 | `scripts/build-site.mjs` | 把 CSV 编成确定性的 `site/data/*.json`（按路由拆分），并直出首页 HTML |
+| `scripts/lib/chapter-html.mjs` | 章正文 Markdown → 读者 HTML：块解析、标题锚点、抽屉与按语包装、删块提示 |
+| `scripts/lib/public-records.mjs` | 记录 → 公开字段：裁剪主张、肖像与检索条目，证据状态措辞在此统一 |
 | `scripts/build-status.mjs` | 从权威 CSV 重建 `STATUS.md`，防止手工数字漂移 |
 | `scripts/build-release.mjs` | 在显式 release 时检测数据覆盖指纹变化、递增版本号并写入 `CHANGELOG.md` |
 | `data/source-rights-ledger.csv` | 来源与版权台账 |
@@ -123,6 +125,7 @@ python3 -m http.server 8765 --directory site
 ## 目录关系与部署
 
 - **`data/` 与 `content/` 是权威层**。`scripts/build-site.mjs` 编成 `site/data/*.json`、直出首页 HTML 与 `robots.txt`（允许抓取，不投递 sitemap）。`site/data/` 与 `site/media-manifest.js` 都是派生，不入库；旧 `site/chapter/`、`person/`、`lane/`、`site/` 分享页目录和 `sitemap.xml` 由构建清理、不再生成。`site/index.html` 仍是入库的首页模板（构建会更新其中的直出内容），`robots.txt` 与带来源说明的 `basemap.js` 继续入库。手写前端只改 `site/app.js`、`templates.js`、`search.js`、`styles.css`、`qing-content.js`。
+  - **构建期反向引用浏览器模块要守层**：`scripts/` 只能静态 import 无浏览器依赖的纯模块（`reading.js`、`media-paths.js`、`qing-content.js`、`live-content.js`）。`templates.js` 是唯一例外——它动态 import 构建期才生成的 `media-manifest.js`，所以必须先跑 `buildMediaManifest()`。浏览器与构建共用的规则只写一处：本地图片的 stem 与变体后缀在 `site/media-paths.js`，证据等级措辞在 `site/reading.js`。
   - **站点是单朝代运行时**：`#dynasty-config`、首页直出与 `home/people/catalog.json` 一次只承载一个朝代。切换当前朝代 = 在 `dynasties.csv` 只保留一个 `active=是` 并备齐该朝内容模块与数据。同时启用多个朝代时 `build` 会报错拦截（并非并存）——多朝代并存需要先把数据块前缀化为 `d-<code>`、给前端加朝代切换器，属后续改造而非纯 CSV 操作。
 - 发现内容错误：`npm run errata -- --loc <位置ID> --text "<问题>"`（见 [`docs/25-勘误流程.md`](docs/25-勘误流程.md)）；
 - **发布由 GitHub Actions 手动触发**：`deploy.yml` 仅 `workflow_dispatch`，不随 push 自动公开。需要更新线上版本时，到 Actions → Deploy Pages → Run workflow 手动运行。

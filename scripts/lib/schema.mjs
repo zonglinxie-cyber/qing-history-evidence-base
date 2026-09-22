@@ -70,10 +70,6 @@ export function dynastyByCode(code) {
   return DYNASTIES.find((d) => d.code === code);
 }
 
-export function filesForDynasty(code) {
-  return DATA_MANIFEST.filter((e) => e.dynasty === code);
-}
-
 export function reignEraLabels(code) {
   const d = dynastyByCode(code);
   return new Set(d ? d.reignEras.map((e) => e.label) : []);

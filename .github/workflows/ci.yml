@@ -22,8 +22,8 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
-      - name: 结构与史料规则校验
-        run: npm run validate
+      - name: 结构与史料规则校验（STRICT：证据/编辑断言与文风提示按 error 阻断）
+        run: npm run validate:strict
 
       - name: 构建站点
         run: npm run build

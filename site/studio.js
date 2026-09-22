@@ -1,7 +1,8 @@
 const moduleVersion = new URL(import.meta.url).search;
-const [{ esc }, { LIVE_TOPICS }] = await Promise.all([
+const [{ esc }, { LIVE_TOPICS }, { JIEDU_FEATURED }] = await Promise.all([
   import('./templates.js' + moduleVersion),
   import('./live-content.js' + moduleVersion),
+  import('./qing-content.js' + moduleVersion),
 ]);
 
 const findTopic = (slug) => LIVE_TOPICS.find((topic) => topic.slug === slug);
@@ -186,7 +187,7 @@ export function studioPage(data, slug, query = {}, audience = false) {
     const last = liveState(readSaved('qing-studio-last'));
     return `<div class="page-intro reading"><p class="kicker">讲解台 · 史料选题</p><h1>从史料细节中选题</h1><p class="lede">连续读几天日记，把一则笔记读到结尾，再追一句话经过了谁的转述。AI 帮助检索与对读，开讲要有原文可回查。</p>${last ? `<p><a class="reader-tool-btn" href="#/studio/${last.topic}?step=${last.step}&format=${last.format}">继续上次：${esc(findTopic(last.topic).title)}</a></p>` : ''}</div>
       <div class="studio-topic-grid">${LIVE_TOPICS.map((item, index) => `<article class="studio-topic"><p class="kicker">${String(index + 1).padStart(2, '0')} · ${esc(item.era)}</p><h2>${esc(item.title)}</h2><p>${esc(item.description)}</p><div class="studio-topic-angle"><span>这次发现</span><p>${esc(item.angle)}</p></div><p class="studio-provenance">${esc(item.provenance)}</p><p class="sub">${item.steps.length} 张讲解卡 · 原文定位 · 继续查证线索${item.pack ? ` · 完整讲稿约 ${packLength(item).total} 字，设计时长 ${packLength(item).minutes}` : ''}</p><div class="actions"><a class="reader-tool-btn primary" href="#/studio/${item.slug}">准备这场讲解</a><a class="link" href="${chapterLink(item)}">相关章节</a></div></article>`).join('')}</div>
-      <section class="studio-intro"><h2>从新材料续写讲稿</h2><ol><li>先看本题原文与上下文，记下值得追问的细节。</li><li>复制查证任务，让 AI 继续找影印、前后条目和独立旁证；把新发现核对后再写进讲稿。</li><li>准备好后打开观众窗口，选择横屏或竖屏，用上一段、下一段控制讲解。</li></ol><p>已准备 ${LIVE_TOPICS.length} 组史料选题，其中 ${LIVE_TOPICS.filter((item) => item.pack).length} 组带可照读的完整讲稿。<a class="link" href="#/jiedu">继续从 48 个原典选读主题找线索</a>。展示窗口与讲解台在同一浏览器中同步，直播推流由你的直播软件完成。</p></section>`;
+      <section class="studio-intro"><h2>从新材料续写讲稿</h2><ol><li>先看本题原文与上下文，记下值得追问的细节。</li><li>复制查证任务，让 AI 继续找影印、前后条目和独立旁证；把新发现核对后再写进讲稿。</li><li>准备好后打开观众窗口，选择横屏或竖屏，用上一段、下一段控制讲解。</li></ol><p>已准备 ${LIVE_TOPICS.length} 组史料选题，其中 ${LIVE_TOPICS.filter((item) => item.pack).length} 组带可照读的完整讲稿。<a class="link" href="#/jiedu">继续从 ${JIEDU_FEATURED.length} 个原典选读主题找线索</a>。展示窗口与讲解台在同一浏览器中同步，直播推流由你的直播软件完成。</p></section>`;
   }
   const session = sessionName(query.session);
   const saved = liveState(readSaved(`qing-live-${session}`));

@@ -10,17 +10,27 @@ import { loadReviewContext } from './review.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const data = (name) => loadCsv(path.join(root, 'data', name));
 const has = (value) => String(value ?? '').trim().length > 0;
+// 指标缺料会让 STATUS 与版本指纹静默少算，一律报出声；判定本身不变。
+const warned = new Set();
+function warnOnce(key, message) {
+  if (warned.has(key)) return;
+  warned.add(key);
+  console.error(`[quality-metrics] ${message}`);
+}
 
 function dirBytes(dir) {
   let total = 0;
   let files = 0;
+  let topLevel = true;
   const walk = (current) => {
     let entries;
     try {
       entries = fs.readdirSync(current, { withFileTypes: true });
     } catch {
+      if (topLevel) warnOnce(`dir:${dir}`, `${dir} 读不到，体积按 0 计`);
       return;
     }
+    topLevel = false;
     for (const entry of entries) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) walk(full);
@@ -62,7 +72,9 @@ function assertionCoverage() {
   };
   try {
     walk(rulesDir);
-  } catch { /* rules 目录缺失时按 0 覆盖处理 */ }
+  } catch {
+    warnOnce('rules', `${rulesDir} 读不到，断言覆盖按 0 计`);
+  }
   const blob = sources.join('\n');
   const prefixes = [...new Set([...blob.matchAll(/QH-A-([A-Z]{2})-\d+/g)].map((m) => m[1]))];
   const ruleCount = [...blob.matchAll(/assertions\.push\(/g)].length;
@@ -82,11 +94,13 @@ function assertionCoverage() {
 function reviewBacklog() {
   const chapters = data('chapters.csv');
   let items = 0;
+  const missing = [];
   for (const row of chapters) {
     let markdown = '';
     try {
       markdown = fs.readFileSync(path.join(root, 'content', row.file), 'utf8');
     } catch {
+      missing.push(row.file);
       continue;
     }
     const block = markdown.split(/^## 待用户抽查\s*$/m)[1];
@@ -95,6 +109,7 @@ function reviewBacklog() {
       if (line.replace(/^\s*\d+\.\s*/, '').replace(/^\s*[-*]\s*/, '').trim()) items += 1;
     }
   }
+  if (missing.length) warnOnce('backlog', `${missing.length} 章正文读不到，抽查积压少计：${missing.slice(0, 5).join(' ')}`);
   return items;
 }
 

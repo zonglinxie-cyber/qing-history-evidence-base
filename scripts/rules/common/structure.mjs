@@ -279,6 +279,14 @@ export function check(ctx) {
     if (!row.person_id) errors.push(`${row.chapter_id} 缺少 person_id`);
     else if (!emperorPersonIds.has(row.person_id)) errors.push(`${row.chapter_id} 引用了未知皇帝人物 ${row.person_id}`);
     else chapterPersons.add(row.person_id);
+    // slug 与 file 会被构建直接拼成落盘路径（site/data/chapter/<slug>.json 与 content/<file>）；
+    // 正文是否存在由下一段管，这里只钉住「不得越出各自的目录」。
+    if (!/^[a-z][a-z0-9-]*$/.test(String(row.slug || ''))) {
+      errors.push(`${row.chapter_id} slug 须为小写字母开头的 [a-z0-9-]，不得含路径分隔符: ${row.slug || '空'}`);
+    }
+    if (row.file && (path.isAbsolute(row.file) || row.file.split('/').includes('..'))) {
+      errors.push(`${row.chapter_id} file 须为 content/ 下的相对路径: ${row.file}`);
+    }
     const chapterFile = path.join(contentDir, row.file);
     const unitIds = splitIds(row.unit_ids);
     if (!fs.existsSync(chapterFile)) {

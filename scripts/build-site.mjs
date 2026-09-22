@@ -5,14 +5,21 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { loadCsv } from './lib/csv.mjs';
 import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
-import { readerCopy, readerProse, readerMetadata, stripInternalComments } from './lib/reader.mjs';
-import { buildIndex } from '../site/search.js';
+import { readerCopy, readerProse, readerMetadata } from './lib/reader.mjs';
+import { firstQuote, escHtml, mdToHtml, publicBodyHtml } from './lib/chapter-html.mjs';
+import {
+  publicCalendarStatus, localPreview, slimPortrait, pick, publicPortrait,
+  publicClaim, publicAvailability, searchEntry, py,
+} from './lib/public-records.mjs';
 import { buildMediaManifest } from './build-media-manifest.mjs';
 buildMediaManifest();
+// 浏览器模块里只有零依赖的纯模块可被构建直接 import（reading.js / media-paths.js /
+// qing-content.js / live-content.js）。templates.js 是唯一的例外：首页要服务端直出，
+// 而它动态加载的 media-manifest.js 是派生产物——所以上面那行 buildMediaManifest()
+// 必须先跑，顺序不是巧合。
 const { homeHtml, isChapterIndexable, isChapterEvidenceClosed, selectReadingPicks, FEATURED_COUNT } = await import('../site/templates.js');
 import { LIVE_TOPICS } from '../site/live-content.js';
-import { chapterGenre, orderedChapters, comparisonLabel } from '../site/reading.js';
-import { pinyin } from 'pinyin-pro';
+import { chapterGenre, orderedChapters, evidenceLabel } from '../site/reading.js';
 import { loadReviewContext } from './lib/review.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -22,15 +29,8 @@ function readVersion() {
   try {
     return fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
   } catch {
+    console.error('[build] VERSION 读不到，站点各处版本号退回 0.0.0');
     return '0.0.0';
-  }
-}
-
-function readReleaseJson() {
-  try {
-    return JSON.parse(fs.readFileSync(path.join(root, 'site', 'data', 'release.json'), 'utf8'));
-  } catch {
-    return { version: readVersion(), updatedAt: '', entries: [] };
   }
 }
 
@@ -69,112 +69,7 @@ function loadCalendarAudit() {
     .map((row) => [row.assertion_id, row]));
 }
 
-function publicCalendarStatus(audit) {
-  if (!audit) return { status: 'unknown' };
-  if (audit['判定'] === '异常' || /C6(?:b)?:|C11:/.test(audit['标记'] || '')) return { status: 'conflict' };
-  if (audit['判定'] === '待核') return { status: 'review' };
-  if (audit['判定'] === '通过') return { status: 'checked' };
-  return { status: 'not-applicable' };
-}
 
-function localPreview(id, remoteUrl) {
-  const remote = String(remoteUrl || '').trim();
-  // 优先使用本地缓存；格式按真实内容保存，避免把 PNG 伪装成 .jpg。
-  if (id) {
-    for (const ext of ['webp', 'png', 'jpg', 'jpeg']) {
-      const localRel = `media/${id}.${ext}`;
-      if (fs.existsSync(path.join(siteDir, localRel))) return localRel;
-    }
-  }
-  return remote;
-}
-
-function slimPortrait(portrait) {
-  if (!portrait) return null;
-  return {
-    visual_id: portrait.visual_id,
-    emperor_id: portrait.emperor_id,
-    对象标题: portrait['对象标题'],
-    预览文件: localPreview(portrait.visual_id, portrait['预览文件']),
-    权利颜色: portrait['权利颜色'],
-    可公开展示: portrait['可公开展示'],
-    展示角色: portrait['展示角色'],
-  };
-}
-
-function pick(row, fields) {
-  return Object.fromEntries(fields
-    .filter((field) => Object.hasOwn(row || {}, field))
-    .map((field) => [field, row[field]]));
-}
-
-function publicPortraitProse(value) {
-  return (String(value || '').match(/[^!！?？。；;]+[!！?？。；;]?/g) || [])
-    .map((sentence) => sentence.trim())
-    .filter((sentence) => sentence && !/\bQH-V-|(?:默认展示|默认头像|网格默认|识别系统|识别用头像|只作为其他真迹进入)/.test(sentence))
-    .map((sentence) => readerMetadata(readerCopy(sentence)))
-    .join('');
-}
-
-function publicPortrait(row) {
-  const out = pick(row, [
-    'visual_id', 'emperor_id', '对象标题', '图像性质', '图像性质分类', '认定等级',
-    '制作年代或摄影日期', '作者或摄影者',
-    '文件页', '预览文件', '文件页标示许可', '权利颜色', '可公开展示', '展示角色',
-    '关键标注', '画面解析', '释文', '卡片钩子', '馆藏登录号',
-  ]);
-  out['预览文件'] = localPreview(row.visual_id, row['预览文件']);
-  out['制作年代或摄影日期'] = readerMetadata(out['制作年代或摄影日期']);
-  out['作者或摄影者'] = readerMetadata(out['作者或摄影者']);
-  out['关键标注'] = readerMetadata(out['关键标注']);
-  out['画面解析'] = publicPortraitProse(out['画面解析']);
-  out['释文'] = publicPortraitProse(out['释文']);
-  out['卡片钩子'] = readerMetadata(readerCopy(out['卡片钩子']));
-  return out;
-}
-
-function publicClaim(row) {
-  // 来源、录文对照和历史编辑决定分别展示，不把机器采纳映射成人工核验。
-  return {
-    ...pick(row, [
-      'Assertion ID', '主体 ID', '谓词/关系', '客体 ID 或值', '原始时间表达', '公历下界', '公历上界', '公历说明',
-      '确定性', '来源实体 ID', '卷页/档号/图像定位', '支持引文', '冲突组 ID',
-    ]),
-  };
-}
-
-function publicEvidence(value) {
-  const code = String(value || '').trim()[0];
-  return ({ E: '已列原文', C: '存在异说', S: '参考线索', U: '尚不确定' })[code] || '';
-}
-
-function publicAvailability(value) {
-  return ({
-    L0: '馆藏入口', L1: '可查目录', L2: '可查原文条目', L3: '已关联逐条依据',
-  })[String(value || '').trim()] || '馆藏入口';
-}
-
-function searchEntry(type, id, hay, extra = {}) {
-  return { type, id, hay, ...extra };
-}
-
-// 拼音（无声调、去空格）并入检索 hay，支持 yinzhen → 胤禛 这类查询
-function py(text) {
-  try {
-    return pinyin(String(text || ''), { toneType: 'none', nonZh: 'none' }).replace(/\s+/g, '');
-  } catch {
-    return '';
-  }
-}
-
-function countBy(rows, field) {
-  const out = {};
-  for (const row of rows) {
-    const val = row[field] || '';
-    out[val] = (out[val] || 0) + 1;
-  }
-  return out;
-}
 
 function writeJson(name, payload) {
   const file = path.join(dataOutDir, name);
@@ -184,289 +79,6 @@ function writeJson(name, payload) {
   return { name, bytes: json.length };
 }
 
-function firstQuote(html) {
-  const match = String(html || '').match(/<blockquote[^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/);
-  return match ? match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '';
-}
-
-function escHtml(value) {
-  return String(value ?? '').replace(/[&<>"]/g, (ch) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-  }[ch]));
-}
-
-function headingSlug(raw, used) {
-  const plain = String(raw).replace(/<[^>]+>/g, '').trim();
-  let base = plain.replace(/[：:]/g, '-').replace(/\s+/g, '-').replace(/[「」『』《》]/g, '');
-  if (!base) base = 'section';
-  let id = base;
-  let n = 2;
-  while (used.has(id)) id = `${base}-${n++}`;
-  used.add(id);
-  return id;
-}
-
-function inlineMd(text) {
-  let out = escHtml(text);
-  out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
-  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-    const safe = /^(https?:\/\/|#\/)/.test(href) ? href : '#';
-    const extra = safe.startsWith('http') ? ' target="_blank" rel="noopener"' : '';
-    return `<a class="link" href="${escHtml(safe)}"${extra}>${label}</a>`;
-  });
-  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  out = out.replace(/\{\{claim:([A-Za-z0-9-]+)\}\}/g, (_, id) => (
-    `<button type="button" class="link claim-ref" data-claim="${escHtml(id)}">依据</button>`
-  ));
-  return out;
-}
-
-const MD_BLOCK = /^(#{1,4} |\- |\d+\. |\||>|---\s*$|\{\{fig:|\{\{conflict:)/;
-
-function readerStatusBlock(raw) {
-  const text = String(raw || '').replace(/`/g, '').trim();
-  const bits = [];
-  if (/\bE1\b/.test(text)) bits.push('已有条目可回查到实录或本纪原文');
-  if (/\bS\b|二手/.test(text)) bits.push('其余叙述仍依据后出史书或通行记载');
-  if (/\bC\b|来源已拆|来源冲突/.test(text)) bits.push('互异说法并列保存');
-  if (/M1/.test(text)) bits.push('由 AI 辅助整理');
-  if (/H1|抽查/.test(text)) bits.push('尚未经清史学者审校');
-  const summary = bits.length ? bits.join('；') : '本章仍是研究草稿';
-  return `<details class="evidence-drawer status"><summary>${escHtml(summary)}</summary><p>以上说明本章材料核对到哪一步。具体卷次和引文见正文角标。</p></details>`;
-}
-
-function mdToHtml(src, fig) {
-  const text = stripInternalComments(String(src || '')).replace(/\r\n/g, '\n').replace(/^# .+\n+/, '');
-  const lines = text.split('\n');
-  const html = [];
-  const usedIds = new Set();
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (!line.trim()) {
-      i += 1;
-      continue;
-    }
-    if (/^状态：/.test(line.trim())) {
-      html.push(readerStatusBlock(line.replace(/^状态：\s*/, '')));
-      i += 1;
-      continue;
-    }
-    if (/^## 待用户抽查/.test(line.trim())) {
-      i += 1;
-      while (i < lines.length && !/^## /.test(lines[i])) i += 1;
-      continue;
-    }
-    if (/^---\s*$/.test(line.trim())) {
-      html.push('<hr>');
-      i += 1;
-      continue;
-    }
-    // 插图语法：整行 {{fig:QH-V-E01}} 或 {{fig:QH-V-E01|自定义图注}}，权利检查在构建期完成
-    const figMatch = line.trim().match(/^\{\{fig:([A-Za-z0-9-]+)(?:\|([^}]*))?\}\}$/);
-    if (figMatch) {
-      html.push(fig ? fig(figMatch[1], (figMatch[2] || '').trim()) : '');
-      i += 1;
-      continue;
-    }
-    const conflictMatch = line.trim().match(/^\{\{conflict:([A-Za-z0-9-]+)(?:\|([^}]*))?\}\}$/);
-    if (conflictMatch) {
-      const id = conflictMatch[1];
-      const label = (conflictMatch[2] || '').trim();
-      html.push(`<div class="claim-compare conflict-embed" data-conflict="${escHtml(id)}"${label ? ` data-label="${escHtml(label)}"` : ''}></div>`);
-      i += 1;
-      continue;
-    }
-    if (line.startsWith('>')) {
-      const quotes = [];
-      while (i < lines.length && lines[i].startsWith('>')) {
-        quotes.push(lines[i].replace(/^>\s?/, ''));
-        i += 1;
-      }
-      html.push(`<blockquote class="quote source-quote"><p>${inlineMd(quotes.join(' '))}</p></blockquote>`);
-      continue;
-    }
-    if (line.startsWith('## ')) {
-      const title = line.slice(3);
-      const id = headingSlug(title, usedIds);
-      html.push(`<h2 id="${escHtml(id)}">${inlineMd(title)}</h2>`);
-      i += 1;
-      continue;
-    }
-    if (line.startsWith('### ')) {
-      const title = line.slice(4);
-      const id = headingSlug(title, usedIds);
-      html.push(`<h3 id="${escHtml(id)}">${inlineMd(title)}</h3>`);
-      i += 1;
-      continue;
-    }
-    if (line.startsWith('#### ')) {
-      const title = line.slice(5);
-      const id = headingSlug(title, usedIds);
-      const body = [];
-      i += 1;
-      let sawField = false;
-      while (i < lines.length && !/^#{1,4} /.test(lines[i]) && !lines[i].startsWith('>') && !lines[i].startsWith('{{')) {
-        if (!lines[i].trim()) {
-          i += 1;
-          continue;
-        }
-        const field = lines[i].match(/^\*\*(原文|今译|当时|今天还读|不能写成)\*\*\s*(.*)$/);
-        if (field) {
-          sawField = true;
-          body.push(`<p class="read-field" data-field="${escHtml(field[1])}"><strong>${escHtml(field[1])}</strong>　${inlineMd(field[2])}</p>`);
-          i += 1;
-          continue;
-        }
-        if (sawField) break;
-        body.push(`<p>${inlineMd(lines[i])}</p>`);
-        i += 1;
-      }
-      html.push(`<aside class="read-line" id="${escHtml(id)}"><h3>${inlineMd(title)}</h3>${body.join('')}</aside>`);
-      continue;
-    }
-    if (line.startsWith('- ')) {
-      const items = [];
-      while (i < lines.length && lines[i].startsWith('- ')) {
-        items.push(`<li>${inlineMd(lines[i].slice(2))}</li>`);
-        i += 1;
-      }
-      html.push(`<ul>${items.join('')}</ul>`);
-      continue;
-    }
-    if (/^\d+\. /.test(line)) {
-      const items = [];
-      while (i < lines.length && /^\d+\. /.test(lines[i])) {
-        items.push(`<li>${inlineMd(lines[i].replace(/^\d+\. /, ''))}</li>`);
-        i += 1;
-      }
-      html.push(`<ol>${items.join('')}</ol>`);
-      continue;
-    }
-    if (line.startsWith('|')) {
-      const rows = [];
-      while (i < lines.length && lines[i].startsWith('|')) {
-        const cells = lines[i].split('|').slice(1, -1).map((cell) => cell.trim());
-        if (!/^[-: ]+$/.test(cells.join(''))) rows.push(cells);
-        i += 1;
-      }
-      if (rows.length) {
-        const [head, ...body] = rows;
-        html.push(`<div class="table-wrap"><table><thead><tr>${head.map((cell) => `<th>${inlineMd(cell)}</th>`).join('')}</tr></thead><tbody>${body.map((row) => `<tr>${row.map((cell) => `<td>${inlineMd(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
-      }
-      continue;
-    }
-    const para = [line];
-    i += 1;
-    while (i < lines.length && lines[i].trim() && !MD_BLOCK.test(lines[i])) {
-      para.push(lines[i]);
-      i += 1;
-    }
-    const paraText = para.join(' ');
-    const paraHtml = `<p>${inlineMd(paraText)}</p>`;
-    html.push(paraText.startsWith('范围：')
-      ? `<details class="evidence-drawer scope"><summary>本章依据哪些材料</summary><p>${inlineMd(paraText.replace(/^范围：\s*/, ''))}</p></details>`
-      : paraHtml);
-  }
-  return wrapDrawers(html.join('\n'));
-}
-
-// 只保留读者能理解的史料说明；“尚未解决”是编辑待办，不进公共页。
-function wrapDrawers(html) {
-  let out = html.replace(/<h2 id="[^"]+">尚未解决<\/h2>[\s\S]*?(?=<h2|$)/g, '');
-  out = out.replace(/<h2 id="[^"]*">待用户抽查<\/h2>[\s\S]*?(?=<h2|$)/g, '');
-  out = out.replace(/<h2 id="[^"]*">(?:待回查清单|尚待更多材料核对清单)<\/h2>([\s\S]*?)(?=<h2|$)/g,
-    (_, body) => `<details class="evidence-drawer"><summary>史料说明</summary>${body}</details>`);
-  out = out.replace(/<h2 id="[^"]*">[一二三四五六七八九十]+、实录卷次回查状态<\/h2>([\s\S]*?)(?=<h2|$)/g,
-    (_, body) => `<details class="evidence-drawer"><summary>原文定位</summary>${body}</details>`);
-  // 「边界」按内部编辑节处理：不进公开正文，只留在源文件与 #/data（内容不丢，只是不上页面）。
-  // 若要让它在页面上折叠展示：改成 details 折叠，并先清掉节内 QH-* 编号。
-  out = out.replace(/<h2 id="[^"]+">边界<\/h2>[\s\S]*?(?=<h2|$)/g, '');
-  return wrapTeach(out);
-}
-
-function publicBodyHtml(html, refs = {}) {
-  let out = String(html || '');
-  const routeRef = (type, id, label, fallback) => {
-    const title = refs[type]?.[id];
-    return title
-      ? `<a class="link" href="#/${type}/${escHtml(id)}">${escHtml(title)}</a>`
-      : `<span class="pending-ref" title="条目尚未整理">${escHtml(label || fallback)}</span>`;
-  };
-  // 「下一步 / 待续」小节不再整节删除：标题由写作者自己起，构建期不替作者决定取舍。
-  // 内容里的编辑便笺仍由下面 privateChecklist 逐块清理。
-  const privateChecklist = /进入站点前|人工复核|深挖状态|章程原则|待用户抽查|责任人|审核备注|第一版产出|项目北极星指标|技术架构组|结构化入库|接入站点|内容选题库|大事记组|task-queue|\bschema\b|(?:data|content)\/[A-Za-z0-9_./-]+/i;
-  out = out.replace(/<(p|li|blockquote)\b[^>]*>[\s\S]*?<\/\1>/g, (block) => {
-    const plain = block.replace(/<[^>]+>/g, '');
-    if (privateChecklist.test(plain)) {
-      console.warn(`[publicBodyHtml] 删块: ${plain.replace(/\s+/g, ' ').trim().slice(0, 120)}`);
-      return '';
-    }
-    return block;
-  });
-  out = out
-    .replace(/<h2 id="骨架">骨架<\/h2>/g, '<h2 id="要点">要点</h2>')
-    .replace(/<code>QH-CF-[^<]+<\/code>/g, '相关记载可对读')
-    .replace(/<code>QH-A-[^<]+<\/code>/g, '相关依据')
-    .replace(/<code>QH-SU-[^<]+<\/code>/g, '相关原文')
-    .replace(/<code>QH-W-[^<]+<\/code>/g, '相关文献条目')
-    // 人物、遗址、图像、对照四类编号在正文里直接出现时，换成可点的实体链接，
-    // 读者看到的是名字而不是档号；名称缺失时退回类型标签。
-    .replace(/<code>QH-P-([^<]+)<\/code>/g, (_, suffix) => (
-      routeRef('person', `QH-P-${suffix}`, '', '人物档')
-    ))
-    .replace(/<code>QH-ST-([^<]+)<\/code>/g, (_, suffix) => (
-      routeRef('site', `QH-ST-${suffix}`, '', '遗址今况')
-    ))
-    .replace(/<code>QH-V-([^<]+)<\/code>/g, (_, suffix) => (
-      routeRef('image', `QH-V-${suffix}`, '', '图像')
-    ))
-    .replace(/<code>QH-L-([^<]+)<\/code>/g, (_, suffix) => (
-      routeRef('lane', `QH-L-${suffix}`, '', '对照')
-    ))
-    .replace(/<code>QH-IR-[^<]+<\/code>/g, '图像区域')
-    .replace(/<code>IDX-[^<]+<\/code>/g, '检索入口')
-    // 兜底：任何没被上面覆盖的 QH-* 编号都不进公开正文。
-    .replace(/<code>QH-[A-Z]+-[^<]*<\/code>/g, '相关条目')
-    .replace(/<code>#\/chapter\/([^<]+)<\/code>/g, (_, slug) => (
-      routeRef('chapter', slug, refs.chapter?.[slug] || '相关章节待整理', '相关章节待整理')
-    ))
-    .replace(/<code>#\/site\/([^<]+)<\/code>/g, (_, id) => (
-      routeRef('site', id, '', '遗址今况')
-    ))
-    .replace(/<code>#\/image\/([^<]+)<\/code>/g, (_, id) => (
-      routeRef('image', id, '', '图像')
-    ))
-    .replace(/<code>#\/lane\/([^<]+)<\/code>/g, (_, id) => (
-      routeRef('lane', id, '', '对照')
-    ))
-    .replace(/<code>#\/person\/([^<]+)<\/code>/g, (_, id) => (
-      routeRef('person', id, '', '人物')
-    ))
-    .replace(/<code>#\/question\/([^<]+)<\/code>/g, (_, id) => (
-      `<a class="link" href="#/question/${escHtml(id)}">这个问题</a>`
-    ))
-    .replace(/<code>#\/(works|claims|lanes|sources|ziguangge|hands)<\/code>/g, (_, page) => {
-      const labels = { works: '文献专栏', claims: '依据', lanes: '对照', sources: '来源', ziguangge: '紫光阁功臣像', hands: '像与物' };
-      return `<a class="link" href="#/${page}">${labels[page] || page}</a>`;
-    })
-    // Markdown 手写链接也必须指向已登记实体；未完成的提案保留标题但不制造死链。
-    .replace(/<a class="link" href="#\/(chapter|person|site|image|lane)\/([^"?]+)">([\s\S]*?)<\/a>/g,
-      (full, type, id, label) => (refs[type]?.[id]
-        ? full
-        : `<span class="pending-ref" title="条目尚未整理">${label}</span>`));
-  return out.replace(/<(ul|ol)>\s*<\/\1>/g, '');
-}
-
-function wrapTeach(html) {
-  return html.replace(
-    /(<h2 id="[^"]+">怎么读这件事<\/h2>)([\s\S]*?)(?=<h2|<!--|$)/,
-    '$1<div class="teach">$2</div>',
-  );
-}
 function writeRobotsTxt() {
   fs.rmSync(path.join(siteDir, 'sitemap.xml'), { force: true });
   fs.writeFileSync(path.join(siteDir, 'robots.txt'), 'User-agent: *\nAllow: /\n');
@@ -664,7 +276,7 @@ function buildDynasty({ dynasty, data }) {
     ...pick(row, [
       'event_id', 'person_id', '当时称号', '事件类型', '原纪年', '公历下界', '公历上界', '来源单元', '引文', '冲突组 ID', '主张 ID', '排序键',
     ]),
-    '公开证据状态': publicEvidence(row['回查状态']),
+    '公开证据状态': evidenceLabel(row['回查状态']),
     calendar: calendarForClaims(row['主张 ID']),
   }));
   const publicPrinces = princes.map((row) => pick(row, [
@@ -677,7 +289,7 @@ function buildDynasty({ dynasty, data }) {
     ...pick(row, [
       'event_id', 'person_id', '阶段', '事件类型', '原纪年', '公历下界', '公历上界', '地点', '来源单元', '引文', '冲突组 ID', '主张 ID', '相关人物ID', '排序键',
     ]),
-    '公开证据状态': publicEvidence(row['回查状态']),
+    '公开证据状态': evidenceLabel(row['回查状态']),
     calendar: calendarForClaims(row['主张 ID']),
   }));
   const publicSites = historicSites.map((row) => {
@@ -688,7 +300,7 @@ function buildDynasty({ dynasty, data }) {
       out[field] = readerCopy(out[field]).replace(/\bQH-ST-\d+\b/g, (id) => siteById.get(id)?.['事件'] || '相关地点');
     }
     out['预览文件'] = localPreview(row.site_id, row['预览文件']);
-    out['公开证据状态'] = publicEvidence(row['证据状态']);
+    out['公开证据状态'] = evidenceLabel(row['证据状态']);
     return out;
   });
   const publicWorks = works.map((row) => ({
@@ -1018,7 +630,14 @@ function buildDynasty({ dynasty, data }) {
     }));
   }
 
-  // 首页直出：kicker/h1/lede 取自 dynasty 对象
+  // 首页直出与发现元信息
+  renderHomePage({ dynasty, slim, emperorRecords, historicSites, publicChapters, portraits });
+
+  return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length };
+}
+
+/** 首页直出：把 SSR 的 `<main>`、朝代配置、发现元信息、主题引导与版本行写回 index.html。只读上一步的结果。 */
+function renderHomePage({ dynasty, slim, emperorRecords, historicSites, publicChapters, portraits }) {
   const indexPath = path.join(siteDir, 'index.html');
   let indexHtml = fs.readFileSync(indexPath, 'utf8');
   // 编辑器／预览面板会把 data-page-node-id 这类标记注入到磁盘上的 index.html。
@@ -1040,10 +659,13 @@ function buildDynasty({ dynasty, data }) {
   // 资源戳必须覆盖代码、全部源数据和分章正文；否则只改正文或来源目录时，按需 JSON 的 URL 不变，
   // 回访读者会继续使用浏览器缓存中的旧内容。
   const assetHash = createHash('sha256');
-  for (const file of [
-    'app.js', 'templates.js', 'media-manifest.js', 'qing-content.js', 'reading.js',
-    'search.js', 'studio.js', 'live-content.js', 'reader-picks.js', 'styles.css',
-  ]) assetHash.update(fs.readFileSync(path.join(siteDir, file)));
+  // 代码清单靠扫目录而不是手抄：浏览器模块之间互相 import，漏一个（basemap.js 就漏过）
+  // 等于改了它资源戳不动，回访的浏览器继续跑旧代码。
+  const assetFiles = fs.readdirSync(siteDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.(?:js|css)$/.test(entry.name))
+    .map((entry) => entry.name)
+    .sort();
+  for (const file of assetFiles) assetHash.update(fs.readFileSync(path.join(siteDir, file)));
   for (const file of [...new Set(DATA_MANIFEST.map((entry) => entry.file))].sort()) {
     const source = path.join(dataDir, file);
     if (fs.existsSync(source)) assetHash.update(fs.readFileSync(source));
@@ -1106,8 +728,6 @@ function buildDynasty({ dynasty, data }) {
     ? indexHtml.replace(versionRe, versionBlock)
     : indexHtml.replace('</footer>', `  ${versionTag}\n  </footer>`);
   fs.writeFileSync(indexPath, indexHtml);
-
-  return { dynasty: dynasty.code, written, searchEntries, emperorCount: emperorRecords.length, siteCount: historicSites.length };
 }
 
 function build() {

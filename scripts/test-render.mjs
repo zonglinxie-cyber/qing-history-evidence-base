@@ -446,6 +446,18 @@ check('本地图 srcset 含 480/960/1280', e04entries.length === 3
 // 回归：今地 site_id 含数字后缀（QH-ST-0001），mediaSrcset 不得把它误判成宽度档而截成 QH-ST.jpg
 check('今地数字 ID 图不被 mediaSrcset 截断', bareUrl(largestVariant('media/QH-ST-0001.webp')) === 'media/QH-ST-0001@2x.webp');
 check('今地图不用占位 QH-ST.jpg', !html.includes('media/QH-ST.jpg'));
+// 精选卡的 ?focus= 直达锚点：浏览器只在正文的 h2/h3/p/li 里找，命不中就静默停在章首，
+// 卡片上那句「直达选段」变成白跑一趟。这里用同一批标签做离线核对。
+const focusTargets = [...html.matchAll(/#\/chapter\/([a-z0-9-]+)\?focus=([^"&]+)/g)].map(([, slug, encoded]) => {
+  const term = decodeURIComponent(encoded);
+  const file = path.join(siteDir, 'data', 'chapter', `${slug}.json`);
+  if (!fs.existsSync(file)) return `${slug}（正文 JSON 缺失）`;
+  const body = JSON.parse(fs.readFileSync(file, 'utf8')).bodyHtml || '';
+  const hit = [...body.matchAll(/<(?:h2|h3|p|li)\b[^>]*>([\s\S]*?)<\/(?:h2|h3|p|li)>/g)]
+    .some(([, block]) => block.replace(/<[^>]+>/g, '').includes(term));
+  return hit ? '' : `${slug} → ${term}`;
+}).filter(Boolean);
+check(`精选卡的段落锚点可定位${focusTargets.length ? `（失配：${focusTargets.join('；')}）` : ''}`, focusTargets.length === 0);
 check('句末不孤字', noOrphan('以官书原文为底本，逐条整理。').includes('class="nobr">整理。'));
 const homeOut = await go('#/');
 check('首页导语句末不孤字', /class="nobr">[^<]{2,}<\/span>/.test(homeOut));

@@ -53,3 +53,24 @@ export function orderedChapters(chapters, emperors, genre = '') {
 export function comparisonLabel(groupId) {
   return groupId === 'QH-CF-KX-SUCCESSION' ? '相关记载对读' : '同组记载对照';
 }
+
+// 证据状态的说法：数据里是 E/C/S/U 首字母，读者看到的是中文，提示句解释这一级凭什么。
+// 构建侧写进 JSON、遗址卡与正文标记都读同一份。此前四处各抄一张表，改文案只改得动一处，
+// 其余三处就变成说不清哪版为真的旧说法。
+const EVIDENCE_LABEL = { E: '已列原文', C: '存在异说', S: '参考线索', U: '尚不确定' };
+
+// 按读者看到的字样取提示；正文标记会另起更短的口径（已回原文／两说并存／后出转述），一并登记。
+export const EVIDENCE_HINT = {
+  '已列原文': '能回到实录或本纪的具体条目',
+  '已回原文': '能回到实录或本纪的具体条目',
+  '存在异说': '同一件事有两种以上写法，并列保存',
+  '两说并存': '同一件事有两种以上写法，并列保存',
+  '参考线索': '依据后出史书或通行叙述，尚未对到日级原文',
+  '后出转述': '依据后出史书或通行叙述，尚未对到日级原文',
+  '尚不确定': '现有材料还不足以判定',
+};
+
+/** 状态原文（可能写成「E1 单源回查」这类带说明的串）按首字母定级。 */
+export function evidenceLabel(status) {
+  return EVIDENCE_LABEL[String(status || '').trim()[0]] || '';
+}

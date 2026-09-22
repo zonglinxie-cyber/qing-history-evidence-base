@@ -1,10 +1,11 @@
 const moduleVersion = new URL(import.meta.url).search;
 const { EMPEROR_CARD, PORTRAIT_FRAMING, HOME_PORTRAIT_BOUNDS, COURT_PORTRAIT_NOTE } = await import('./qing-content.js' + moduleVersion);
 const { MEDIA_FILES, MEDIA_ASPECT, MEDIA_STEM_VER } = await import('./media-manifest.js' + moduleVersion);
-const { COAST, RIVER, PROVINCE } = await import('./basemap.js' + moduleVersion);
+const { COAST, RIVER, PROVINCE, VIEW } = await import('./basemap.js' + moduleVersion);
 
-const { isChapterIndexable, isChapterEvidenceClosed } = await import('./reading.js' + moduleVersion);
+const { isChapterIndexable, isChapterEvidenceClosed, evidenceLabel, EVIDENCE_HINT } = await import('./reading.js' + moduleVersion);
 export { isChapterIndexable, isChapterEvidenceClosed };
+const { mediaPath, LOCAL_VARIANTS } = await import('./media-paths.js' + moduleVersion);
 const { readingPick, selectReadingPicks, FEATURED_COUNT } = await import('./reader-picks.js' + moduleVersion);
 export { readingPick, selectReadingPicks, FEATURED_COUNT };
 
@@ -129,15 +130,16 @@ export function mediaSrcset(url) {
       srcset: WIDTHS.map((width) => `${base}/${width}px-${file} ${width}w`).join(', '),
     };
   }
-  const local = src.match(/^(media\/[A-Za-z0-9-]+?)(?:-(?:480|960)|@2x)?(\.(?:jpe?g|png|webp))$/i);
+  const local = mediaPath(src);
   if (local) {
-    const [, stem, ext] = local;
+    const { stem, ext } = local;
     // 图片文件名不变、内容会换（帝容换源、重切档），所以拼内容指纹做缓存失效。
     // 指纹来自构建期生成的 MEDIA_STEM_VER，Node 侧与浏览器侧拿到的是同一份清单。
     const ver = MEDIA_STEM_VER[stem] ? `?v=${MEDIA_STEM_VER[stem]}` : '';
     return {
       src: `${stem}${ext}${ver}`,
-      srcset: [[`${stem}-480${ext}`, 480], [`${stem}-960${ext}`, 960], [`${stem}@2x${ext}`, 1280]]
+      srcset: LOCAL_VARIANTS
+        .map(([suffix, width]) => [`${stem}${suffix}${ext}`, width])
         .filter(([file]) => MEDIA_FILES.has(file))
         .map(([file, width]) => `${file}${ver} ${width}w`).join(', '),
     };
@@ -171,30 +173,7 @@ export function imgTag(url, alt, opts = {}) {
   return `<img src="${esc(src)}"${srcsetAttr} sizes="${esc(sizes)}" alt="${esc(alt)}" width="${width}" height="${height}" loading="${loading}" decoding="async"${priority}${referrer}${onerror}${lightboxAttr}>`;
 }
 
-export function emperorCardVita(emperor) {
-  const given = emperor['规范名'] || '';
-  const temple = emperor['庙号'] || '';
-  const son = emperor['皇子序'] || '';
-  const nick = emperor['外号'] || '';
-  const { born, died, from, to, age, reign } = yearSpan(emperor);
-  const lines = [];
-  if (given) lines.push(`<p class="card-name">${esc(given)}</p>`);
-  if (temple || son) lines.push(`<p>${esc([temple, son].filter(Boolean).join(' · '))}</p>`);
-  if (born || died) lines.push(`<p>${esc(`${born ? `${born} 年` : ''}–${died ? `${died} 年` : ''}${age ? ` · ${age} 岁` : ''}`)}</p>`);
-  if (from || to) lines.push(`<p>${esc(`在位 ${reign} 年 · ${from}–${to}`)}</p>`);
-  if (nick) lines.push(`<p class="card-nick">${esc(nick)}</p>`);
-  return `<div class="card-vita">${lines.join('')}</div>`;
-}
-
 const EVIDENCE_CLASS = { 'S': 'medium', 'C': 'conflict', 'U': 'medium' };
-const EVIDENCE_LABEL = { S: '参考线索', E: '已列原文', C: '存在异说', U: '尚不确定' };
-
-export function credibilityBadge(cred) {
-  if (!cred || !cred.claims) {
-    return '<span class="cred-badge cred-none">尚无逐日官书条</span>';
-  }
-  return '';
-}
 
 export function noEvidenceBanner(headline, explanation) {
   const ex = explanation ? `\n  <p>${esc(explanation)}</p>` : '';
@@ -299,14 +278,9 @@ export function siteCard(site, opts = {}) {
     })
     : '<div class="img-fallback">图像权利受限，不嵌入</div>';
   const rawStatus = site['证据状态'] || '';
-  const publicStatus = site['公开证据状态'] || EVIDENCE_LABEL[rawStatus[0]] || '';
+  const publicStatus = site['公开证据状态'] || evidenceLabel(rawStatus);
   const evCls = rawStatus ? (EVIDENCE_CLASS[rawStatus[0]] || 'site') : (publicStatus === '存在异说' ? 'conflict' : 'medium');
-  const badgeHint = {
-    '已列原文': '能回到实录或本纪的具体条目',
-    '参考线索': '依据后出史书或通行叙述，尚未对到日级原文',
-    '存在异说': '同一件事有两种以上写法，并列保存',
-    '尚不确定': '现有材料还不足以判定',
-  }[publicStatus] || '';
+  const badgeHint = EVIDENCE_HINT[publicStatus] || '';
   const siteBadge = publicStatus
     ? `<span class="cred-badge cred-${evCls}"${badgeHint ? ` title="${esc(badgeHint)}"` : ''}>${esc(publicStatus)}</span>`
     : '';
@@ -419,11 +393,13 @@ export function courtPortraitNote() {
 //     底图取 Natural Earth 1:50m 的海岸线、省界与主要河流。
 //
 //   底图是**现代**地理参照，不是清代疆域——省界尤其如此，界线上不写朝代。
+// 视野取自 VIEW（由 scripts/build-basemap.mjs 写进底图），不在这里另抄一份数字：
+// 底图裁线的范围与画框范围一旦分叉，贴边的海岸线会缺一段而没人发现。
 const MAP = {
+  ...VIEW,
   lon0: 117,
   phi1: (25 * Math.PI) / 180,
   phi2: (47 * Math.PI) / 180,
-  minLon: 104, maxLon: 133, minLat: 19.5, maxLat: 55.5,
   W: 640, H: 848, pad: 26,
 };
 MAP.n = (Math.sin(MAP.phi1) + Math.sin(MAP.phi2)) / 2;
@@ -505,7 +481,7 @@ const MAP_REGIONS = [
   ['岭南·海防与开埠', 107.9, 25.1],
 ];
 
-export function sitesMapSvg(sites, activeCat = '全部') {
+export function sitesMapSvg(sites) {
   const validSites = (sites || []).filter((s) => {
     const lng = Number(s['经度']);
     const lat = Number(s['纬度']);

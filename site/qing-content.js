@@ -243,6 +243,26 @@ export const SOURCE_GROUPS = [
   },
 ];
 
+// 本朝专属链接的说法。通用路由（文献／依据／转轴／真迹手稿）的说法属界面壳，留在 app.js；
+// 这里只放「康熙朝」「储位链」这类只有清朝才成立的题目。
+export const LINK_LABELS = {
+  '#/kangxi': '康熙朝',
+  '#/yongzheng': '雍正朝',
+  '#/succession': '储位链',
+  '#/empresses': '四后时间轴',
+  '#/princes': '皇子表',
+  '#/princesses': '皇女表',
+  '#/site/QH-ST-0013': '遗址今况：畅春园',
+  '#/site/QH-ST-0021': '景陵',
+  '#/site/QH-ST-0022': '泰陵',
+  '#/person/QH-P-000004': '胤礽',
+  '#/person/QH-P-000002': '胤禛',
+  '#/person/QH-P-000025': '乌雅氏',
+  '#/spine/power': '继承与决策',
+  '#/spine/money': '军饷与兵源',
+  '#/chronicle/kangxi': '康熙大事记',
+};
+
 export const OPEN_STATE_LABEL = {
   L0: '馆藏入口',
   L1: '可查目录',

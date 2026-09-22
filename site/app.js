@@ -26,8 +26,8 @@ const [
   yearSpan,
 },
   { normalize, lookup: lookupIndex, buildIndex },
-  { calendarDate, chapterGenre, orderedChapters, comparisonLabel },
-  { EMPEROR_READS, EMPRESS_IDS, HEIR_THREADS, SOURCE_GROUPS, PATH_NODES, SPINE_POWER, SPINE_MONEY, ERA_PINNED, JIEDU_FEATURED, SITE_DETAILS, PORTRAIT_FRAMING, EMPEROR_CARD, EXHIBITIONS }
+  { calendarDate, chapterGenre, orderedChapters, comparisonLabel, EVIDENCE_HINT },
+  { EMPEROR_READS, EMPRESS_IDS, HEIR_THREADS, SOURCE_GROUPS, PATH_NODES, SPINE_POWER, SPINE_MONEY, ERA_PINNED, JIEDU_FEATURED, SITE_DETAILS, PORTRAIT_FRAMING, EMPEROR_CARD, EXHIBITIONS, LINK_LABELS }
 ] = await Promise.all([
   import('./templates.js' + moduleVersion),
   import('./search.js' + moduleVersion),
@@ -292,14 +292,6 @@ function eraPage(slug) {
     });
   }
 
-  const ROLE_GROUPS = [
-    { role: '默认朝服像', title: '朝服像', hint: '' },
-    { role: '其他真迹', title: '其他真迹', hint: '' },
-    { role: '相关史迹', title: '相关史迹', hint: '今貌不能倒推当时战场。' },
-    { role: '御笔书法', title: '御笔书法', hint: '碑是刻出来的，纸上才是手写。' },
-    { role: '奏折朱批', title: '奏折与朱批', hint: '红笔是皇帝批的，黑字是臣工写的。' },
-  ];
-
   function mediaImg(src, alt, lightbox = '') {
     return imgTag(src, alt, {
       width: 600,
@@ -313,10 +305,6 @@ function eraPage(slug) {
   function safeUrl(url) {
     const value = String(url || '').trim();
     return /^https?:\/\//.test(value) ? value : '';
-  }
-
-  function joinPublic(parts) {
-    return parts.map((item) => String(item || '').trim()).filter((item) => item && item !== '待核').join(' · ');
   }
 
   function sourcePageLabel(portrait) {
@@ -352,43 +340,6 @@ function eraPage(slug) {
         </span>
         <span class="thumb-cap">${esc(row['对象标题'])}</span>
       </a>`;
-  }
-
-  function textMediaCard(row) {
-    return `
-      <article class="doc-card">
-        <p class="muted">${esc(row['展示角色'])}</p>
-        <strong>${esc(row['对象标题'])}</strong>
-        ${transcriptionBlock(row)}
-        <p class="actions">
-          <a class="link" href="#/image/${esc(row.visual_id)}">全文</a>
-          ${safeUrl(row['文件页']) ? `<a class="link" href="${esc(safeUrl(row['文件页']))}" target="_blank" rel="noopener">${esc(sourcePageLabel(row))}</a>` : ''}
-        </p>
-      </article>`;
-  }
-
-  function groupedMedia(list) {
-    return ROLE_GROUPS.map(({ role, title, hint }) => {
-      const rows = list.filter((row) => row['展示角色'] === role);
-      if (!rows.length) return '';
-      const pics = rows.filter(canEmbed);
-      const texts = rows.filter((row) => !canEmbed(row));
-      return `
-        <h2>${esc(title)}</h2>
-        ${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
-        ${pics.length ? `<div class="thumbs">${pics.map(thumbCard).join('')}</div>` : ''}
-        ${texts.map(textMediaCard).join('')}
-        ${pics.filter((row) => row['释文']).map((row) => `
-          <article class="doc-card">
-            <strong>${esc(row['对象标题'])}</strong>
-            ${transcriptionBlock(row)}
-            <p class="actions">
-              <a class="link" href="#/image/${esc(row.visual_id)}">全文</a>
-              <a class="link" href="${esc(safeUrl(row['文件页']))}" target="_blank" rel="noopener">${esc(sourcePageLabel(row))}</a>
-            </p>
-          </article>`).join('')}
-      `;
-    }).join('');
   }
 
   function personName(id) {
@@ -445,16 +396,6 @@ function eraPage(slug) {
   function predicateLabel(code) {
     return (DATA.predicates || {})[code] || code;
   }
-
-  const EVIDENCE_HINT = {
-    '已列原文': '能回到实录或本纪的具体条目',
-    '已回原文': '能回到实录或本纪的具体条目',
-    '存在异说': '同一件事有两种以上写法，并列保存',
-    '两说并存': '同一件事有两种以上写法，并列保存',
-    '参考线索': '依据后出史书或通行叙述，尚未对到日级原文',
-    '后出转述': '依据后出史书或通行叙述，尚未对到日级原文',
-    '尚不确定': '现有材料还不足以判定',
-  };
 
   function evidenceMark(state) {
     if (!state) return '';
@@ -726,27 +667,6 @@ function eraPage(slug) {
           <button class="link" data-claim="${esc(claim['Assertion ID'])}">依据</button>
         </p>
       </article>
-    `;
-  }
-
-  function portraitBlock(portrait, extra = '', figureClass = '') {
-    if (!portrait) return '';
-    return `
-      <figure class="portrait${figureClass ? ` ${figureClass}` : ''}">
-        ${canEmbed(portrait)
-          ? `<a href="#/image/${esc(portrait.visual_id)}">${mediaImg(portrait['预览文件'], portrait['对象标题'], portrait['对象标题'])}</a>`
-          : `<a class="img-fallback" href="#/image/${esc(portrait.visual_id)}">${esc(portrait['对象标题'])}</a>`}
-        <figcaption>
-          <strong>${esc(portrait['对象标题'])}</strong>
-          <p class="muted">${esc(joinPublic([portrait['展示角色'], portrait['制作年代或摄影日期']]))}</p>
-          ${transcriptionBlock(portrait)}
-          <p class="actions">
-            ${portrait['释文'] ? `<a class="link" href="#/image/${esc(portrait.visual_id)}">全文</a>` : ''}
-            <a class="link" href="${esc(safeUrl(portrait['文件页']))}" target="_blank" rel="noopener">${esc(sourcePageLabel(portrait))}</a>
-            ${extra}
-          </p>
-        </figcaption>
-      </figure>
     `;
   }
 
@@ -1085,27 +1005,14 @@ function eraPage(slug) {
   }
 
   function relatedLinks(value) {
+    // 通用路由的说法属界面壳；本朝专属题目（康熙朝／储位链／景陵…）在 qing-content.js。
     const labels = {
-      '#/kangxi': '康熙朝',
-      '#/yongzheng': '雍正朝',
-      '#/succession': '储位链',
-      '#/empresses': '四后时间轴',
-      '#/princes': '皇子表',
-      '#/princesses': '皇女表',
+      ...LINK_LABELS,
       '#/lanes': '对照',
-      '#/site/QH-ST-0013': '遗址今况：畅春园',
-      '#/site/QH-ST-0021': '景陵',
-      '#/site/QH-ST-0022': '泰陵',
-      '#/person/QH-P-000004': '胤礽',
-      '#/person/QH-P-000002': '胤禛',
-      '#/person/QH-P-000025': '乌雅氏',
       '#/claims': '依据',
       '#/works': '文献',
       '#/hands': '真迹手稿',
       '#/path': '转轴',
-      '#/spine/power': '继承与决策',
-      '#/spine/money': '军饷与兵源',
-      '#/chronicle/kangxi': '康熙大事记',
     };
     return String(value || '').split(/[；;]/).map((item) => item.trim()).filter(Boolean)
       .map((href) => {
@@ -1145,43 +1052,9 @@ function eraPage(slug) {
       .join(' · ');
   }
 
-  function chaptersForPerson(personId) {
-    return (DATA.chapters || [])
-      .filter((row) => row.person_id === personId)
-      .slice()
-      .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
-  }
-
   function lampChip(lamp) {
     if (!lamp) return '';
     return `<span class="lamp lamp-${esc(lamp)}">${esc(lamp)}</span>`;
-  }
-
-  function dynastyReadsBlock(emperor) {
-    if (!emperor) return '';
-    const ready = emperor.reads?.chapters?.length
-      ? emperor.reads.chapters
-      : chaptersForPerson(emperor.person_id).slice(0, 3).map((row) => ({
-        slug: row.slug, title: row.title, lede: row.lede,
-      }));
-    const lane = emperor.reads?.lane || null;
-    if (!ready.length && !lane) return '';
-    return `
-      <h2>本朝可读</h2>
-      <ol class="threads">
-        ${ready.map((row) => {
-          const full = (DATA.chapters || []).find((item) => item.slug === row.slug);
-          const lede = row.lede || full?.lede || '';
-          return `<li>
-            <a class="thread" href="#/chapter/${esc(row.slug)}">
-              <span class="thread-year">${esc(full?.era || '')}</span>
-              <h2>${esc(row.title)}</h2>
-              ${lede ? `<p>${esc(lede)}</p>` : ''}
-            </a>
-          </li>`;
-        }).join('')}
-      </ol>
-      ${lane ? `<p class="actions"><a class="link" href="#/lane/${esc(lane.id)}">对照：${esc(lane.title)}</a></p>` : ''}`;
   }
 
   function emperorPack(read, emperor) {
@@ -1379,35 +1252,6 @@ function eraPage(slug) {
     `;
   }
 
-  function chapterReadBlock(personId) {
-    const shown = new Set((emperorByPerson.get(personId)?.reads?.chapters || []).map((row) => row.slug));
-    const chapters = chaptersForPerson(personId).filter((row) => !shown.has(row.slug));
-    const extras = {
-      'QH-P-000001': [['#/chapter/kangxi-02', '两废太子'], ['#/chapter/kangxi-01', '即位、崩逝与遗诏'], ['#/succession', '储位全链'], ['#/princes', '儿子怎么排'], ['#/princesses', '女儿怎么排']],
-      'QH-P-000002': [['#/succession?stage=顾命即位', '崩逝到即位的七日'], ['#/kangxi', '康熙朝的储位与对照'], ['#/lanes', '改诏、丹药等传闻']],
-      'QH-P-000019': [['#/lane/QH-L-0033', '继皇后对照'], ['#/chapter/jiaqing-04', '内禅与和珅分日'], ['#/ziguangge', '紫光阁功臣像']],
-      'QH-P-000053': [['#/lane/QH-L-0010', '出家说'], ['#/image/QH-V-E03C', '多尔衮令旨'], ['#/hands', '真迹手稿']],
-      'QH-P-000054': [['#/lane/QH-L-0032', '和珅对照'], ['#/question/QH-GQ-0068', '八亿两答不了'], ['#/image/QH-V-E07B', '嘉庆朱批']],
-      'QH-P-000051': [['#/chapter/nurhaci-01', '本纪怎么写称汗'], ['#/hands', '真迹手稿']],
-      'QH-P-000052': [['#/chapter/huangtaiji-01', '汗位与帝位'], ['#/hands', '真迹手稿']],
-      'QH-P-000055': [['#/chapter/daoguang-01', '议款这一句'], ['#/image/QH-V-E08C', '道光朱批']],
-      'QH-P-000056': [['#/chapter/xianfeng-01', '幸木兰'], ['#/image/QH-V-E09C', '咸丰朱批']],
-      'QH-P-000057': [['#/chapter/tongzhi-01', '祺祥不是纪年'], ['#/image/QH-V-E10C', '入承大统诏']],
-      'QH-P-000058': [['#/chapter/guangxu-01', '继文宗为子'], ['#/image/QH-V-E11C', '光绪朱批']],
-      'QH-P-000059': [['#/chapter/xuantong-01', '统治权公诸全国'], ['#/hands', '真迹手稿']],
-    };
-    const extra = (extras[personId] || []).filter(([href]) => {
-      const slug = String(href).match(/^#\/chapter\/([^/?#]+)$/)?.[1];
-      return !slug || !shown.has(slug);
-    });
-    if (!chapters.length && !extra.length) return '';
-    return `
-          <h2>其余篇目</h2>
-          ${chapters.map((row) => `<p class="rel"><a href="#/chapter/${esc(row.slug)}">${esc(row.title)}</a></p>`).join('')}
-          ${extra.map(([href, label]) => `<p class="rel"><a href="${esc(href)}">${esc(label)}</a></p>`).join('')}
-    `;
-  }
-
   function reignThreadItem(year, href, title, lede) {
     return `<li><a class="thread" href="${esc(href)}">
       <span class="thread-year">${esc(year)}</span>
@@ -1476,16 +1320,6 @@ function eraPage(slug) {
     `;
   }
 
-  function portraitKind(portrait) {
-    if (!portrait) return '';
-    const blob = [portrait['图像性质'], portrait['制作年代或摄影日期'], portrait['作者或摄影者'], portrait['关键标注']].join('');
-    if (/照片/.test(portrait['图像性质'] || '')) return '照片';
-    if (/追绘/.test(blob)) return '后世追绘';
-    if (/郎世宁/.test(blob)) return '郎世宁';
-    if (/立像/.test(blob)) return '朝服立轴';
-    return '朝服定妆';
-  }
-
   function splitIds(value) {
     return String(value || '').split(/[；;]/).map((item) => item.trim()).filter(Boolean);
   }
@@ -1536,7 +1370,7 @@ function eraPage(slug) {
       <div class="filters era-tab-bar site-filters" style="margin-bottom: 28px;" aria-label="地景分类">
         ${SITE_CATEGORIES.map((item) => `<a href="#/sites?cat=${encodeURIComponent(item.label)}" class="era-tab-item${item.label === activeCat ? ' active' : ''}">${esc(item.label)} <i>${allRows.filter((r) => item.test(r)).length}</i></a>`).join('')}
       </div>
-      ${sitesMapSvg(rows, activeCat)}
+      ${sitesMapSvg(rows)}
       <div class="grid cards site-cards">${rows.map(siteCard).join('')}</div>
     `;
   }
@@ -1661,24 +1495,6 @@ function eraPage(slug) {
   }
 
 
-  function reignVisualSection(number, title, keys, rows) {
-    const groups = VISUAL_GROUPS.filter((group) => keys.includes(group.key))
-      .map((group) => ({ group, rows: rows.filter((row) => visualGroup(row)?.key === group.key) }))
-      .filter((item) => item.rows.length);
-    return `<section class="reign-section reign-visual" data-reign-part="${esc(title)}">
-      <h2 class="reign-part">${number} ${esc(title)}</h2>
-      ${groups.length ? groups.map(({ group, rows: items }) => {
-        const pics = items.filter(canEmbed);
-        const texts = items.filter((row) => !canEmbed(row));
-        return `
-          <h3>${esc(group.title)} <span class="muted">${items.length} 件</span></h3>
-          ${pics.length ? `<div class="thumbs">${pics.map(thumbCard).join('')}</div>` : ''}
-          ${texts.length ? texts.map(textMediaCard).join('') : ''}
-        `;
-      }).join('') : '<p class="empty">这一类材料目前尚未收录。</p>'}
-    </section>`;
-  }
-
   function externalAlign(person) {
     if (!person) return null;
     const qid = String(person.wikidata_qid || '').trim();
@@ -1786,7 +1602,6 @@ function eraPage(slug) {
               </div>
               ${crumbs([
                 { href: '#/', label: '十二帝' },
-                { label: era },
               ])}
             </div>
 
@@ -2772,7 +2587,6 @@ function eraPage(slug) {
           { href: '#/', label: '十二帝' },
           { href: '#/read', label: '读故事' },
           eraHome ? { href: eraHome, label: chapter.era } : null,
-          { label: chapter.title },
         ])}
         <div class="chapter-tools">
           <p class="crumb crumb-share"><a class="link" href="#/chapter/${esc(chapter.slug)}">分享本页</a></p>
@@ -2929,10 +2743,6 @@ function eraPage(slug) {
       ${questionCard(row, { hideBound: row.evidenceGap })}
       <p class="crumb"><a class="link" href="#/questions">全部这类问题</a></p>
     `;
-  }
-
-  function visualThread(row, group) {
-    return visualGalleryCard(row);
   }
 
   function handsPage(query = {}) {

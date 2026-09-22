@@ -16,7 +16,7 @@
 //     ne_50m_rivers_lake_centerlines.geojson
 //     ne_50m_admin_1_states_provinces_lines.geojson
 //
-// 视野常量必须与 site/templates.js 的 sitesMapSvg 保持一致，改了要同时改两处。
+// 视野由本文件定义并随底图一起导出，templates.js 读同一份，见下方 VIEW。
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -27,7 +27,8 @@ const rootDir = path.resolve(scriptDir, '..');
 const cacheDir = path.join(rootDir, 'data/import/natural-earth');
 const outFile = path.join(rootDir, 'site/basemap.js');
 
-// 与 templates.js 的 sitesMapSvg 同源。外扩一点点，让贴边的线能被裁出干净的端点。
+// 视野：裁线用，同时随底图写进 site/basemap.js —— site/templates.js 的 sitesMapSvg
+// 读的就是这一份，改这里即可，不必再两边对齐。外扩一点点，让贴边的线能被裁出干净的端点。
 const VIEW = { minLon: 104.0, maxLon: 133.0, minLat: 19.5, maxLat: 55.5 };
 
 // 抽稀容差（度）。0.06° 约 6–7 公里：在这个视野下肉眼看不出折角，点数却降一个量级。
@@ -229,6 +230,8 @@ function main() {
 //
 // 这是**现代**地理参照，不是清代疆域。省界尤其如此——清代的省制与今天不同，
 // 这一层只帮读者把点位放回今天的中国地图上，不得当史料用。
+// 视野：站点画框与本文件的裁线范围共用下面这一份，别在 templates.js 里另写数字。
+export const VIEW = ${JSON.stringify(VIEW)};
 ${Object.entries(layers).map(([key, list]) => `export const ${key.toUpperCase()} = ${JSON.stringify(list)};`).join('\n')}
 `;
   fs.writeFileSync(outFile, body);
