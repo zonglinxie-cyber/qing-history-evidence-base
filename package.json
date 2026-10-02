@@ -8,6 +8,7 @@
     "build:basemap": "node scripts/build-basemap.mjs --fetch",
     "release": "node scripts/build-release.mjs",
     "watch": "node scripts/check-calendar-baseline.mjs && node scripts/build-site.mjs --watch",
+    "serve": "node scripts/serve.mjs",
     "status": "node scripts/build-status.mjs",
     "validate": "node scripts/validate-data.mjs",
     "check:calendar": "node scripts/check-calendar-baseline.mjs",

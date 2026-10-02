@@ -12,7 +12,6 @@ import {
   activeDynasties,
   reignEraLabels,
 } from './lib/schema.mjs';
-import { checkSkeletonProse, checkReaderProse } from './rules/common/prose.mjs';
 import { check as checkCommon } from './rules/common/structure.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -22,7 +21,7 @@ const contentDir = path.join(root, 'content');
 
 const errors = [];
 const warnings = [];
-// 证据/编辑类断言与文风提示：默认只打印、不阻断构建。
+// 证据/编辑类断言：默认只打印、不阻断构建。
 // 改文案、加内容不该被机器拦住；需要严格自查时用 STRICT=1（npm run validate:strict）。
 const assertions = [];
 const STRICT = process.env.STRICT === '1';
@@ -219,21 +218,7 @@ async function main() {
       if (mod.check) mod.check(ctx);
     }
 
-    // 文风检查（docs/04 §13.2）默认不跑：它是写作参考，不是内容门槛。
-    // 想看一份文案自查报告时用 npm run validate:strict——此时文风提示与证据断言一样按 error 报出。
-    if (STRICT) {
-      const proseFindings = [];
-      checkSkeletonProse({
-        chapters: ctx.chapters,
-        contentDir,
-        warnings: proseFindings,
-      });
-      checkReaderProse({
-        questions: ctx.questions,
-        warnings: proseFindings,
-      });
-      errors.push(...proseFindings);
-    }
+    // 文风检查已于 0.8.0 取消：读本层按 docs/30-读本写作契约.md 写，不做机器文风判分。
 
     summary.push({
       dynasty: dynasty.code,
@@ -255,7 +240,7 @@ async function main() {
     warnings: warnings.length,
     assertions: assertions.length,
     mode: STRICT
-      ? 'STRICT=1：证据/编辑类断言与文风提示按 error 阻断'
+      ? 'STRICT=1：证据/编辑类断言按 error 阻断'
       : '默认：只输出提示，不阻断构建',
   }, null, 2));
   if (warnings.length) console.log(`WARNINGS（提示，不影响构建）\n- ${warnings.join('\n- ')}`);

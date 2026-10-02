@@ -133,12 +133,14 @@ if (unregistered) {
 }
 
 const homeHtmlOut = await go('#/');
-check('首页精选入口在前、十二帝画像完整、讲解台入口稳定', (homeHtmlOut.match(/class="card emperor-card"/g) || []).length === 12
-  && homeHtmlOut.indexOf('reign-scroll-wrap') < homeHtmlOut.indexOf('home-features')
-  && homeHtmlOut.indexOf('home-features') < homeHtmlOut.indexOf('home-emperors')
-  && homeHtmlOut.includes('#/chapter/jiaqing-04')
-  && homeHtmlOut.indexOf('home-paths') < homeHtmlOut.indexOf('home-emperors')
-  && homeHtmlOut.includes('href="#/studio"'));
+check('首页只留长卷与十二帝画像，精选直达已下沉', (homeHtmlOut.match(/class="card emperor-card"/g) || []).length === 12
+  && homeHtmlOut.indexOf('reign-scroll-wrap') < homeHtmlOut.indexOf('home-emperors')
+  && !homeHtmlOut.includes('reading-picks')
+  && !homeHtmlOut.includes('home-paths')
+  && !homeHtmlOut.includes('#/chapter/'));
+check('首页保留三条内容线入口', homeHtmlOut.includes('home-more')
+  && ['#/jiedu', '#/spine/money', '#/lanes'].every((h) => homeHtmlOut.includes(h))
+  && homeHtmlOut.includes('href="#/read"'));
 const jieduOut = await go('#/jiedu');
 check('逐解全部在自己的页面上', jieduOut.includes('一部一部，逐段读') && (jieduOut.match(/class="thread"/g) || []).length >= 40);
 const howOut = await go('#/how');
@@ -174,6 +176,9 @@ check('读故事总目录按朝列出章节', readOut.includes('按朝读故事'
   && readOut.includes('#/chapter/kangxi-01')
   && readOut.includes('资料')
   && readOut.includes('crumb'));
+check(`精选七问并入读故事首屏（实际 ${(readOut.match(/class="reading-pick"/g) || []).length}）`, (readOut.match(/class="reading-pick"/g) || []).length === 7
+  && readOut.indexOf('read-features') < readOut.indexOf('era-jump')
+  && readOut.includes('#/chapter/jiaqing-04'));
 const pathPage = await go('#/path');
 check('转轴年页', pathPage.includes('转轴之处') && pathPage.includes('1912') && pathPage.includes('遗诏与密建储'));
 check('内禅转轴接到和珅分日章', pathPage.includes('#/chapter/jiaqing-04'));
@@ -203,8 +208,20 @@ check('人物页渲染（含朝代内容模块）', person.includes('两废太�
 check('康熙帝页整篇叙事且留台账', person.includes('文书所见') && person.includes('明立太子这条路在这一朝走到了尽头')
   && person.includes('史料说明') && !person.includes('未开') && !person.includes('未拆'));
 check('康熙帝页有 Wikidata 对照', person.includes('wikidata.org/wiki/Q17790'));
-check('康熙帝页六段合一且保留专题链', ['生平与施政', '御容与器物', '大事与储位', '史料与遗址'].every((title) => person.includes(title))
+check('康熙帝页六段合一且保留专题链', ['生平与施政', '御容与器物', '本朝纪事', '史料与遗址'].every((title) => person.includes(title))
   && person.includes('#/chapter/kangxi-02') && person.includes('储位立废') && person.includes('#/succession'));
+// 本朝纪事＝一条时间线：逐日条与年表行排在一起，范围与异说原样保留，储位不再单独成块。
+const kxSpine = person.match(/<ol class="timeline">[\s\S]*?<\/ol>/)?.[0] || '';
+check('康熙本朝纪事并排逐日条与年表行', kxSpine.includes('顺治十八年正月初九日')
+  && kxSpine.includes('康熙元年') && kxSpine.includes('（范围）') && kxSpine.includes('两说并存'));
+check('年表与储位在帝页不重复成块', (person.match(/#\/chapter\/kangxi-09/g) || []).length === 1
+  && !person.includes('reign-sub">储位<'));
+// 出处入口：一行最多一处「依据」，多条并成计数；章入口要写章名，不是一个「章」字。
+const kxRefs = person.match(/<p class="tl-refs">[\s\S]*?<\/p>/g) || [];
+check('一行只留一处依据入口且章入口带章名', kxRefs.length >= 10
+  && kxRefs.every((row) => (row.match(/>依据/g) || []).length <= 1)
+  && !/>章<\/a>/.test(person) && kxRefs.some((row) => /依据 \d+ 条/.test(row))
+  && kxRefs.some((row) => /两废太子|即位、崩逝与遗诏/.test(row)));
 check('帝卷像与物收成横排', person.includes('thumbs-row') && person.includes('全部像与物')
   && person.includes('本朝章目') && !person.includes('表与对照') && !person.includes('era-toc'));
 const nurhaci = await go('#/person/QH-P-000051');
@@ -218,6 +235,7 @@ const qlEra = await go('#/qianlong');
 check('乾隆朝页钉住已打开对照', qlEra.includes('#/lane/QH-L-0033') && qlEra.includes('#/chapter/jiaqing-04') && qlEra.includes('系年不可考者'));
 const emperorRouteFailures = [];
 const emperorVisualFailures = [];
+const emperorTimelineFailures = [];
 for (const emperor of homeData.emperors || []) {
   const slug = emperor.eraSlug;
   const era = String(emperor['年号或通称'] || '').split('；')[0];
@@ -229,7 +247,23 @@ for (const emperor of homeData.emperors || []) {
   const visualList = await go(`#/hands?era=${encodeURIComponent(era)}`);
   if (byEra !== byPerson || eraLayout !== 'era' || personLayout !== 'era') emperorRouteFailures.push(slug);
   if ((visualList.match(/#\/image\//g) || []).length !== expectedVisuals || !byEra.includes(`像与物 ${expectedVisuals} 件`)) emperorVisualFailures.push(slug);
+  // 本朝纪事：每一朝都排出一条时间线；年表行只能被同年同据的逐日条并掉，不能凭空消失。
+  const spine = byEra.match(/<ol class="timeline">[\s\S]*?<\/ol>/)?.[0] || '';
+  const spineRows = (spine.match(/<li>/g) || []).length;
+  const yearRows = (reignData.reignTimeline || []).filter((row) => row.emperor_id === emperor.emperor_id);
+  const hits = yearRows.filter((row) => spine.includes(
+    String(row.event_html).replace(/<[^>]+>/g, '').trim().slice(0, 12),
+  )).length;
+  const dayRows = (reignData.chronicle || []).filter((row) => (
+    row.emperor_id === emperor.emperor_id && row['年号级收录'] === '是'
+  )).length;
+  if (spineRows < 10 || hits === 0 || yearRows.length - hits > dayRows
+    || /QH-(?:CF|SU|W|L|IR)-|undefined/.test(spine.replace(/(?:data-claim|href)="[^"]*"/g, ''))) {
+    emperorTimelineFailures.push(`${slug}:节点${spineRows} 命中${hits}/${yearRows.length} 逐日${dayRows}`);
+  }
 }
+check('十二帝本朝纪事均排出时间线且不丢年表行', emperorTimelineFailures.length === 0);
+if (emperorTimelineFailures.length) console.log('  ' + emperorTimelineFailures.join(' | '));
 check('十二帝年号路由与旧人物路由内容及版心一致', emperorRouteFailures.length === 0);
 check('十二帝材料计数与各朝像与物清单一致', emperorVisualFailures.length === 0);
 const qlUnified = await go('#/qianlong');
@@ -301,7 +335,7 @@ check('即位章角标贴在引文上', /source-quote[\s\S]*cite-n[\s\S]*<\/bloc
 const succession = await go('#/succession');
 check('储位接到七日', succession.includes('顾命与即位') && succession.includes('口谕令') && succession.includes('满汉遗诏原件'));
 const yinzhenEra = await go('#/person/QH-P-000002');
-check('雍正帝页有七日储位', yinzhenEra.includes('储位') && yinzhenEra.includes('即皇帝位') && yinzhenEra.includes('七日全链'));
+check('雍正帝页有七日储位', yinzhenEra.includes('储位') && yinzhenEra.includes('即皇帝位') && yinzhenEra.includes('储位全链'));
 const princesPageHtml = await go('#/princes');
 check('皇子页写清玉牒未见', princesPageHtml.includes('玉牒未开') && princesPageHtml.includes('合法核验路径仍不通'));
 const testamentQ = await go('#/question/QH-GQ-0084');
@@ -337,6 +371,56 @@ const heshenPerson = await go('#/person/QH-P-000124');
 check('和珅人物页接入主张', heshenPerson.includes('钮祜禄·和珅')
   && heshenPerson.includes('QH-A-JQ-0006'));
 check('和珅人物页先讲分日', heshenPerson.includes('第五天下狱') && heshenPerson.includes('#/chapter/jiaqing-04'));
+check('和珅人物页列出正文出场', heshenPerson.includes('<h2 id="p-mention">出场')
+  && heshenPerson.includes('#/chapter/jiaqing-04?focus='));
+// 出场索引与正文是同一次扫描的两面：摘录必须真在目标章里，锚点必须命不中就跑的标签元素，
+// 每节最多连一次姓名——正文铺满人名链接就不是读本了。
+const decodeEntities = (value) => value.replace(/&(?:amp|lt|gt|quot);/g, { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"' });
+const squeeze = (value) => value.replace(/\s+/g, '');
+const mentionBlocks = new Map();
+const blockTexts = (body, tags, fold) => [...body.matchAll(new RegExp(`<(?:${tags})\\b[^>]*>([\\s\\S]*?)<\\/(?:${tags})>`, 'g'))]
+  .map(([, inner]) => {
+    const text = decodeEntities(inner.replace(/<button[\s\S]*?<\/button>/g, '').replace(/<[^>]+>/g, ''));
+    return fold ? squeeze(text) : text.replace(/\s+/g, ' ').trim();
+  });
+const chapterBlocksOf = (slug) => {
+  if (!mentionBlocks.has(slug)) {
+    const file = path.join(siteDir, 'data', 'chapter', `${slug}.json`);
+    const body = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).bodyHtml || '' : '';
+    mentionBlocks.set(slug, {
+      body,
+      // 摘录可以出自表格单元；锚点只认 focusPassage 会搜的那几个标签。
+      texts: blockTexts(body, 'h2|h3|p|li|td|th|dd|dt|figcaption', true),
+      focusTexts: blockTexts(body, 'h2|h3|p|li', false),
+    });
+  }
+  return mentionBlocks.get(slug);
+};
+const mentionIssues = [];
+for (const row of reignData.personMentions || []) {
+  const { body, texts, focusTexts } = chapterBlocksOf(row.chapter_slug);
+  if (!body) { mentionIssues.push(`${row.chapter_slug} 无正文`); continue; }
+  if (!body.includes(`href="#/person/${row.person_id}"`)) mentionIssues.push(`${row.chapter_slug} 正文没连线`);
+  if (!texts.some((text) => text.includes(squeeze(row.excerpt.replace(/^…|…$/g, ''))))) {
+    mentionIssues.push(`${row.chapter_slug} 摘录对不上：${row.excerpt.slice(0, 20)}`);
+  }
+  if (row.focus && !focusTexts.some((text) => text.includes(row.focus))) {
+    mentionIssues.push(`${row.chapter_slug} 锚点落空：${row.focus}`);
+  }
+}
+const { annotateMentions } = await import(new URL('./lib/person-mentions.mjs', import.meta.url));
+const probe = annotateMentions(
+  '<h2 id="a">甲</h2><p>第二处和珅与第一处和珅同段。</p>'
+  + '<h2 id="b">乙</h2><p>已有 <a class="link" href="#/person/QH-P-000124">钮祜禄·和珅</a>，裸名和珅不再连第二个。</p>',
+  [{ id: 'QH-P-000124', names: ['和珅'] }],
+  { slug: 'probe', title: '探针', era: '嘉庆' },
+);
+check('出场连线：每节至多一处、已有链接不重复加',
+  (probe.html.match(/href="#\/person\/QH-P-000124"/g) || []).length === 2
+  && probe.mentions.length === 2
+  && probe.mentions.every((row) => row.focus && row.excerpt.includes('和珅')));
+check(`正文出场索引与正文一致${mentionIssues.length ? `（${mentionIssues.slice(0, 4).join('；')}）` : ''}`,
+  (reignData.personMentions || []).length > 0 && mentionIssues.length === 0);
 const searchHeshen = await go('#/search?q=和珅');
 check('全站检索命中和珅', searchHeshen.includes('QH-P-000124') && searchHeshen.includes('<mark>'));
 check('搜索先展示可读文章与命中片段', searchHeshen.includes('class="search-story"')
@@ -448,7 +532,8 @@ check('今地数字 ID 图不被 mediaSrcset 截断', bareUrl(largestVariant('me
 check('今地图不用占位 QH-ST.jpg', !html.includes('media/QH-ST.jpg'));
 // 精选卡的 ?focus= 直达锚点：浏览器只在正文的 h2/h3/p/li 里找，命不中就静默停在章首，
 // 卡片上那句「直达选段」变成白跑一趟。这里用同一批标签做离线核对。
-const focusTargets = [...html.matchAll(/#\/chapter\/([a-z0-9-]+)\?focus=([^"&]+)/g)].map(([, slug, encoded]) => {
+// 精选卡住在 #/read，运行时才拼进 DOM，所以取构建产物 home.json 的 featuredReads。
+const focusTargets = [...JSON.stringify(homeData.featuredReads || []).matchAll(/#\/chapter\/([a-z0-9-]+)\?focus=([^"&]+)/g)].map(([, slug, encoded]) => {
   const term = decodeURIComponent(encoded);
   const file = path.join(siteDir, 'data', 'chapter', `${slug}.json`);
   if (!fs.existsSync(file)) return `${slug}（正文 JSON 缺失）`;

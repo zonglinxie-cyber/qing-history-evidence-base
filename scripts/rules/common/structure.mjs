@@ -294,8 +294,9 @@ export function check(ctx) {
     } else {
       const markdown = fs.readFileSync(chapterFile, 'utf8');
       const status = markdown.match(/^状态：\s*(.+)$/m)?.[1] || '';
-      if (!status || !CHAPTER_STATUS_MARKER.test(status)) {
-        errors.push(`${row.chapter_id} 缺少可识别的章节证据状态`);
+      // 「状态：」行自 0.8.0 起可省（docs/30）；写了就必须是可识别的取值。
+      if (status && !CHAPTER_STATUS_MARKER.test(status)) {
+        errors.push(`${row.chapter_id} 章节证据状态无法识别: ${status}`);
       }
       if (/E1\s*单源回查/.test(status) && unitIds.length === 0) {
         errors.push(`${row.chapter_id} 标为 E1 但未绑定 unit_ids`);

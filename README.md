@@ -33,7 +33,8 @@ AI 负责查资料、核对和编辑，不要求用户逐条审核，也不要�
 | `docs/01-project-charter.md` | 项目使命、范围、角色、交付物和 Go/No-Go 标准 |
 | `docs/02-information-architecture.md` | 产品信息架构、核心页面和用户任务 |
 | `docs/03-source-and-rights-policy.md` | 史料**性质**分级（三级：`同时代·官方` / `同时代·私撰` / `后出`，2026-09-11 由六级压缩）、引用要求、版权三色规则 |
-| `docs/04-editorial-and-review-manual.md` | 录文、主张、关系、日期、画像及 AI 使用规范 |
+| `docs/04-editorial-and-review-manual.md` | 证据库：录文、主张、关系、日期、画像及 AI 使用规范 |
+| `docs/30-读本写作契约.md` | **读者正文怎么写**（0.8.0 起唯一写作规则，替代旧 §13 禁词表） |
 | `docs/archive/` | 已归档的过期规划：SQL schema 候选、六周计划、专家团队、风险登记全表、审查方案、Phase-0 数量门槛与 Go/No-Go 验收、社媒内容策略；现役警戒线见章程第 11 节 |
 | `docs/07-zero-budget-production-method.md` | 免费资料边界、证据状态和持续生产循环 |
 | `docs/21-史学评估与补充方案.md` | 史学角度的系统评估与换算基准登记（CAL-001）；按 P0/P1/P2 排列的补充方案与复算命令。**注意**：其中 §1.1「新增 A3」已被当晚的三级压缩推翻，该节仅存留档 |
@@ -92,13 +93,13 @@ AI 负责查资料、核对和编辑，不要求用户逐条审核，也不要�
 ```bash
 npm install
 npm run validate       # 只输出提示；仅结构/外键类 error 会阻断
-npm run validate:strict  # 可选自查：把证据与文风提示升级为 error
+npm run validate:strict  # 可选自查：把证据断言升级为 error
 npm run self-review    # 只读登记与变更检查；不改状态，不等于来源复核
 npm run build          # validate → build-release --render-only → build-site
 npm run status         # 只刷新 STATUS.md
 npm test               # 渲染冒烟测试（黄金问题数量由数据动态读取）
 npm run watch          # 监视 CSV / 正文变化并重建
-python3 -m http.server 8765 --directory site
+npm run serve          # 本地预览 http://127.0.0.1:8765/（HTML 与 JSON 不缓存，只 media/ 长缓存；产物变化时页面自动重载）
 ```
 
 浏览器打开 `http://127.0.0.1:8765/`，或直接用上面的 GitHub Pages 地址。这是研究稿浏览层：主张保留历史编辑状态，另显示登记与逐条复核状态，家庭字段保持「索引级候选」，黄色/红色资源只给元数据和外链。绿色画像已缓存到 `site/media/`，页面不热链 Wikimedia。
@@ -112,12 +113,12 @@ python3 -m http.server 8765 --directory site
 `scripts/validate-data.mjs` 只在一件事上阻断：**数据结构必须能读出来**。
 
 - **结构类 error（唯一阻断项）**：行读不出 / 必填缺失 / 主键重复 / 跨文件重复 / 未知外键引用 / 枚举无效 / 章节 era 无效 / 清史稿卷次异常等。
-- **证据、编辑、文风类（只提示）**：`qing.mjs` 里的「不得把 X 写成 Y」「必须保留冲突组」，以及 `docs/04` §13.2 的文风判据——都不再影响构建，也不再设 warning／断言条数上限。
+- **证据、编辑类（只提示）**：`qing.mjs` 里的「不得把 X 写成 Y」「必须保留冲突组」——只查 CSV 数据，不查正文文风，不影响构建。文风检查已于 0.8.0 删除。
 
 用法：
 
 1. `npm run validate` —— 输出提示，只有结构类 error 会让它以非 0 退出。
-2. `npm run validate:strict`（等价 `STRICT=1 node scripts/validate-data.mjs`）—— 可选自查：把证据与文风提示升级为 error，想安心检查文案时再跑。
+2. `npm run validate:strict`（等价 `STRICT=1 node scripts/validate-data.mjs`）—— 可选自查：把证据断言升级为 error。
 3. `npm run build` 串行执行 validate → build-release --render-only → build-site：内容类问题不失败，结构 error 才失败。生成的 `site/data/*.json` 不入库，CI 与本地都会重建。
 
 质量基线（原先的「warning ≤ 1、断言 ≤ 0、黄金问题 ≥ 86」）已于 2026-09-11 取消：告警是给人看的雷达，不是构建闸门。
@@ -130,7 +131,7 @@ python3 -m http.server 8765 --directory site
 - 发现内容错误：`npm run errata -- --loc <位置ID> --text "<问题>"`（见 [`docs/25-勘误流程.md`](docs/25-勘误流程.md)）；
 - **发布由 GitHub Actions 手动触发**：`deploy.yml` 仅 `workflow_dispatch`，不随 push 自动公开。需要更新线上版本时，到 Actions → Deploy Pages → Run workflow 手动运行。
 - 前置条件：仓库 Settings → Actions → General → Workflow permissions 需选 **Read and write**（GITHUB_TOKEN 要推送 gh-pages）。
-- 新检出先运行 `npm ci && npm run build && npm test`，再用 `python3 -m http.server 8765 --directory site` 预览；`watch` 只负责重建，不启动 HTTP 服务。CI 和手动 Pages 发布都先完整构建与测试，再上传整个 `site/`，包含被 Git 忽略的生成文件。
+- 新检出先运行 `npm ci && npm run build && npm test`，再用 `npm run serve` 预览；`watch` 只负责重建，不启动 HTTP 服务。别改用 `python3 -m http.server`：它只发 `Last-Modified`、不发 `Cache-Control`，浏览器会按文件年龄猜新鲜度，而版本号 `?v=` 写在 `index.html` 里，这份 HTML 一被缓存整站就退回旧构建。CI 和手动 Pages 发布都先完整构建与测试，再上传整个 `site/`，包含被 Git 忽略的生成文件。
 
 ## 推荐阅读顺序
 
@@ -140,9 +141,9 @@ python3 -m http.server 8765 --directory site
 4. 零预算生产方法；
 5. 数据字典（`data/` 各 CSV 表头）。
 
-## 五项默认写作原则（方法约定，不参与构建拦截）
+## 五项默认原则（方法约定，不参与构建拦截；前四条管证据库）
 
-1. **文章不是事实源。** 事实首先保存为带证据的原子主张，文章只是派生视图。
+1. **证据库与读本分层。** 事实以带证据的原子主张存进 CSV；读者看的文章是独立作品，可以写背景、人物、场景和今人研究，按 [`docs/30-读本写作契约.md`](docs/30-读本写作契约.md) 写。
 2. **关系边必须有证据。** 生母、嫡母、养母、承嗣、过继、婚配和政治关系不得混写。
 3. **历史时间必须保留原值。** 年号纪年、闰月、公历换算、精度和换算方法同时保存。
 4. **能浏览不等于能复制。** 每件图片、档案和数据库资源先进入版权台账，再决定本地保存、外链或禁用。
@@ -163,7 +164,7 @@ python3 -m http.server 8765 --directory site
 - 目标包含十二帝完整骨架，并持续向后妃、皇子女和宗室扩充；
 - 不承诺一次性完成“全部清史”，按可核验批次持续生产；
 - 不把《清史稿》当最终事实裁判；
-- 不让模型自动补写残字、死因、动机或争议结论；
+- 不编造残字、原文引文、对话和心理活动；死因、动机、争议可以讲，要说明依据或说明是推测；
 - 不把历史画像、后世历史画和 AI 想象图混在同一类别。
 
 ## 零预算规则

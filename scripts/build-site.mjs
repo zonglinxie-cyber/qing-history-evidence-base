@@ -7,6 +7,8 @@ import { loadCsv } from './lib/csv.mjs';
 import { CSV_FILES, DATA_MANIFEST, KIND_TO_FIELD, activeDynasties } from './lib/schema.mjs';
 import { readerCopy, readerProse, readerMetadata } from './lib/reader.mjs';
 import { firstQuote, escHtml, mdToHtml, publicBodyHtml } from './lib/chapter-html.mjs';
+import { annotateMentions } from './lib/person-mentions.mjs';
+import { parseReignTimeline } from './lib/reign-timeline.mjs';
 import {
   publicCalendarStatus, localPreview, slimPortrait, pick, publicPortrait,
   publicClaim, publicAvailability, searchEntry, py,
@@ -20,6 +22,7 @@ buildMediaManifest();
 const { homeHtml, isChapterIndexable, isChapterEvidenceClosed, selectReadingPicks, FEATURED_COUNT } = await import('../site/templates.js');
 import { LIVE_TOPICS } from '../site/live-content.js';
 import { chapterGenre, orderedChapters, evidenceLabel } from '../site/reading.js';
+import { MENTION_PERSONS } from '../site/qing-content.js';
 import { loadReviewContext } from './lib/review.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -243,6 +246,16 @@ function buildDynasty({ dynasty, data }) {
   const laneById = new Map(lanes.map((row) => [row.lane_id, row]));
   const chapterById = new Map(chapters.map((row) => [row.chapter_id, row]));
 
+  // 正文「出场」：白名单人物在每节首见处连到人物页，同时留下人物页要用的出场索引。
+  // 未入库的人物不参与，否则连出去就是死链。
+  const mentionPersons = MENTION_PERSONS.filter((row) => personById.has(row.id));
+  const personMentions = [];
+  for (const row of chapters) {
+    const annotated = annotateMentions(row.bodyHtml, mentionPersons, row);
+    row.bodyHtml = annotated.html;
+    personMentions.push(...annotated.mentions);
+  }
+
   const publicPeople = people.map((row) => ({
     ...pick(row, ['person_id', '分组', '规范名', '人物类型', 'wikidata_qid', 'cbdb_id', 'ctext_entity']),
     '常用名或异名': readerMetadata(row['常用名或异名']),
@@ -330,6 +343,16 @@ function buildDynasty({ dynasty, data }) {
     '说明': readerCopy(row['说明']),
     calendar: calendarForClaims(row['主张IDs']),
   }));
+  // 帝页时间骨架：各朝年表的年份表解析一次，前端只排不再读 Markdown。
+  // 年表仍是二手索引层，逐日官书条另有自己的主张与冲突组，两者在帝页合并成一条时间线。
+  const reignTimeline = [];
+  for (const row of chapters) {
+    if (!/-reign-timeline\.md$/.test(String(row.file || ''))) continue;
+    const emperor = emperorRecords.find((item) => item.person_id === row.person_id);
+    for (const item of parseReignTimeline(row.markdown, routeTitles)) {
+      reignTimeline.push({ ...item, emperor_id: emperor?.emperor_id || '', era: row.era, chapter_slug: row.slug });
+    }
+  }
   const publicChapters = chapters.map((row) => {
     const sourceCount = String(row.unit_ids || '').split(/[；;]/).map((id) => id.trim()).filter((id) => unitById.has(id)).length;
     const closed = isChapterEvidenceClosed(row.status, sourceCount);
@@ -562,10 +585,12 @@ function buildDynasty({ dynasty, data }) {
         const { bodyHtml, quote, ...meta } = row;
         return meta;
       }),
+      personMentions,
       questions: publicQuestions,
       works: publicWorks,
       conflictSets: publicConflictSets,
       chronicle: publicChronicle,
+      reignTimeline,
       overviews: publicOverviews,
       predicates: Object.fromEntries(
         (vocab || [])
@@ -650,7 +675,7 @@ function renderHomePage({ dynasty, slim, emperorRecords, historicSites, publicCh
   }
   const homeRe = /<main id="main"[^>]*>[\s\S]*?<\/main>/;
   if (homeRe.test(indexHtml)) {
-    const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false, reads: selectReadingPicks(publicChapters, { limit: FEATURED_COUNT }) });
+    const home = homeHtml(slim, emperorRecords, historicSites, { onerror: false });
     indexHtml = indexHtml.replace(homeRe, `<main id="main" tabindex="-1" data-ssr="home">\n${home}\n  </main>`);
   } else {
     console.warn('WARN: index.html 未找到 <main id="main">，跳过直出。');
@@ -795,6 +820,11 @@ if (process.argv.includes('--watch')) {
   };
   fs.watch(dataDir, { recursive: true }, kick);
   fs.watch(contentDir, { recursive: true }, kick);
-  fs.watch(path.join(siteDir, 'templates.js'), kick);
+  // 单文件 watch 在 macOS 上是按所在目录实现的，兄弟文件被重写也会报成 templates.js 变了。
+  // build 每次都写 site/index.html，于是重建→自触发→重建无限循环（实测一次保存刷出 122 次重建）。
+  // 改成显式盯 site/ 目录并按文件名精确过滤，只有 templates.js 真的变了才重建。
+  fs.watch(siteDir, (event, filename) => {
+    if (String(filename).endsWith('templates.js')) kick(event, filename);
+  });
   console.log('watching data/, content/, site/templates.js');
 }

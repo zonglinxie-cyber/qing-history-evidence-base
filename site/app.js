@@ -53,7 +53,8 @@ async function fetchJson(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    // no-cache 是「每次回源核对」而不是「不缓存」：数据块有 2 MB，命中 304 只花一次往返。
+    const response = await fetch(url, { signal: controller.signal, cache: 'no-cache' });
     if (!response.ok) throw new Error(`无法载入 ${url}`);
     return await response.json();
   } finally {
@@ -81,6 +82,7 @@ const DATA = {
   iiif: [],
   kangxiChapter: '',
   chapters: [],
+  personMentions: [],
   questions: [],
   predicates: {},
   coverage: {},
@@ -89,6 +91,7 @@ const DATA = {
   suggest: [],
   conflictSets: [],
   chronicle: [],
+  reignTimeline: [],
   overviews: [],
 };
 
@@ -670,14 +673,37 @@ function eraPage(slug) {
     `;
   }
 
-  function annotationChips(portrait) {
-    return (portrait['关键标注'] || '').split('；').filter(Boolean)
+  function mentionCard(row) {
+    const href = `#/chapter/${encodeURIComponent(row.chapter_slug)}${row.focus ? `?focus=${encodeURIComponent(row.focus)}` : ''}`;
+    return `
+      <article class="claim">
+        <p class="sentence"><a class="link" href="${esc(href)}">${esc(row.section_title || '本章开篇')}</a></p>
+        <p class="quote">${esc(row.excerpt)}</p>
+      </article>
+    `;
+  }
+
+  // 出场按章归组：一个人物散在十几篇里，逐条平铺会读成一堵链接墙。
+  function mentionGroups(mentions) {
+    const groups = [];
+    for (const row of mentions) {
+      const last = groups[groups.length - 1];
+      if (last && last.chapter_slug === row.chapter_slug) last.rows.push(row);
+      else groups.push({ chapter_slug: row.chapter_slug, chapter_title: row.chapter_title, era: row.era, rows: [row] });
+    }
+    return groups.map((group) => `
+      <h3><a class="link" href="#/chapter/${encodeURIComponent(group.chapter_slug)}">${esc(group.chapter_title)}</a> <span class="muted">${esc(group.era)} · ${group.rows.length} 处</span></h3>
+      ${group.rows.map((row) => mentionCard(row)).join('')}
+    `).join('');
+  }
+
+  function annotationChips(portrait) {    return (portrait['关键标注'] || '').split('；').filter(Boolean)
       .map((item) => `<span class="chip">${esc(item)}</span>`).join('');
   }
 
   function home() {
 
-    return homeHtml(DATA.dynasty, DATA.emperors, DATA.sites, { onerror: true, reads: DATA.featuredReads });
+    return homeHtml(DATA.dynasty, DATA.emperors, DATA.sites, { onerror: true });
   }
 
   function eraChapters(era) {
@@ -763,6 +789,10 @@ function eraPage(slug) {
         ${crumbs([{ href: '#/', label: '十二帝' }, { label: '读故事' }])}
         <p class="muted">全站收录 ${list.length} 篇，其中 ${narrative} 篇为主线正文。</p>
       </div>
+      ${DATA.featuredReads?.length ? `<section class="read-features" aria-labelledby="read-picks">
+        <div class="reading-section-head"><div><p class="kicker">先挑一篇</p><h2 id="read-picks">每个精选都从一个具体问题开始</h2></div></div>
+        ${readingCards(DATA.featuredReads)}
+      </section>` : ''}
       <nav class="era-jump era-tab-bar" aria-label="按朝跳转">${groups
         .map(([era, items]) => `<button type="button" class="era-tab-item" data-scroll="read-${esc(era)}">${esc(era)} <i>${items.length}</i></button>`).join('')}</nav>
       ${groups.map(([era, items]) => `
@@ -1082,37 +1112,125 @@ function eraPage(slug) {
 
   function chronicleItem(row) {
     const claims = String(row['主张IDs'] || '').split(/[；;]/).map((s) => s.trim()).filter(Boolean);
-    const site = row['今地ID'] ? `#/site/${row['今地ID']}` : '';
-    const chapter = row['章节slug'] ? `#/chapter/${row['章节slug']}` : '';
     return `
       <article class="chronicle-item" id="${esc(row.entry_id)}">
         <p class="sub">${esc(row['原纪年'])} · ${esc(calendarDate(row))}${row['冲突组'] ? ' · 同组记载对照' : ''}</p>
         <h3>${esc(row['标题'])}</h3>
         <p>${esc(row['说明'])}</p>
-        <p class="actions">
-          ${claims.map((id) => `<button class="link" type="button" data-claim="${esc(id)}">依据</button>`).join(' ')}
-          ${chapter ? `<a class="link" href="${esc(chapter)}">章</a>` : ''}
-          ${site ? `<a class="link" href="${esc(site)}">遗址今况</a>` : ''}
-        </p>
+        ${refRow([
+          claimRef(claims),
+          chapterRef(row['章节slug']),
+          row['今地ID'] ? `<a class="link" href="#/site/${esc(row['今地ID'])}">今地</a>` : '',
+        ])}
       </article>`;
   }
 
-  function eraChronicleBlock(emperorId) {
-    const all = chronicleRows(emperorId).filter((row) => row['年号级收录'] === '是');
-    if (!all.length) return '';
-    const prefer = new Set(['QH-CR-KX-0001', 'QH-CR-KX-0005', 'QH-CR-KX-0011', 'QH-CR-KX-0014', 'QH-CR-KX-0016']);
-    const rows = all.filter((row) => prefer.has(row.entry_id));
-    const shown = rows.length ? rows : all.slice(0, 5);
-    const more = all.length > shown.length;
-    const era = ((DATA.emperors || []).find((e) => e.emperor_id === emperorId)?.['年号或通称'] || '').split('；')[0];
-    const href = (DATA.emperors || []).find((row) => row.emperor_id === emperorId)?.chronicleSlug
-      ? `#/chronicle/${(DATA.emperors || []).find((row) => row.emperor_id === emperorId).chronicleSlug}`
-      : '';
+  // 本朝纪事：一条时间线。逐日官书条、储位记录与年表行按公历同序排下来。
+  // 同年且共享一条主张算同一件事，只留证据级更高的那条（大事记带章节与遗址入口）；
+  // 系日不同或异说各条不合并，冲突组照原样标出来，不替读者择一。
+  function claimIdsOf(value) {
+    return String(value || '').split(/[；;]/).map((id) => id.trim()).filter(Boolean);
+  }
+
+  // 一行只留一处出处入口：多条依据收成一枚计数，点开仍是站点原有的并列依据抽屉。
+  function claimRef(ids) {
+    if (!ids.length) return '';
+    if (ids.length === 1) return `<button class="link" type="button" data-claim="${esc(ids[0])}">依据</button>`;
+    return `<button class="link" type="button" data-claim="${esc(ids[0])}" data-claim-run="${esc(ids.join(','))}"`
+      + ` aria-label="依据 ${ids.length} 条，一次列出">依据 ${ids.length} 条</button>`;
+  }
+
+  // 「章」不写成一个字：给出章名，读者知道这点下去读哪一篇。
+  function chapterRef(slug) {
+    if (!slug) return '';
+    const title = String((DATA.chapters || []).find((row) => row.slug === slug)?.title || '').split('：')[0].trim();
+    return `<a class="link" href="#/chapter/${esc(slug)}">${esc(title || '原章')}</a>`;
+  }
+
+  function personRef(id) {
+    const href = personHref(id);
+    return href ? `<a class="link" href="${esc(href)}">${esc(personName(id))}</a>` : '';
+  }
+
+  function refRow(refs) {
+    const bits = refs.filter(Boolean);
+    return bits.length ? `<p class="tl-refs">${bits.join('')}</p>` : '';
+  }
+
+  function eraTimelineNodes(emperor) {
+    const dayRows = chronicleRows(emperor.emperor_id).filter((row) => row['年号级收录'] === '是');
+    const dayClaims = new Set(dayRows.flatMap((row) => claimIdsOf(row['主张IDs'])));
+    const dated = dayRows.map((row) => ({
+      sort: row['排序键'] || row['公历下界'] || '9999',
+      year: String(row['公历下界'] || '').slice(0, 4),
+      claims: claimIdsOf(row['主张IDs']),
+      when: row['原纪年'],
+      date: calendarDate(row),
+      title: esc(row['标题']),
+      gloss: esc(row['说明']),
+      conflict: row['冲突组'],
+      refs: [
+        claimRef(claimIdsOf(row['主张IDs'])),
+        chapterRef(row['章节slug']),
+        row['今地ID'] ? `<a class="link" href="#/site/${esc(row['今地ID'])}">今地</a>` : '',
+      ],
+    }));
+    const heir = heirEventsFor(emperor.person_id)
+      .filter((row) => !claimIdsOf(row['主张 ID']).some((id) => dayClaims.has(id)))
+      .map((row) => ({
+        sort: row['排序键'] || '9999',
+        year: String(row['公历下界'] || '').slice(0, 4),
+        claims: claimIdsOf(row['主张 ID']),
+        when: row['原纪年'],
+        date: calendarDate(row),
+        title: eventSentence(row),
+        quote: row['引文'],
+        conflict: row['冲突组 ID'],
+        refs: [claimRef(claimIdsOf(row['主张 ID'])), personRef(row.person_id)],
+      }));
+    const spine = dated.concat(heir);
+    const yearRows = (DATA.reignTimeline || [])
+      .filter((row) => row.emperor_id === emperor.emperor_id)
+      .filter((row) => !spine.some((node) => node.year && node.year === row.year
+        && row.claims.some((id) => node.claims.includes(id))))
+      .map((row) => ({
+        sort: row.sort,
+        when: row.reign_year || row.year_label,
+        date: row.year_label,
+        title: row.event_html,
+        gloss: row.note_html,
+        refs: [claimRef(row.claims)],
+      }));
+    return spine.concat(yearRows).sort((a, b) => String(a.sort).localeCompare(String(b.sort)));
+  }
+
+  function eraTimelineBlock(emperor) {
+    const nodes = eraTimelineNodes(emperor);
+    if (!nodes.length) return '<p class="empty">这一朝还没有系年可考的条目。</p>';
     return `
-      <h2>大事记</h2>
-      <div class="chronicle-list">${shown.map(chronicleItem).join('')}</div>
-      ${more && href ? `<p class="actions"><a class="link" href="${esc(href)}">其余 ${all.length - shown.length} 件</a></p>` : ''}
-    `;
+      <ol class="timeline">
+        ${nodes.map((node) => `
+          <li>
+            <div class="when">
+              <strong>${esc(node.when || '')}</strong>
+              ${node.date ? `<span class="muted">${esc(node.date)}</span>` : ''}
+            </div>
+            <div class="what">
+              <p class="event-line">${node.title}${node.conflict ? ' <span class="mark two">两说并存</span>' : ''}</p>
+              ${node.quote ? `<p class="quote">「${esc(node.quote)}」</p>` : ''}
+              ${node.gloss ? `<p class="gloss">${node.gloss}</p>` : ''}
+              ${refRow(node.refs)}
+            </div>
+          </li>`).join('')}
+      </ol>`;
+  }
+
+  function eraTimelineLinks(emperor) {
+    const bits = [];
+    const slug = (DATA.reignTimeline || []).find((row) => row.emperor_id === emperor.emperor_id)?.chapter_slug;
+    if (slug) bits.push(`<a class="link" href="#/chapter/${esc(slug)}">全表与卷次</a>`);
+    if (heirEventsFor(emperor.person_id).length) bits.push('<a class="link" href="#/succession">储位全链</a>');
+    return bits.length ? `<p class="actions">${bits.join(' · ')}</p>` : '';
   }
 
   function pathPage() {
@@ -1260,32 +1378,18 @@ function eraPage(slug) {
     </a></li>`;
   }
 
-  function emperorHeirBlock(emperor) {
-    const sealStages = ['崩前不豫', '御榻口谕', '遗诏文本', '崩逝', '即位礼'];
-    const rows = (DATA.heirChain || []).filter((row) => (
-      sealStages.includes(row['阶段'])
-      && (row.person_id === emperor.person_id || String(row['相关人物ID'] || '').includes(emperor.person_id))
-    ));
-    if (!rows.length) return '';
-    return `
-      <h3 class="reign-sub">储位</h3>
-      <p class="thread-lead">十三日口谕、遗诏和崩于寝宫，二十日才行即位礼。</p>
-      ${heirList(rows)}
-      <p class="actions"><a class="link" href="#/succession?stage=顾命即位">七日全链</a></p>
-    `;
-  }
-
   function reignEventsBlock(emperor) {
     const era = String(emperor['年号或通称'] || '').split('；')[0];
     const slug = emperor.eraSlug || '';
     const chapters = eraChapters(era);
+    // 年表已经排进上面的时间线，章目里不再重复列一次；入口在时间线上方。
+    const spineSlugs = new Set((DATA.reignTimeline || []).map((row) => row.chapter_slug));
     const reads = chapters.filter((row) => chapterGenre(row) === '章');
-    const extras = chapters.filter((row) => chapterGenre(row) !== '章');
+    const extras = chapters.filter((row) => chapterGenre(row) !== '章' && !spineSlugs.has(row.slug));
     const seen = new Set(chapters.map((row) => `#/chapter/${row.slug}`));
     const tools = [];
     if (era === '康熙') {
       tools.push(
-        { year: '分日', href: '#/succession', title: '储位立废', lede: '从择吉到再废，一天一天排下来。六十一年十一月，口谕、遗诏和崩在十三日，即位礼在二十日。' },
         { year: '胤礽', href: '#/person/QH-P-000004', title: '胤礽', lede: '两岁被立，三十五岁再废。中间废过一次，又立过一次。' },
         { year: '后妃', href: '#/empresses', title: '康熙四后', lede: '活着的时候是妃、是后、是太后，孝恭两个字是死后才有的。' },
         { year: '皇子', href: '#/princes', title: '康熙的儿子', lede: '表上第一子是胤禔，但后妃传说承瑞才是长子。' },
@@ -1294,7 +1398,6 @@ function eraPage(slug) {
       );
     } else if (era === '雍正') {
       tools.push(
-        { year: '分日', href: '#/succession?stage=顾命即位', title: '崩逝到即位的七日', lede: '十三日口谕、遗诏和崩于寝宫，二十日才行即位礼。满汉原件和起居注还没有可核验的页。' },
         { year: '对照', href: '#/lanes', title: '改诏、丹药、吕四娘', lede: '通行说法和官书原文放在一起，看差在哪里。' },
       );
     }
@@ -1627,12 +1730,18 @@ function eraPage(slug) {
           </div>
         </article>
 
+        <nav class="era-section-jump" aria-label="本朝内容">
+          <button class="link" data-scroll="era-start">精选故事</button>
+          <button class="link" data-scroll="era-life">生平与施政</button>
+          <button class="link" data-scroll="era-events">本朝纪事</button>
+          <button class="link" data-scroll="era-visuals">御容与器物</button>
+          <button class="link" data-scroll="era-material">史料与遗址</button>
+        </nav>
+
         <section class="era-start" id="era-start" aria-labelledby="era-start-title">
           <div class="reading-section-head"><div><p class="kicker">开卷</p><h2 id="era-start-title">读${esc(era)}，从这里开始</h2></div><a class="link" href="#/read">读故事目录 →</a></div>
-          ${readingCards(selectReadingPicks(DATA.chapters, { era, limit: 3 }))}
+          ${readingCards(selectReadingPicks(DATA.chapters, { era, limit: 6 }))}
         </section>
-        ${succStrip}
-        <nav class="era-section-jump" aria-label="本朝内容"><button class="link" data-scroll="era-life">生平与施政</button><button class="link" data-scroll="era-events">大事与储位</button><button class="link" data-scroll="era-visuals">御容与器物</button><button class="link" data-scroll="era-material">史料与遗址</button></nav>
 
         <!-- 板块一：生平与施政 -->
         <section class="reign-section emperor-read era-section" data-reign-part="生平" id="era-life">
@@ -1641,12 +1750,12 @@ function eraPage(slug) {
           ${(emperor.credibility?.claims || 0) === 0 ? noEvidenceBanner('尚无逐日官书条', '这一朝目前只有骨架，日子还对不回去。') : ''}
         </section>
 
-        <!-- 板块二：大事与储位 -->
+        <!-- 板块二：本朝纪事（时间线 + 本朝章目） -->
         <section id="era-events" class="reign-section era-events-section era-section" data-reign-part="大事">
-          <h2 class="reign-part section-title">大事与储位</h2>
-          <p class="section-sub muted">官书编年与分章通读</p>
-          ${eraChronicleBlock(emperor.emperor_id)}
-          ${emperorHeirBlock(emperor)}
+          <h2 class="reign-part section-title">本朝纪事</h2>
+          <p class="section-sub muted">系年可考的条目按时间排下来；专题长文在本朝章目里</p>
+          ${eraTimelineLinks(emperor)}
+          ${eraTimelineBlock(emperor)}
           ${reignEventsBlock(emperor)}
         </section>
 
@@ -1666,6 +1775,8 @@ function eraPage(slug) {
           <p class="section-sub muted">遗址今况与专题文献</p>
           ${reignTail(era)}
         </section>
+
+        ${succStrip}
       </div>
     `;
   }
@@ -1715,6 +1826,13 @@ function eraPage(slug) {
     if (empressRows.length) sections.push({
       id: 'p-title', title: '称号', count: `${empressRows.length} 条`,
       body: `${timelineList(empressRows)}<p class="actions"><a class="link" href="#/empresses">四后全轴</a></p>`,
+    });
+
+    const mentions = (DATA.personMentions || []).filter((row) => row.person_id === id);
+    if (mentions.length) sections.push({
+      id: 'p-mention', title: '出场',
+      count: `${mentions.length} 处 · ${new Set(mentions.map((row) => row.chapter_slug)).size} 篇`,
+      body: mentionGroups(mentions),
     });
 
     const lanes = lanesForPerson(id);
@@ -2338,7 +2456,7 @@ function eraPage(slug) {
     return `
       <p class="kicker">${esc({ 后宫制度: '后宫制度', 野史对照: '传闻', 罕读史料: '罕读史料', 宫中治理: '宫中治理', 笔法: '笔法' }[row['栏目']] || row['栏目'])}</p>
       <h1>${esc(row['标题'])}</h1>
-      ${crumbs([{ href: '#/lanes', label: '对照' }, { label: row['标题'] }])}
+      ${crumbs([{ href: '#/lanes', label: '对照' }])}
       <p class="crumb crumb-share"><a class="link" href="#/lane/${esc(id)}">分享本页</a></p>
       ${laneCard(row, { detail: true, headingLevel: 2 })}
       ${questions.length ? `<h2>这类问题</h2>${questions.map((item) => questionCard(item)).join('')}` : ''}
@@ -4244,8 +4362,10 @@ function eraPage(slug) {
     if (scrollBtn) {
       const target = document.getElementById(scrollBtn.getAttribute('data-scroll'));
       if (target) {
+        const jumpBar = document.querySelector('.era-section-jump');
+        const jumpHeight = (jumpBar && window.getComputedStyle(jumpBar).position === 'sticky') ? jumpBar.getBoundingClientRect().height : 0;
         const head = document.querySelector('.masthead');
-        const gap = (head ? head.getBoundingClientRect().height : 0) + 12;
+        const gap = jumpHeight ? (jumpHeight + 14) : ((head ? head.getBoundingClientRect().height : 0) + 12);
         const y = target.getBoundingClientRect().top + window.scrollY - gap;
         // 用 instant 不用 smooth：平滑滚动在部分环境下会被静默丢弃，
         // 页内跳转必须每次都落到位，动画不值得拿准确性换。

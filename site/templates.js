@@ -598,19 +598,10 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <p class="kicker">${esc(dynasty?.kicker || '')}</p>
         <h1>${esc(dynasty?.headline || '')}</h1>
         <p class="lede">${noOrphan(dynasty?.lede || '')}</p>
-        <p class="home-invitation">先挑一个具体的问题读进去 <span aria-hidden="true">·</span> 也可以沿十二帝一朝一朝读</p>
+        <p class="home-invitation"><a href="#/read">先挑一个具体的问题读进去</a> <span aria-hidden="true">·</span> 也可以沿十二帝一朝一朝读</p>
       </div>
 ${reignScroll(emperors)}
-      ${opts.reads?.length ? `<section class="home-features" aria-labelledby="home-stories">
-        <div class="reading-section-head"><div><p class="kicker">读故事</p><h2 id="home-stories">每个精选都从一个具体问题开始</h2></div><a class="link" href="#/read">全部文章 →</a></div>
-        ${readingCards(opts.reads)}
-      </section>` : ''}
-      <nav class="home-paths" aria-label="三条入口">
-        <a href="#/read"><strong>读故事</strong><span>主线文章按朝排好，一篇回答一个问题。</span></a>
-        <a href="#/material"><strong>读史料</strong><span>实录、画像、朱批与逐段原典，回到材料本身。</span></a>
-        <a href="#/studio"><strong>准备讲解</strong><span>成稿讲稿、观众卡与出处，打开就能备课。</span></a>
-      </nav>
-      <p class="home-paths-more"><a class="link" href="#/jiedu">逐段读原典</a><span aria-hidden="true">·</span><a class="link" href="#/spine/money">看钱粮如何运转</a><span aria-hidden="true">·</span><a class="link" href="#/lanes">对读两种说法</a></p>
+      <p class="home-more"><a class="link" href="#/jiedu">逐段读原典</a><span aria-hidden="true">·</span><a class="link" href="#/spine/money">看钱粮如何运转</a><span aria-hidden="true">·</span><a class="link" href="#/lanes">对读两种说法</a></p>
       <section class="home-emperors-block" aria-labelledby="home-emperors-title">
         <div class="reading-section-head"><div><p class="kicker">沿朝读</p><h2 id="home-emperors-title">十二帝</h2></div></div>
         <div class="grid cards home-emperors">${emperors.map((row) => emperorCard(row, { ...opts, eager: false, compact: true })).join('')}</div>

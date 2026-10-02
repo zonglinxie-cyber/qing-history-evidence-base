@@ -900,6 +900,39 @@ tr[data-href] td:first-child a:focus-visible { color: var(--vermilion); }
   box-shadow: inset 0 -1px 0 var(--vermilion);
 }
 
+/* 裸筛选条（人物异名、储位全链、来源卷次）原先是无边界的文字，
+   窄屏散成一团。并入站点既有的笺纸标签栏语法：一个托盘 + 有界胶囊、选中朱底，
+   全站筛选只此一种格式。 */
+.filters:not(.era-tab-bar):not(.view-filters) {
+  gap: 8px;
+  margin: 0 0 28px;
+  padding: 6px;
+  background: color-mix(in srgb, var(--panel) 70%, var(--paper));
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.filters:not(.era-tab-bar):not(.view-filters) button {
+  min-height: 0;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 14px;
+}
+.filters:not(.era-tab-bar):not(.view-filters) button:hover {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--vermilion);
+}
+.filters:not(.era-tab-bar):not(.view-filters) button.on {
+  background: var(--vermilion);
+  color: var(--paper);
+  border-color: var(--vermilion);
+  box-shadow: none;
+}
+
 .claim {
   border: 0;
   border-bottom: 1px solid var(--line);
@@ -1631,6 +1664,11 @@ a.img-fallback.yellow,
 .timeline .when {
   font-family: var(--serif);
 }
+/* 公历范围后面的「（范围）」是注记，不能被拆成两行。 */
+.chronicle .when .muted,
+.timeline .when .muted {
+  word-break: keep-all;
+}
 .chronicle .when strong,
 .timeline .when strong {
   display: block;
@@ -1658,6 +1696,32 @@ a.img-fallback.yellow,
   font-size: 14px;
   line-height: 1.7;
   margin: 0 0 8px;
+}
+/* 一条纪事的出处入口：小字灰蓝、默认不划线，悬停或聚焦才亮起来。
+   逐日条一行只出现一处「依据 N 条」，不再把同一个词重复三遍。 */
+.tl-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.tl-refs .link {
+  color: var(--muted);
+  text-decoration: none;
+}
+.tl-refs .link:hover,
+.tl-refs .link:focus-visible {
+  color: var(--vermilion);
+  text-decoration: underline;
+}
+/* 会跳页的入口带一枚尖角，与只开抽屉的「依据」区分开。 */
+.tl-refs a::after {
+  content: "›";
+  margin-left: 5px;
+  color: color-mix(in srgb, var(--muted) 55%, transparent);
 }
 .mark {
   font-size: 12px;
@@ -2962,9 +3026,9 @@ main[data-layout="compare"] .lane-card { max-width: none; }
 /* 「怎么读」是两栏底下的通栏结论，46em 会到 46 字一行，收到 40 字 */
 main[data-layout="compare"] .lane-card > p { max-width: 40em; }
 
-/* 材料页是索引不是正文：四个入口卡一行排开，按朝表也放开 */
+/* 材料页是索引不是正文：三个入口卡一行排开，按朝表也放开 */
 main[data-layout="table"] .mat-kinds {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   max-width: none;
 }
 /* 表格拉满会把数字推到离朝名很远，读起来要横扫一整行 */
@@ -3008,7 +3072,11 @@ main[data-layout="table"] .mat-table thead th:not(:first-child) { text-align: ri
 }
 
 @media (max-width: 900px) {
-  main[data-layout="table"] .mat-kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  main[data-layout="table"] .mat-kinds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  main[data-layout="table"] .mat-kinds { grid-template-columns: 1fr; }
 }
 
 /* ==== 帝王与朝代页：帝容生平主卡与模块化分区 ==== */
@@ -5312,6 +5380,13 @@ a.chapter-read::after {
   vertical-align: 2px;
   opacity: 0.85;
 }
+.reading-pick > a.chapter-read::after {
+  position: absolute;
+  top: 22px;
+  right: 36px;
+  margin: 0;
+}
+
 
 /* ============================================================
    续读书签：首页一条明黄缎带，夹在上次读到的地方
@@ -5608,12 +5683,12 @@ a.chapter-read::after {
   .zgg-grid { grid-template-columns: 1fr; }
 }
 
-/* 阅读入口：具体问题在前两屏，十二帝画像紧随长卷，讲解台入口与主导航常驻。 */
+/* 首页只留长卷与十二帝画像；精选卡与三条入口下沉到 #/read，顶栏常驻。 */
 .home-intro { max-width: 850px; border-bottom: 0; margin-bottom: 12px; }
 .home-intro > h1 { font-size: clamp(32px, 4vw, 46px); letter-spacing: .18em; }
 .home-invitation { margin: 14px 0 0; color: var(--vermilion); font: 13px/1.8 var(--sans); letter-spacing: .05em; }
+.home-invitation a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .home-invitation span { padding: 0 .5em; }
-.home-features { margin-top: 30px; }
 .home-emperors .emperor-card { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; grid-template-areas: 'picture' 'heading' 'intro' 'facts'; gap: 14px; border-top: 0; padding-top: 0; }
 .home-emperors .emperor-card .card-pic { grid-area: picture; aspect-ratio: 3 / 4; }
 /* 十二帝统一冠顶、鞋底的位置；画框和内衬等高，宽窄由原图比例决定。
@@ -5660,13 +5735,10 @@ a.chapter-read::after {
 .pick-facts dt { flex-shrink: 0; color: var(--vermilion); font-weight: 600; }
 .pick-facts dd { margin: 0; color: var(--muted); }
 .pick-action { display: flex; justify-content: space-between; margin-top: auto; color: var(--vermilion); font-size: 12px; }
-.home-paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 26px; }
-.home-paths a { display: flex; flex-direction: column; gap: 6px; padding: 16px 14px; border: 1px solid var(--line); border-top: 2px solid var(--vermilion); background: var(--panel); color: var(--ink); text-decoration: none; }
-.home-paths strong { font: 600 17px/1.6 var(--serif); }
-.home-paths span { color: var(--muted); font-size: 13px; line-height: 1.7; }
-.home-paths a:hover strong { color: var(--vermilion); }
-.home-paths-more { margin: 10px 2px 0; font-size: 13px; color: var(--muted); }
-.home-paths-more span { padding: 0 10px; }
+/* 精选卡从首页搬来，读故事页首屏先给七条具体问题，再进按朝目录 */
+.read-features { margin: 30px 0 30px; }
+.home-more { margin: 26px 2px 0; font-size: 13px; color: var(--muted); }
+.home-more span { padding: 0 10px; }
 .home-emperors-block { margin-top: 44px; padding-top: 30px; border-top: 2px solid var(--rule-heavy); }
 .home-emperors-block .reading-section-head { margin-bottom: 18px; }
 .home-emperors { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px 18px; }
@@ -5680,6 +5752,10 @@ a.chapter-read::after {
   .home-emperors { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
 }
 .era-start { margin: 36px 0; }
+.era-start,
+.era-section {
+  scroll-margin-top: 64px;
+}
 .era-section-jump { position: sticky; top: 0; z-index: 4; display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 0 0 28px; padding: 12px 0; border-block: 1px solid var(--line); background: var(--paper); }
 .era-section-jump button { font-size: 13px; }
 .reading-time { color: var(--muted); font: 12px/1.8 var(--sans); }
@@ -5714,16 +5790,13 @@ a.chapter-read::after {
   .home-intro { margin-bottom: 8px; }
   .home-emperors .emperor-card .card-pic { aspect-ratio: 4 / 5; }
   .home-invitation { font-size: 12px; }
-  .home-features { margin-top: 22px; }
   .reading-section-head { align-items: start; gap: 12px; }
   .reading-section-head > a { padding-top: 6px; }
   .reading-picks { grid-template-columns: 1fr; gap: 4px; }
   .reading-pick > a { padding: 20px 0; }
   .reading-pick h3 { font-size: 21px; }
   .pick-description { margin-bottom: 12px; }
-  .home-paths { grid-template-columns: 1fr; gap: 8px; }
-  .home-paths a { flex-direction: row; align-items: baseline; gap: 10px; padding: 12px; }
-  .home-paths span { font-size: 12px; }
+  .read-features { margin: 22px 0 24px; }
   .home-emperors-block { margin-top: 32px; padding-top: 24px; }
   .chapter-nav { flex-direction: column; }
   .chapter-nav-card { padding: 16px; }
@@ -5839,3 +5912,22 @@ a.chapter-read::after {
   .studio-pack-runtime { grid-template-columns: 1fr; max-width: none; }
 }
 /* ===== night-studio end ===== */
+
+/* 0.8.0 读本层：原文引文用楷体、与正文同级字号，出处另起一行小字右对齐（docs/30） */
+.md .source-quote {
+  margin: 28px 0 28px;
+  padding: 18px 24px 16px;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "LXGW WenKai", var(--serif);
+  font-size: 1.05em;
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+.md .source-quote > p { margin: 0; font-family: inherit; line-height: inherit; }
+.md .source-quote .quote-source {
+  margin-top: 10px;
+  font-family: var(--serif);
+  font-size: 0.78em;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-align: right;
+}

@@ -37,7 +37,7 @@
    ```bash
    npm install
    npm run validate         # 只输出提示；仅结构/外键类 error 会阻断
-   npm run validate:strict  # 可选：把证据与文风提示升级为 error，供自愿自查
+   npm run validate:strict  # 可选：把证据断言升级为 error，供自愿自查
    npm run check:calendar   # 可选：跑 CAL-001 日期的机器一致性校验，覆写两个工单产物
    npm run build            # 生成站点；不改版本、README、CHANGELOG 或 STATUS
    npm test                 # 跑数据/模板/状态回归；真实浏览器流程另验

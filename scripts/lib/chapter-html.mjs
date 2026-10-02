@@ -27,7 +27,7 @@ function headingSlug(raw, used) {
   return id;
 }
 
-function inlineMd(text) {
+export function inlineMd(text) {
   let out = escHtml(text);
   out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
@@ -104,7 +104,9 @@ export function mdToHtml(src, fig) {
         quotes.push(lines[i].replace(/^>\s?/, ''));
         i += 1;
       }
-      html.push(`<blockquote class="quote source-quote"><p>${inlineMd(quotes.join(' '))}</p></blockquote>`);
+      // 引文块最后一行以「——」开头时，作为出处署名单独排（docs/30）。
+      const source = quotes.length > 1 && /^——/.test(quotes[quotes.length - 1].trim()) ? quotes.pop().trim() : '';
+      html.push(`<blockquote class="quote source-quote"><p>${inlineMd(quotes.filter((q) => q.trim()).join(' '))}</p>${source ? `<footer class="quote-source">${inlineMd(source)}</footer>` : ''}</blockquote>`);
       continue;
     }
     if (line.startsWith('## ')) {
@@ -200,9 +202,16 @@ function wrapDrawers(html) {
     (_, body) => `<details class="evidence-drawer"><summary>史料说明</summary>${body}</details>`);
   out = out.replace(/<h2 id="[^"]*">[一二三四五六七八九十]+、实录卷次回查状态<\/h2>([\s\S]*?)(?=<h2|$)/g,
     (_, body) => `<details class="evidence-drawer"><summary>原文定位</summary>${body}</details>`);
-  // 「边界」按内部编辑节处理：不进公开正文，只留在源文件与 #/data（内容不丢，只是不上页面）。
-  // 若要让它在页面上折叠展示：改成 details 折叠，并先清掉节内 QH-* 编号。
-  out = out.replace(/<h2 id="[^"]+">边界<\/h2>[\s\S]*?(?=<h2|$)/g, '');
+  // 「边界」是旧章的史料限制说明：折叠展示，不再整节删掉（0.8.0）。新章写进「史料怎么说」正文节。
+  // 条目里带内部编号或编辑行话（研究卡、原子主张、尚未钉）的那一条不上页面。
+  const internalLine = /\bQH-[A-Z]+-[A-Z0-9-]+\b|研究卡|原子主张|尚未钉/;
+  out = out.replace(/<h2 id="[^"]+">边界<\/h2>([\s\S]*?)(?=<h2|$)/g, (_, body) => {
+    const kept = body.replace(/<(li|p)\b[^>]*>[\s\S]*?<\/\1>/g, (block) => (internalLine.test(block.replace(/<[^>]+>/g, '')) ? '' : block))
+      .replace(/<(ul|ol)>\s*<\/\1>/g, '');
+    return kept.replace(/<[^>]+>/g, '').trim()
+      ? `<details class="evidence-drawer"><summary>史料的限度</summary>${kept}</details>`
+      : '';
+  });
   return wrapTeach(out);
 }
 

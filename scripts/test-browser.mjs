@@ -110,7 +110,7 @@ try {
   await send('Page.navigate', { url: base });
   await sleep(1000);
 
-  const routes = ['#/', '#/jiaqing', '#/chapter/jiaqing-04', '#/chapter/yongzheng-04', '#/chapter/kangxi-01', '#/chapter/guangxu-07', '#/chapter/shunzhi-05', '#/chapter/tongzhi-05', '#/chapter/huangtaiji-13', '#/chapter/huangtaiji-12', '#/chapter/huangtaiji-08', '#/chapter/jiaqing-11', '#/chapter/xianfeng-08', '#/chapter/nurhaci-11', '#/lane/QH-L-0032', '#/works', '#/claim/QH-A-KX-0180', '#/search?q=如意', '#/search?q=找不到的测试词', '#/studio/treaty-paper', '#/screen/treaty-paper'];
+  const routes = ['#/', '#/read', '#/jiaqing', '#/chapter/jiaqing-04', '#/chapter/yongzheng-04', '#/chapter/kangxi-01', '#/chapter/guangxu-07', '#/chapter/shunzhi-05', '#/chapter/tongzhi-05', '#/chapter/huangtaiji-13', '#/chapter/huangtaiji-12', '#/chapter/huangtaiji-08', '#/chapter/jiaqing-11', '#/chapter/xianfeng-08', '#/chapter/nurhaci-11', '#/lane/QH-L-0032', '#/works', '#/claim/QH-A-KX-0180', '#/search?q=如意', '#/search?q=找不到的测试词', '#/studio/treaty-paper', '#/screen/treaty-paper'];
   const failures = [];
   function check(name, ok) {
     if (!ok) failures.push(name);
@@ -173,43 +173,46 @@ try {
         && !/载入中|检索中|暂时没有打开/.test(state.text) && !state.duplicates.length && state.overflow <= 1
         && (!state.hasTable || state.wideTablesOk)
         && state.brokenImgs === 0 && state.skewedImgs === 0);
-      if (['#/', '#/jiaqing', '#/chapter/jiaqing-04', '#/chapter/yongzheng-04', '#/studio/treaty-paper', '#/search?q=如意'].includes(route)) {
+      if (['#/', '#/read', '#/jiaqing', '#/chapter/jiaqing-04', '#/chapter/yongzheng-04', '#/studio/treaty-paper', '#/search?q=如意'].includes(route)) {
         await screenshot(`${width}-${route.replace(/[^\w\u4e00-\u9fff]/g, '-')}`);
       }
       if (route === '#/') {
-        check(`${width}px 精选阅读入口位于前两屏`, await evaluate(`(() => {
-          const features = document.querySelector('.home-features');
-          return !!features && features.getBoundingClientRect().top + window.scrollY <= ${width === 390 ? 1688 : 1800};
-        })()`));
-        check(`${width}px 十二帝画像与长卷导航完整`, await evaluate(`(() => {
+        check(`${width}px 十二帝画像紧随长卷进入前两屏`, await evaluate(`(() => {
           const cards = document.querySelector('.home-emperors');
-          const features = document.querySelector('.home-features');
           return document.querySelectorAll('.home-emperors .emperor-card').length === 12
             && document.querySelectorAll('.reign-track .reign-seg').length === 12
-            && features && cards.getBoundingClientRect().top >= features.getBoundingClientRect().bottom;
+            && !!cards && cards.getBoundingClientRect().top + window.scrollY <= ${width === 390 ? 1688 : 1800};
         })()`));
-        check(`${width}px 首页精选不少于六项`, await evaluate(`document.querySelectorAll('.home-features .reading-pick').length >= 6`));
-        check(`${width}px 讲解台入口稳定可达`, await evaluate(`(
-          !!document.querySelector('.nav a[href="#/studio"]')
-          && !!document.querySelector('.home-paths a[href="#/studio"]')
-        )`));
+        check(`${width}px 首页不再直出精选卡与三格入口`, await evaluate(`(() => {
+          const main = document.querySelector('main');
+          return !main.querySelector('.reading-picks') && !main.querySelector('.home-paths')
+            && !!main.querySelector('.home-more a[href="#/jiedu"]');
+        })()`));
+        check(`${width}px 讲解台入口稳定可达`, await evaluate(`!!document.querySelector('.nav a[href="#/studio"]')`));
+      }
+      if (route === '#/read') {
+        check(`${width}px 精选阅读入口位于前两屏`, await evaluate(`(() => {
+          const features = document.querySelector('.read-features');
+          return !!features && features.getBoundingClientRect().top + window.scrollY <= ${width === 390 ? 1688 : 1800};
+        })()`));
+        check(`${width}px 读故事页精选不少于六项`, await evaluate(`document.querySelectorAll('.read-features .reading-pick').length >= 6`));
         if (screenshotDir) {
-          await evaluate(`document.querySelector('.home-features').scrollIntoView({ behavior: 'instant', block: 'start' })`);
+          await evaluate(`document.querySelector('.read-features').scrollIntoView({ behavior: 'instant', block: 'start' })`);
           await sleep(200);
-          await screenshot(`${width}-home-stories`);
+          await screenshot(`${width}-read-stories`);
         }
       }
     }
   }
 
-  await evaluate(`location.hash='#/'`);
-  await waitFor(`!!document.querySelector('.home-features')`);
-  await evaluate(`document.querySelector('.home-features a[href*="guangxu-01"]').click()`);
+  await evaluate(`location.hash='#/read'`);
+  await waitFor(`!!document.querySelector('.read-features')`);
+  await evaluate(`document.querySelector('.read-features a[href*="guangxu-01"]').click()`);
   await waitFor(`!!document.querySelector('.passage-focus')`);
   check('精选故事直达正文选段，不绕到讲解台', await evaluate(`location.hash.startsWith('#/chapter/guangxu-01') && document.querySelector('.passage-focus').textContent.includes('备约细工')`));
-  await evaluate(`location.hash='#/'`);
-  await waitFor(`!!document.querySelector('.home-features')`);
-  const pickHrefs = await evaluate(`[...document.querySelectorAll('.home-features a[href*="#/chapter"]')].map((a) => new URL(a.getAttribute('href'), location.href).hash).filter((h) => h.includes('focus='))`);
+  await evaluate(`location.hash='#/read'`);
+  await waitFor(`!!document.querySelector('.read-features')`);
+  const pickHrefs = await evaluate(`[...document.querySelectorAll('.read-features a[href*="#/chapter"]')].map((a) => new URL(a.getAttribute('href'), location.href).hash).filter((h) => h.includes('focus='))`);
   check(`精选直达选段不少于六项（实际 ${pickHrefs.length}）`, pickHrefs.length >= 6);
   for (const href of pickHrefs) {
     await evaluate(`location.hash=${JSON.stringify(href)}`);
@@ -293,6 +296,41 @@ try {
   check('返回搜索保留关键词、类别与滚动位置', await evaluate(`document.getElementById('q').value === '雍正'
     && document.querySelector('[data-search-cat="chapter"]').getAttribute('aria-selected') === 'true'
     && Math.abs(window.scrollY - ${searchY}) < 40`));
+
+  // 出场反向索引的运行时闭环：正文人名可点 → 人物页列出篇章与摘录 → 点回去落在对应段落。
+  // 只看 .md（正文本体），章末「接着读下去」里的人物卡不算连线；摘录出自表格单元的那条也要跳一次，
+  // 因为锚点只认标题与段落，那类出场只能落到所在小标题。
+  const mentionRows = (JSON.parse(fs.readFileSync(path.join(siteDir, 'data', 'd-qing.json'), 'utf8')).personMentions || [])
+    .filter((row) => row.person_id === 'QH-P-000124');
+  const mentionHref = (row) => `#/chapter/${encodeURIComponent(row.chapter_slug)}${row.focus ? `?focus=${encodeURIComponent(row.focus)}` : ''}`;
+  const bodyRows = mentionRows.filter((row) => row.chapter_slug === 'qianlong-12');
+  await evaluate(`location.hash='#/chapter/qianlong-12'`);
+  await waitFor(`!!document.querySelector('.chapter-body .md')`);
+  const nameLinks = await evaluate(`[...document.querySelectorAll('.chapter-body .md a[href="#/person/QH-P-000124"]')].map((a) => a.textContent.trim())`);
+  check(`正文人名连线（${nameLinks.length} 处 / 该章出行 ${bodyRows.length} 条）`,
+    nameLinks.length >= bodyRows.length && nameLinks.every((text) => text.includes('和珅')));
+  await evaluate(`document.querySelector('.chapter-body .md a[href="#/person/QH-P-000124"]').click()`);
+  await waitFor(`!!document.getElementById('p-mention')`);
+  check('点正文人名落到该人物页', await evaluate(`location.hash === '#/person/QH-P-000124'
+    && document.querySelector('h1').textContent.includes('和珅')`));
+
+  const mentionCards = await evaluate(`(() => {
+    const section = document.getElementById('p-mention').closest('section');
+    return [...section.querySelectorAll('.claim a[href*="#/chapter"]')].map((a) => a.getAttribute('href'));
+  })()`);
+  check(`人物页出场与构建产物逐条一致（${mentionCards.length} 条 / ${new Set(mentionRows.map((row) => row.chapter_slug)).size} 篇）`,
+    mentionCards.length === mentionRows.length
+    && mentionCards.every((href, index) => href === mentionHref(mentionRows[index])));
+  for (const row of [mentionRows[0],
+    mentionRows.find((item) => item.chapter_slug === 'qianlong-04'),
+    mentionRows.find((item) => !item.focus)].filter(Boolean)) {
+    await evaluate(`location.hash=${JSON.stringify(mentionHref(row))}`);
+    await sleep(600);
+    const focused = await evaluate(`document.querySelector('.passage-focus')?.textContent.trim() || ''`);
+    check(row.focus ? `出场跳回 ${row.chapter_slug} 的「${row.focus}」` : `无锚点出场落到 ${row.chapter_slug} 篇首`,
+      row.focus ? focused.includes(row.focus)
+        : focused === '' && await evaluate(`!!document.querySelector('.chapter-shell')`));
+  }
 
   // 真正阻断一个数据请求，再通过页面按钮恢复；不把预期的网络失败当正常加载成功。
   await send('Network.setBlockedURLs', { urls: ['*/data/people.json*'] });
