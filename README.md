@@ -2,7 +2,7 @@
 
 版本：`0.7.2`（[`CHANGELOG.md`](CHANGELOG.md) 由显式 release 命令维护）
 建立日期：2026-08-12
-当前状态：**个人兴趣项目，持续扩充内容与改善阅读体验；数据统计见 [`STATUS.md`](STATUS.md)**
+当前状态：**个人兴趣项目，持续扩充内容与改善阅读体验；数据统计见 `STATUS.md`（本地 `npm run status` 生成，不入库）**
 
 手机阅读：https://zonglinxie-cyber.github.io/qing-history-evidence-base/
 
@@ -28,7 +28,7 @@ AI 负责查资料、核对和编辑，不要求用户逐条审核，也不要�
 
 | 路径 | 用途 |
 |---|---|
-| `STATUS.md` | 由 CSV 自动生成的当前覆盖、审核与文献打开程度 |
+| `STATUS.md` | 由 `npm run status` 从 CSV 重建的当前覆盖、审核与文献打开程度；内嵌构建 commit，不入库，随用随生成 |
 | `CHANGELOG.md` / `VERSION` | 由显式 `npm run release` 维护的更新日志与语义化版本号 |
 | `docs/01-project-charter.md` | 项目使命、范围、角色、交付物和 Go/No-Go 标准 |
 | `docs/02-information-architecture.md` | 产品信息架构、核心页面和用户任务 |

@@ -28,6 +28,10 @@ site/site/
 site/media-manifest.js
 site/sitemap.xml
 
+# STATUS.md 由 npm run status 从 CSV 重建，且内嵌 git rev-parse HEAD 的构建 commit：
+# 入库必然漂移（文件永远记录上一个提交），也无法用 git diff 做一致性门禁，故不入库。
+STATUS.md
+
 # 历法核对的工作表：每次 npm run build 由 scripts/check-calendar-baseline.mjs 整表重写，
 # 人工批注请写在 data/review-notes.csv，不要写在这两张表里（写了会被覆盖）。
 data/calendar-audit.csv
