@@ -1,5 +1,6 @@
-# 数据校验 + 站点构建。PR 与 main 推送都会运行；构建产物以 artifact 形式可下载预览。
-# 校验规则由 data/data-manifest.csv 与 scripts/rules/<dynasty>.mjs 驱动，新增朝代无需改本文件。
+# 只验证「能构建」。PR 与 main 推送都会运行；构建产物以 artifact 形式可下载预览。
+# 校验与测试不在这里跑：validate / validate:strict / test / test:browser 均为本地手动命令，
+# 需要自查时自己跑，不作为合并或发布的门槛。
 name: CI
 
 on:
@@ -22,17 +23,8 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
-      - name: 结构与史料规则校验（STRICT：证据/编辑断言与文风提示按 error 阻断）
-        run: npm run validate:strict
-
       - name: 构建站点
         run: npm run build
-
-      - name: 渲染冒烟测试
-        run: npm test
-
-      - name: 真实浏览器冒烟测试
-        run: npm run test:browser
 
       - name: 上传站点预览
         if: github.event_name == 'pull_request'

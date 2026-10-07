@@ -86,7 +86,7 @@ AI 负责查资料、核对和编辑，不要求用户逐条审核，也不要�
 | `LICENSE` / `LICENSE-data` | 代码 MIT；自建数据与文本 CC BY 4.0；第三方材料以权利台账为准 |
 | `CONTRIBUTING.md` | 外部纠错/贡献的证据规则与 PR 流程 |
 | `.github/ISSUE_TEMPLATE/` | 内容纠错、图像与权利、站点 Bug 三类报错模板 |
-| `.github/workflows/` | PR 校验（validate+build+渲染测试）；`deploy.yml` 仅手动触发（`workflow_dispatch`），不随 push 自动发布 |
+| `.github/workflows/` | PR/push 只跑构建冒烟；`deploy.yml` 仅手动触发（`workflow_dispatch`），不随 push 自动发布 |
 
 ## 如何打开本地工作台
 
@@ -131,7 +131,7 @@ npm run serve          # 本地预览 http://127.0.0.1:8765/（HTML 与 JSON 不
 - 发现内容错误：`npm run errata -- --loc <位置ID> --text "<问题>"`（见 [`docs/25-勘误流程.md`](docs/25-勘误流程.md)）；
 - **发布由 GitHub Actions 手动触发**：`deploy.yml` 仅 `workflow_dispatch`，不随 push 自动公开。需要更新线上版本时，到 Actions → Deploy Pages → Run workflow 手动运行。
 - 前置条件：仓库 Settings → Actions → General → Workflow permissions 需选 **Read and write**（GITHUB_TOKEN 要推送 gh-pages）。
-- 新检出先运行 `npm ci && npm run build && npm test`，再用 `npm run serve` 预览；`watch` 只负责重建，不启动 HTTP 服务。别改用 `python3 -m http.server`：它只发 `Last-Modified`、不发 `Cache-Control`，浏览器会按文件年龄猜新鲜度，而版本号 `?v=` 写在 `index.html` 里，这份 HTML 一被缓存整站就退回旧构建。CI 和手动 Pages 发布都先完整构建与测试，再上传整个 `site/`，包含被 Git 忽略的生成文件。
+- 新检出先运行 `npm ci && npm run build && npm test`，再用 `npm run serve` 预览；`watch` 只负责重建，不启动 HTTP 服务。别改用 `python3 -m http.server`：它只发 `Last-Modified`、不发 `Cache-Control`，浏览器会按文件年龄猜新鲜度，而版本号 `?v=` 写在 `index.html` 里，这份 HTML 一被缓存整站就退回旧构建。CI 和手动 Pages 发布都先完整构建，再上传整个 `site/`，包含被 Git 忽略的生成文件；校验与测试是本地命令，不设线上关卡。
 
 ## 推荐阅读顺序
 

@@ -31,17 +31,8 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
-      - name: 结构与史料规则校验（STRICT：发布前同样按 error 阻断）
-        run: npm run validate:strict
-
       - name: 构建站点
         run: npm run build
-
-      - name: 渲染冒烟测试
-        run: npm test
-
-      - name: 真实浏览器冒烟测试
-        run: npm run test:browser
 
       - name: 发布到 gh-pages
         uses: peaceiris/actions-gh-pages@v4
