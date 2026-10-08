@@ -870,7 +870,6 @@ tr[data-href] { cursor: pointer; }
 table { width: 100%; border-collapse: collapse; font-size: 15px; }
 th, td { text-align: left; padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.08em; }
-tr[data-href] { cursor: pointer; }
 tr[data-href]:hover td { color: var(--vermilion); }
 tr[data-href] td:first-child a {
   color: inherit;
@@ -3029,7 +3028,6 @@ h2.lane-group {
 @media (max-width: 600px) {
   .mat-chapter-row { grid-template-columns: 1fr; gap: 2px; }
   .mat-kinds { grid-template-columns: 1fr; }
-  .mat-kinds { grid-template-columns: 1fr; }
   .mat-table td { width: 4em; }
 }
 
@@ -4582,10 +4580,6 @@ main[data-layout="table"] .mat-table thead th:not(:first-child) { text-align: ri
   text-decoration: none;
 }
 
-.lineage-title:hover {
-  color: var(--vermilion);
-}
-
 .lineage-mother {
   font-size: 12.5px;
   color: var(--muted);
@@ -5585,7 +5579,6 @@ a.chapter-read::after {
   .fold-all, .era-tab-bar, .reign-scroll-wrap,
   .resume-reading, .duqi-seal { display: none !important; }
   body { background: #fff; font-size: 11pt; }
-  body::after { display: none; }
   main[data-layout="chapter"] .chapter-shell,
   main[data-layout="reading"] .chapter-shell {
     border: 1.5pt solid #272117;
