@@ -1923,8 +1923,10 @@ a.img-fallback.yellow,
 /* 卷首：年号竖排作书耳，立在卷题之侧 */
 .chapter-head {
   display: grid;
+  /* 卷耳竖排 kicker 已并入 chapter-crumb 一行，col 1 恒空：保留两列模板是为了
+     既有 grid-column: 2 子项规则不破版，gap 归零让内容贴左边线 */
   grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 24px;
+  column-gap: 0;
   align-items: start;
   padding-bottom: 26px;
   margin-bottom: 10px;
@@ -1942,22 +1944,12 @@ a.img-fallback.yellow,
 .chapter-head > .kicker {
   grid-column: 1;
   grid-row: 1 / span 6;
-  writing-mode: vertical-rl;
-  margin: 0;
-  padding: 14px 7px;
-  font-size: 14px;
-  letter-spacing: 0.42em;
-  color: var(--vermilion);
-  border: 1px solid color-mix(in srgb, var(--vermilion) 46%, transparent);
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--vermilion) 5%, transparent);
-  align-self: start;
-  justify-self: start;
 }
 .chapter-head > .kicker::before { display: none; }
 .chapter-head > h1,
 .chapter-head > .lede,
 .chapter-head > .chapter-meta-row,
+.chapter-head > .chapter-meta,
 .chapter-head > .crumb,
 .chapter-head > .actions,
 .chapter-head > .chapter-tools,
@@ -2204,6 +2196,7 @@ a.img-fallback.yellow,
   .chapter-head > h1,
   .chapter-head > .lede,
   .chapter-head > .chapter-meta-row,
+  .chapter-head > .chapter-meta,
   .chapter-head > .crumb,
   .chapter-head > .actions,
   .chapter-head > .chapter-tools,
@@ -2215,10 +2208,8 @@ a.img-fallback.yellow,
   }
   .chapter-head > .kicker {
     grid-row: auto;
-    writing-mode: horizontal-tb;
     display: inline-flex;
     padding: 3px 10px;
-    letter-spacing: 0.3em;
     justify-self: start;
     margin-bottom: 12px;
   }
@@ -4605,6 +4596,8 @@ main[data-layout="table"] .mat-table thead th:not(:first-child) { text-align: ri
   .masthead,
   .foot,
   .chapter-tools,
+  .chapter-meta,
+  .fold-all,
   .era-jump,
   .filters,
   #to-top,
@@ -5573,7 +5566,8 @@ a.chapter-read::after {
 @media print {
   .masthead, .foot, .to-top, .drawer, .lightbox,
   .banxin, .juan-progress, .pi-trigger, .pi-pop,
-  .chapter-tools, .chapter-toc, .era-tab-bar, .reign-scroll-wrap,
+  .chapter-tools, .chapter-toc, .chapter-meta,
+  .fold-all, .era-tab-bar, .reign-scroll-wrap,
   .resume-reading, .duqi-seal { display: none !important; }
   body { background: #fff; font-size: 11pt; }
   body::after { display: none; }
@@ -5790,6 +5784,121 @@ a.chapter-read::after {
 .chapter-evidence summary { color: var(--ink); padding-block: 8px; }
 .chapter-notes { margin: 16px 0; font-size: 13px; color: var(--muted); }
 .chapter-notes > summary { cursor: pointer; padding-block: 8px; }
+
+/* ==== 批次B：版式与阅读节奏 ==== */
+
+/* 章节头：crumb 与 kicker 合一行（复用 crumb 风格，不另起一套） */
+.chapter-crumb { margin: 0 0 14px; }
+.chapter-crumb-kicker { color: var(--muted); }
+
+/* 本章工具与目录抽屉：手机上不占第一屏，桌面默认展开 */
+.chapter-meta {
+  margin: 0 0 24px;
+  padding-block: 10px;
+  border-block: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+}
+.chapter-meta > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.chapter-meta > summary::-webkit-details-marker { display: none; }
+.chapter-meta > summary::before { content: "＋ "; display: inline-block; }
+.chapter-meta[open] > summary::before { content: "－ "; }
+.chapter-meta .chapter-toc { margin: 14px 0 16px; max-width: none; }
+.chapter-meta .chapter-toc .toc-label { cursor: default; }
+.chapter-meta .reading-time { margin-bottom: 4px; }
+.chapter-meta .chapter-tools { margin-top: 8px; border-bottom: 0; padding-bottom: 4px; }
+.chapter-meta .chapter-talks { margin-bottom: 8px; }
+
+/* 移动端 lede 截 3 行：导读价值在，但正文必须进第一屏 */
+@media (max-width: 600px) {
+  .chapter-head > .lede {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* 帝王页：本朝一句话导读 + 世系档案卡抽屉 */
+.era-lede {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+.emperor-dossier > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 4px 0;
+}
+.emperor-dossier > summary::-webkit-details-marker { display: none; }
+.emperor-dossier > summary::before { content: "＋ "; display: inline-block; }
+.emperor-dossier[open] > summary::before { content: "－ "; }
+.emperor-dossier .card-ids { margin-bottom: 0; }
+
+/* 长列表分组折叠：summary 复用 era-group 的题头风格 */
+.group-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 14px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.group-fold > summary::-webkit-details-marker { display: none; }
+.group-fold > summary::before {
+  content: "＋";
+  color: var(--muted);
+  font-size: 0.7em;
+  flex: none;
+}
+.group-fold[open] > summary::before { content: "－"; }
+.group-fold > summary .muted,
+.group-fold > summary .era-group-n {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.group-fold > summary .era-group-n { margin-left: auto; float: none; }
+.group-fold[open] > summary { margin-bottom: 16px; }
+.fold-all { margin: 0 0 8px; }
+
+/* 主张详情：主体是主张与引文，核对状态收抽屉 */
+.claim-detail .sentence { font-size: 19px; }
+.claim-when { margin: 4px 0 14px; }
+.claim-detail blockquote.quote {
+  margin: 14px 0 18px;
+  padding: 2px 0 2px 1em;
+  border-left: 3px solid var(--vermilion);
+}
+.claim-detail blockquote.quote p {
+  font-size: 20px;
+  line-height: 1.9;
+  margin: 0;
+}
+.claim-source { margin: 0 0 12px; }
+.claim-source-name { font-family: var(--serif); font-size: 17px; margin-bottom: 2px; }
+.claim-status { margin: 8px 0 24px; }
+.same-unit h2 { font-size: 20px; }
+
+/* 检索结果正文限读栏 */
+.search-body.reading { max-width: var(--read); }
+.search-body .search-stories,
+.search-body .search-people { max-width: var(--read); }
+
 .search-facets .facet-btn.on { color: #fff; box-shadow: none; }
 .search-facets .facet-btn.on i { color: #fff; }
 .search-stories { margin: 28px 0; max-width: 850px; }

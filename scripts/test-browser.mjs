@@ -269,7 +269,7 @@ try {
   // 目录定位：章内目录点开末节，标题应滚入视口顶部附近。
   await evaluate(`location.hash='#/chapter/kangxi-01'`);
   await waitFor(`!!document.querySelector('.chapter-shell')`);
-  await evaluate(`(() => { const d = document.querySelector('.chapter-toc'); if (d?.tagName === 'DETAILS') d.open = true; })()`);
+  await evaluate(`(() => { const d = document.querySelector('.chapter-meta'); if (d?.tagName === 'DETAILS') d.open = true; })()`);
   const tocOk = await evaluate(`!!document.querySelector('.chapter-toc [data-scroll]')`);
   check('长章提供章内目录', tocOk);
   if (tocOk) {
@@ -375,7 +375,7 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await send('Page.navigate', { url: `${base}?probe=toc#/chapter/yongzheng-04c` });
   await waitFor(`!!document.querySelector('.chapter-toc')`);
-  await evaluate(`(() => { const d = document.querySelector('.chapter-toc'); if (d?.tagName === 'DETAILS') d.open = true; })()`);
+  await evaluate(`(() => { const d = document.querySelector('.chapter-meta'); if (d?.tagName === 'DETAILS') d.open = true; })()`);
   check('目录编号与题名同行', await evaluate(`[...document.querySelectorAll('.chapter-toc li')].every((li) => {
     const btn = li.querySelector('button');
     return btn && Math.abs(li.getBoundingClientRect().top - btn.getBoundingClientRect().top) <= 4;
@@ -404,6 +404,43 @@ try {
 
   // 回归：正文里所有链接都带链接样式（class），不再有裸 <a>。
   check('正文链接全部带 class', await evaluate(`[...document.querySelectorAll('main a[href]')].every((a) => a.classList.length > 0)`));
+
+  // ==== 批次B：版式与阅读节奏 ====
+  // (a) 手机 390×844 首屏 scrollTop=0 时，main 内第一条 >40 字的 <p> 必须进第一屏。
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+  await send('Page.navigate', { url: `${base}?probe=foldA#/chapter/yongzheng-04c` });
+  await waitFor(`!!document.querySelector('.chapter-shell .md p')`);
+  check('390px 章节页首屏出现正文段落', await evaluate(`(() => {
+    const p = [...document.querySelectorAll('main p')].find((el) => el.offsetParent !== null && el.textContent.trim().length > 40);
+    return !!p && p.getBoundingClientRect().top < 844;
+  })()`));
+  check('390px 章节工具与目录收进抽屉且默认收起', await evaluate(`(() => {
+    const d = document.querySelector('details.chapter-meta');
+    return !!d && !d.open && !!d.querySelector('.chapter-toc') && !!d.querySelector('.chapter-tools') && !!d.querySelector('.reading-time');
+  })()`));
+
+  // (b) 紫光阁按批分折叠、默认全开。
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await send('Page.navigate', { url: `${base}?probe=foldB#/ziguangge` });
+  await waitFor(`!!document.querySelector('.zgg-batch')`);
+  check('紫光阁按批折叠且默认全开', await evaluate(`(() => {
+    const all = document.querySelectorAll('details.zgg-batch');
+    return all.length >= 3 && [...all].every((d) => d.open) && [...all].every((d) => d.hasAttribute('data-fold-group'));
+  })()`));
+
+  // (c) 主张详情：主体是引文等内容，「核对状态」收进抽屉。
+  await send('Page.navigate', { url: `${base}?probe=foldC#/claim/QH-A-KX-0001` });
+  await waitFor(`!!document.querySelector('main blockquote')`);
+  check('主张详情正文为大引文、核对状态为抽屉', await evaluate(`(() => {
+    const quote = document.querySelector('main .claim-detail blockquote');
+    const drawer = [...document.querySelectorAll('details.evidence-drawer summary')].some((s) => s.textContent.includes('核对状态'));
+    return !!quote && drawer;
+  })()`));
+
+  // (d) 文献页按朝分组折叠。
+  await send('Page.navigate', { url: `${base}?probe=foldD#/works` });
+  await waitFor(`!!document.querySelector('details.work-group')`);
+  check('文献页分组折叠（details.work-group ≥3）', await evaluate(`document.querySelectorAll('details.work-group').length >= 3`));
 
   if (runtimeErrors.length) failures.push(`运行时异常：${runtimeErrors.join('；')}`);
   if (responseErrors.length) failures.push(`本地资源错误：${responseErrors.join('；')}`);
