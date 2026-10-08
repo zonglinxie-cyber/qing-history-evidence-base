@@ -974,6 +974,13 @@ button.link, a.link {
   text-underline-offset: 3px;
 }
 button.link { min-height: 24px; }
+/* 兜底：正文里漏加 class 的裸 <a> 也要呈现为可点的链接（靛青＋下划线），
+   而不是混在段落里看不出来。卡片式/导航式锚点都带 class，不受影响。 */
+main a:not([class]) {
+  color: var(--indigo);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
 .emperor-read {
   max-width: var(--read);
@@ -5186,6 +5193,13 @@ main[data-layout="reading"] .chapter-shell .chapter-head {
   main[data-layout="reading"] .chapter-shell::before { display: none; }
   /* 窄屏正文列放不下多列对照表，改为横向滚动，不再逐字碎行 */
   .md .table-wrap table { min-width: 34rem; }
+  /* 材料矩阵（.mat-table）与人物表等也走 .table-wrap，但没有 .md 包裹：
+     缺最小宽度时窄屏会把表头压成一列单字竖排。统一给个底线宽度让容器横滚，
+     首列（人名／年号）不换行，保住「一行一条」的行结构。
+     .table-wrap 自身 overflow: auto 已常驻，这里只补 min-width 与 nowrap。 */
+  .table-wrap table { min-width: 30rem; }
+  .table-wrap th,
+  .table-wrap td:first-child { white-space: nowrap; }
 }
 @media (min-width: 1100px) {
   main[data-layout="chapter"] .chapter-shell,

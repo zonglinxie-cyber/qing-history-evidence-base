@@ -22,7 +22,7 @@
 | 第七子 | 隆禧 | 庶妃钮氏 | 康熙十三年封纯亲王。十八年薨。谥曰靖 | |
 | 第八子 | 永幹 | 庶妃穆克图氏 | 早卒。无嗣 | 后妃传：「永幹，八岁殇」 |
 
-常宁与常颖、钮钮与牛钮，两两并存，不择一抹平。提案冲突组见 `_data-proposals/conflict-sets.csv`。
+常宁与常颖、钮钮与牛钮，两两并存，不择一抹平。
 
 ## 皇女表（卷166世祖段）
 
@@ -49,7 +49,7 @@
 
 ## 还可以看
 
-福全见人物档 `QH-P-000156`。玄烨见 [康熙即位](#/chapter/kangxi-01)。后妃时态见 `04-consorts.md`。完整提案表见 `_data-proposals/shunzhi-princes.csv`、`shunzhi-princesses.csv`。
+福全见人物档 `QH-P-000156`。玄烨见 [康熙即位](#/chapter/kangxi-01)。后妃时态见 `#/chapter/shunzhi-04`。
 
 ## 边界
 

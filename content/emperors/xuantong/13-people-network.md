@@ -49,7 +49,7 @@
 
 - 《宣统政纪》逐日条、监国礼节总目原文尚未打开。
 - 玉牒 1921 年本用「宣统十三年」是小朝廷修谱。
-- 不生退位签字想象图冒充现场。监国—内阁—退位链条示意图（**AI 示意，非历史原件**）见 [`../_cross-cutting-proposals/ai-schematics/ai-schematic-xuantong-regency-cabinet.png`](../_cross-cutting-proposals/ai-schematics/ai-schematic-xuantong-regency-cabinet.png)。缴章早于退位约两月，以正文为准。台账 `SRC-150`。已有退位后照片见 08，时态须标。
+- 不生退位签字想象图冒充现场。监国—内阁—退位链条示意图为 AI 示意、非历史原件，缴章早于退位约两月，以正文为准。退位后照片须标明时态。
 
 ## 交叉引用
 

@@ -49,7 +49,7 @@
 
 ## 今地、图像与卷86
 
-今地见 [福陵](#/site/QH-ST-0007)、[永陵](#/site/QH-ST-0014)。福陵卡用 Commons `2014 East Tomb (Fuling, Tomb of Manchu Chief Nurhachi) 01.jpg`（CC BY-SA 4.0，WorldHistoryPics，2014）。永陵卡用 `Yongling Tomb of Qing Dynasty - 0.JPG`（CC BY-SA 3.0，Gisling，2010）。两张都是维修后的公园实景，不是天聪三年迁葬原状。沈阳俗称东陵的是这座福陵，不是遵化清东陵。
+今地见 [福陵](#/site/QH-ST-0007)、[永陵](#/site/QH-ST-0014)。福陵、永陵卡配图都用 Commons 实景照（分别为 CC BY-SA 4.0／WorldHistoryPics，2014；CC BY-SA 3.0／Gisling，2010）。两张都是维修后的公园实景，不是天聪三年迁葬原状。沈阳俗称东陵的是这座福陵，不是遵化清东陵。
 
 《清史稿》卷86「谒陵」是后出制度总述，用来给关外三陵分层，不替代《太祖实录》葬条：
 
@@ -63,7 +63,7 @@
 
 文保层：盛京三陵（永陵、福陵、昭陵）2004 年列入联合国教科文组织「明清皇家陵寝」。这是今地登录，不是天聪葬条。
 
-昭陵见 [太宗卷](#/chapter/huangtaiji-09)。东京陵今地提案见 `_data-proposals/historic-sites.csv`（`QH-ST-NH-0001`，无图）。
+昭陵见 [太宗卷](#/chapter/huangtaiji-09)。东京陵今地尚无遗址条目（无图）。
 
 ## 边界
 

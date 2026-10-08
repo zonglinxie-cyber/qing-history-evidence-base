@@ -30,10 +30,11 @@ function headingSlug(raw, used) {
 export function inlineMd(text) {
   let out = escHtml(text);
   out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
-  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-    const safe = /^(https?:\/\/|#\/)/.test(href) ? href : '#';
-    const extra = safe.startsWith('http') ? ' target="_blank" rel="noopener"' : '';
-    return `<a class="link" href="${escHtml(safe)}"${extra}>${label}</a>`;
+  out = out.replace(/\[([^\]]+)\]\(((?:[^()]|\([^()]*\))+)\)/g, (_, label, href) => {
+    // 指向仓库内文件（相对路径、*.md、../ 等）的链接在站点上无处可达，只留文字，不生死链。
+    if (!/^(https?:\/\/|#\/)/.test(href)) return label;
+    const extra = href.startsWith('http') ? ' target="_blank" rel="noopener"' : '';
+    return `<a class="link" href="${href}"${extra}>${label}</a>`;
   });
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/\{\{claim:([A-Za-z0-9-]+)\}\}/g, (_, id) => (
@@ -194,24 +195,40 @@ export function mdToHtml(src, fig) {
   return wrapDrawers(html.join('\n'));
 }
 
+// 编辑工件标记：档号、台账、提案目录、AI 示意图路径、入库指令等。命中这些标记的块整体不上页面；
+// 只写读者能懂的史料限度说明（如「五大臣列传未开，不写各人卒年」）的块保留。
+const internalLine = /\bQH-[A-Z]+-[A-Z0-9-]+\b|SRC-\d+|研究卡|原子主张|尚未钉|台账|ai-schematics|_cross-cutting-proposals|_data-proposals|双主键|不得写入|入库|工单|转\s?CSV|gap\.csv|\.(?:png|jpe?g|webp)\b|\{\{(?:fig|conflict|claim):|workflow|待升格|回查清单|\.\.\/|(?:data|content|docs)\/[A-Za-z0-9_./-]+/i;
+
+function cleanInternalBlocks(body) {
+  return String(body || '')
+    .replace(/<(li|p|tr)\b[^>]*>[\s\S]*?<\/\1>/g, (block) => (internalLine.test(block.replace(/<[^>]+>/g, '')) ? '' : block))
+    .replace(/<(ul|ol)>\s*<\/\1>/g, '');
+}
+
 // 只保留读者能理解的史料说明；“尚未解决”是编辑待办，不进公共页。
 function wrapDrawers(html) {
   let out = html.replace(/<h2 id="[^"]+">尚未解决<\/h2>[\s\S]*?(?=<h2|$)/g, '');
   out = out.replace(/<h2 id="[^"]*">待用户抽查<\/h2>[\s\S]*?(?=<h2|$)/g, '');
+  // 「待办」是编辑侧的 TODO 清单，不进公共页。
+  out = out.replace(/<h2 id="[^"]*">[^<]*待办<\/h2>[\s\S]*?(?=<h2|$)/g, '');
   out = out.replace(/<h2 id="[^"]*">(?:待回查清单|尚待更多材料核对清单)<\/h2>([\s\S]*?)(?=<h2|$)/g,
     (_, body) => `<details class="evidence-drawer"><summary>史料说明</summary>${body}</details>`);
   out = out.replace(/<h2 id="[^"]*">[一二三四五六七八九十]+、实录卷次回查状态<\/h2>([\s\S]*?)(?=<h2|$)/g,
     (_, body) => `<details class="evidence-drawer"><summary>原文定位</summary>${body}</details>`);
   // 「边界」是旧章的史料限制说明：折叠展示，不再整节删掉（0.8.0）。新章写进「史料怎么说」正文节。
-  // 条目里带内部编号或编辑行话（研究卡、原子主张、尚未钉）的那一条不上页面。
-  const internalLine = /\bQH-[A-Z]+-[A-Z0-9-]+\b|研究卡|原子主张|尚未钉/;
   out = out.replace(/<h2 id="[^"]+">边界<\/h2>([\s\S]*?)(?=<h2|$)/g, (_, body) => {
-    const kept = body.replace(/<(li|p)\b[^>]*>[\s\S]*?<\/\1>/g, (block) => (internalLine.test(block.replace(/<[^>]+>/g, '')) ? '' : block))
-      .replace(/<(ul|ol)>\s*<\/\1>/g, '');
+    const kept = cleanInternalBlocks(body);
     return kept.replace(/<[^>]+>/g, '').trim()
       ? `<details class="evidence-drawer"><summary>史料的限度</summary>${kept}</details>`
       : '';
   });
+  // 「史料的限度」「原文定位」「本章依据哪些材料」等抽屉同样会漏进编辑行话，统一再过滤一遍；
+  // 抽屉被清空就连壳去掉，不留一个展开后只有空白或空列表的折叠框。
+  out = out.replace(/(<details class="evidence-drawer[^"]*"><summary>[\s\S]*?<\/summary>)([\s\S]*?)<\/details>/g,
+    (_, head, body) => {
+      const kept = cleanInternalBlocks(body);
+      return kept.replace(/<[^>]+>/g, '').trim() ? `${head}${kept}</details>` : '';
+    });
   return wrapTeach(out);
 }
 
@@ -225,7 +242,9 @@ export function publicBodyHtml(html, refs = {}) {
   };
   // 「下一步 / 待续」小节不再整节删除：标题由写作者自己起，构建期不替作者决定取舍。
   // 内容里的编辑便笺仍由下面 privateChecklist 逐块清理。
-  const privateChecklist = /进入站点前|人工复核|深挖状态|章程原则|待用户抽查|责任人|审核备注|第一版产出|项目北极星指标|技术架构组|结构化入库|接入站点|内容选题库|大事记组|task-queue|\bschema\b|(?:data|content)\/[A-Za-z0-9_./-]+/i;
+  // 兜底整块删：块里出现内部档号、台账/提案路径、编辑指令或工件文件名时，整段不进公开正文。
+  // 读者能读懂的史料限度说明不含这些词，不受影响。
+  const privateChecklist = /进入站点前|人工复核|深挖状态|章程原则|待用户抽查|责任人|审核备注|第一版产出|项目北极星指标|技术架构组|结构化入库|接入站点|内容选题库|大事记组|task-queue|\bschema\b|(?:data|content|docs)\/[A-Za-z0-9_./-]+|SRC-\d+|台账|ai-schematics|_cross-cutting-proposals|_data-proposals|双主键|不得写入|入库|工单|转\s?CSV|gap\.csv|\.(?:png|jpe?g|webp)\b|\{\{(?:fig|conflict|claim):|workflow|待升格|回查清单|\.\.\//i;
   out = out.replace(/<(p|li|blockquote)\b[^>]*>[\s\S]*?<\/\1>/g, (block) => {
     const plain = block.replace(/<[^>]+>/g, '');
     if (privateChecklist.test(plain)) {
@@ -256,8 +275,40 @@ export function publicBodyHtml(html, refs = {}) {
     ))
     .replace(/<code>QH-IR-[^<]+<\/code>/g, '图像区域')
     .replace(/<code>IDX-[^<]+<\/code>/g, '检索入口')
+    .replace(/<code>CAND-[A-Za-z0-9-]+<\/code>/g, '候选条目')
+    // 表格单元格不走上面的块级清理；残留在 td/th 里的台账编号一律中性化，
+    // 只含编号的括号一并去掉，免得留下空括号。
+    .replace(/<code>SRC-\d+<\/code>/g, '相关来源')
+    .replace(/（[^（）]*SRC-\d+[^（）]*）|\([^()]*SRC-\d+[^()]*\)/g, '')
+    .replace(/\bSRC-\d+\b/g, '相关来源')
     // 兜底：任何没被上面覆盖的 QH-* 编号都不进公开正文。
     .replace(/<code>QH-[A-Z]+-[^<]*<\/code>/g, '相关条目')
+    // 提案号、冲突组编号被中性化后，外围的编辑话术（「提案」「冲突组」「生产表」等）
+    // 对读者没有意义；统一换成「争议组／待定条目」这类能读通的说法。
+    .replace(/，?共享冲突表尚无此行，提案补行/g, '，尚未立组')
+    .replace(/提案勘误，不改生产表/g, '条目待勘误')
+    .replace(/提案只登记入口，权利色先标黄/g, '仅登记为待核入口')
+    .replace(/提案补挂，不在这里改共享表/g, '尚未立条目')
+    .replace(/都已在提案表挂 ID/g, '均已登记')
+    .replace(/生产史迹卡/g, '遗址卡')
+    .replace(/生产史迹/g, '遗址条目')
+    .replace(/生产表/g, '总表')
+    .replace(/提案冲突组|冲突组提案/g, '争议组')
+    .replace(/冲突组/g, '争议组')
+    .replace(/提案/g, '待定条目')
+    // 裸写的库内编号（没套 ` 号）同样只给读者可点的名字，不露出档号本身；
+    // 反向断言排除属性值里的编号（href/data-claim/alt 等不算外漏）。
+    .replace(/(?<![\w"'/=&.-])QH-(V|ST|P|L)-([A-Za-z0-9-]+)\b/g, (_, t, rest) => {
+      const type = { V: 'image', ST: 'site', P: 'person', L: 'lane' }[t];
+      const fallback = { image: '图像', site: '遗址今况', person: '人物档', lane: '对照' }[type];
+      return routeRef(type, `QH-${t}-${rest}`, '', fallback);
+    })
+    .replace(/(?<![\w"'/=&.-])QH-IR-[A-Za-z0-9-]+\b/g, '图像区域')
+    .replace(/(?<![\w"'/=&.-])QH-A-([A-Za-z0-9-]+)\b/g,
+      (_, id) => `<a class="link" href="#/claim/QH-A-${escHtml(id)}">这条依据</a>`)
+    .replace(/(?<![\w"'/=&.-])QH-(CF|CP)-[A-Za-z0-9-]+\b/g, '相关记载可对读')
+    .replace(/(?<![\w"'/=&.-])CAND-[A-Za-z0-9-]+\b/g, '候选条目')
+    .replace(/(?<![\w"'/=&.-])SRC-\d+\b/g, '相关来源')
     .replace(/<code>#\/chapter\/([^<]+)<\/code>/g, (_, slug) => (
       routeRef('chapter', slug, refs.chapter?.[slug] || '相关章节待整理', '相关章节待整理')
     ))

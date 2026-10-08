@@ -1,7 +1,9 @@
 // 模板与路由冒烟测试：真实构建产物 + stub DOM（不代替浏览器验收），验证路由与视图渲染。
 // 运行前置：npm run build。零第三方依赖，node scripts/test-render.mjs 即可。
 import fs from 'node:fs';
+import http from 'node:http';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -563,10 +565,10 @@ check('依据抽屉与灯箱使用 dialog', html.includes('<dialog id="drawer"')
   && html.includes('<dialog id="lightbox"')
   && !html.includes('id="scrim"'));
 const peopleTable = await go('#/people');
-check('人物表首列是真实链接', peopleTable.includes('<a href="#/person/')
+check('人物表首列是真实链接', /<a[^>]*href="#\/person\//.test(peopleTable)
   && !peopleTable.includes('role="link"'));
 const princesTable = await go('#/princes');
-check('皇子表首列是真实链接', princesTable.includes('<a href="#/person/')
+check('皇子表首列是真实链接', /<a[^>]*href="#\/person\//.test(princesTable)
   && !princesTable.includes('role="link"'));
 
 // 公开投影门禁：编辑待办、人员身份与 QA 字段不得进入任何可下载 JSON 或静态正文。
@@ -782,6 +784,35 @@ check(`搜索索引不重复${duplicateSearchKeys.length ? `（重复 ${duplicat
 const worksOut = await go('#/works');
 const workIds = [...worksOut.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
 check('文献页没有重复 id', workIds.length === new Set(workIds).size);
+
+// 回归：空 slug 的 #/chapter/ 必须落到「未找到」，不能空页或抛错。
+{
+  const out = await go('#/chapter/');
+  check('空 slug 章节路由优雅降级', out.includes('未找到'));
+}
+
+// 回归：已发布的章节/总览正文不得含内部工件（台账编号、提案路径、指令语、文件名）。
+{
+  const internal = /SRC-\d+|台账|_data-proposals|_cross-cutting|ai-schematics|双主键|不得写入|结构化入库|工单|\{\{(?:fig|claim|conflict):|workflow|待升格|回查清单|CAND-|(?:data|content|docs)\/[A-Za-z0-9_.-]|[0-9A-Za-z_-]+\.md\b|\.csv\b|QH-CF-|冲突组|提案|内部事项|<!--/;
+  const chapterDir = path.join(siteDir, 'data', 'chapter');
+  const leaked = [];
+  const strip = (html) => String(html || '').replace(/<[^>]+>/g, ' ');
+  for (const name of fs.readdirSync(chapterDir).filter((n) => n.endsWith('.json'))) {
+    const body = JSON.parse(fs.readFileSync(path.join(chapterDir, name), 'utf8')).bodyHtml || '';
+    if (internal.test(strip(body))) leaked.push(`chapter/${name}`);
+  }
+  for (const ov of reignData.overviews || []) {
+    if (internal.test(strip(ov.bodyHtml))) leaked.push(`overview/${ov.slug}`);
+  }
+  check(`公开正文无内部工件残留${leaked.length ? `（${leaked.slice(0, 5).join(' ')}${leaked.length > 5 ? '…' : ''}）` : ''}`, leaked.length === 0);
+  // 生成 HTML 里也不得有指向仓库内文件的死链。
+  let deadLinks = 0;
+  for (const name of fs.readdirSync(chapterDir).filter((n) => n.endsWith('.json'))) {
+    const body = JSON.parse(fs.readFileSync(path.join(chapterDir, name), 'utf8')).bodyHtml || '';
+    deadLinks += (body.match(/href="#"/g) || []).length;
+  }
+  check('公开正文无 href="#" 死链', deadLinks === 0);
+}
 const conflictClaim = (reignData.claims || []).find((row) => row.calendar?.status === 'conflict');
 if (conflictClaim) {
   const conflictOut = await go(`#/claim/${conflictClaim['Assertion ID']}`);
@@ -789,6 +820,36 @@ if (conflictClaim) {
   check('历法冲突主张不展示精确公历', conflictOut.includes('日期换算异常')
     && conflictOut.includes('公历换算待核')
     && (!rawDate || !conflictOut.includes(`>${escExpected(rawDate)}<`)));
+}
+
+// 回归：serve.mjs 对非法 URL 编码必须回 400 而不是让进程抛异常挂掉；
+// 正常请求仍回 200。随机端口起真服务，测完即杀。
+// 注意本文件把 globalThis.fetch 重写成了读目录桩，这里必须走真 http。
+{
+  const httpGet = (reqPath) => new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${servePort}${reqPath}`, (res) => {
+      res.resume();
+      res.on('end', () => resolve(res.statusCode));
+    });
+    req.on('error', () => resolve(0));
+    req.setTimeout(3000, () => { req.destroy(); resolve(0); });
+  });
+  const servePort = 18900 + Math.floor(Math.random() * 800);
+  const serve = spawn(process.execPath, [path.join(scriptDir, 'serve.mjs'), `--port=${servePort}`], { stdio: 'ignore' });
+  try {
+    let ready = false;
+    for (let i = 0; i < 60 && !ready; i += 1) {
+      ready = (await httpGet('/__sig')) === 200;
+      if (!ready) await new Promise((r) => setTimeout(r, 100));
+    }
+    check('serve.mjs 起服务', ready);
+    if (ready) {
+      check('serve.mjs 非法编码回 400', (await httpGet('/%E0%A4%A')) === 400);
+      check('serve.mjs 正常路径回 200', (await httpGet('/')) === 200);
+    }
+  } finally {
+    serve.kill('SIGTERM');
+  }
 }
 
 console.log(failed ? `渲染测试 ${failed} 项失败` : '渲染测试全部通过');

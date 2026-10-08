@@ -107,7 +107,13 @@ setInterval(() => {
 }, 400).unref();
 
 const server = http.createServer((req, res) => {
-  const raw = decodeURIComponent(new URL(req.url, `http://${host}`).pathname);
+  let raw;
+  try {
+    raw = decodeURIComponent(new URL(req.url, `http://${host}`).pathname);
+  } catch {
+    res.writeHead(400, { 'cache-control': 'no-store' }).end('bad request');
+    return;
+  }
   if (raw === '/__live') { liveStream(req, res); return; }
   if (raw === '/__sig') {
     res.writeHead(200, {

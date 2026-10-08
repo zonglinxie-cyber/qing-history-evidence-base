@@ -46,7 +46,7 @@
 - 赞襄处档号、两印未核。
 - 肃顺传、载垣端华传未通篇新开。
 - 不把圆明园灾照片写成「谁下令」的证据。
-- 不生八大臣廷讯想象图冒充现场。热河／京师分栏示意图（**现代示意，非历史原件**）见 [`../_cross-cutting-proposals/ai-schematics/ai-schematic-xinyou-rehe-beijing.png`](../_cross-cutting-proposals/ai-schematics/ai-schematic-xinyou-rehe-beijing.png)。八人姓名以卷21 为准。台账 `SRC-149`。
+- 不生八大臣廷讯想象图冒充现场。热河／京师分栏示意图为现代示意、非历史原件，八人姓名以卷21 为准。
 
 ## 交叉引用
 

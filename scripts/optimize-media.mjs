@@ -20,8 +20,11 @@ function isWidthVariant(name) {
 }
 
 function isBaseName(name) {
+  // `-D1`/`-D2` 细节图给遗址详情卡用（qing-content.js 的 SITE_DETAILS），
+  // 页面只取原尺寸档，不为它们再生 480/960 变体——曾生成过一批无人引用的孤儿文件。
   return /^(QH-[A-Z0-9-]+)\.(jpe?g|png|webp)$/i.test(name)
     && !/@2x/i.test(name)
+    && !/-D\d+\./i.test(name)
     && !isWidthVariant(name);
 }
 

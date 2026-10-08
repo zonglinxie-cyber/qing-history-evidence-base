@@ -69,7 +69,7 @@
 - 四辅臣盟誓、索尼遗疏、鳌拜三十款原文未回实录／档。
 - 「索明党争」专书很多，本库未拆原子主张以前，不当定论。
 - 南书房始设年月日，本纪此条未在本章新开，不写死「某年某日创立」。
-- 不生鳌拜、索尼肖像冒充御容。四辅臣空座示意图（**AI 示意，非历史原件**）见 [`../_cross-cutting-proposals/ai-schematics/ai-schematic-kangxi-four-regents.png`](../_cross-cutting-proposals/ai-schematics/ai-schematic-kangxi-four-regents.png)。图上印章字形可能讹写，贷死／族诛以正文为准。台账 `SRC-148`。
+- 不生鳌拜、索尼肖像冒充御容。四辅臣座次示意图为 AI 示意、非历史原件，图上印章字形可能讹写，贷死／族诛以正文为准。
 
 ## 交叉引用
 

@@ -59,7 +59,7 @@ function sourceList(step, data) {
     const label = [unit['史料名'], unit['卷次'], locators.join('、')].filter(Boolean).join(' · ');
     const url = unit?.['直接记录网址'];
     return url && /^https?:\/\//.test(url)
-      ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`
+      ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`
       : `<span>${esc(label)}</span>`;
   }).join('；');
 }
@@ -183,7 +183,7 @@ const chapterLink = (topic) => (topic.chapterFocus ? `#/chapter/${topic.chapter}
 export function studioPage(data, slug, query = {}, audience = false) {
   const topic = findTopic(slug);
   if (!topic) {
-    if (slug) return '<h1>没有这组讲解</h1><p><a href="#/studio">← 讲解台选题</a></p>';
+    if (slug) return '<h1>没有这组讲解</h1><p><a class="link" href="#/studio">← 讲解台选题</a></p>';
     const last = liveState(readSaved('qing-studio-last'));
     return `<div class="page-intro reading"><p class="kicker">讲解台 · 史料选题</p><h1>从史料细节中选题</h1><p class="lede">连续读几天日记，把一则笔记读到结尾，再追一句话经过了谁的转述。AI 帮助检索与对读，开讲要有原文可回查。</p>${last ? `<p><a class="reader-tool-btn" href="#/studio/${last.topic}?step=${last.step}&format=${last.format}">继续上次：${esc(findTopic(last.topic).title)}</a></p>` : ''}</div>
       <div class="studio-topic-grid">${LIVE_TOPICS.map((item, index) => `<article class="studio-topic"><p class="kicker">${String(index + 1).padStart(2, '0')} · ${esc(item.era)}</p><h2>${esc(item.title)}</h2><p>${esc(item.description)}</p><div class="studio-topic-angle"><span>这次发现</span><p>${esc(item.angle)}</p></div><p class="studio-provenance">${esc(item.provenance)}</p><p class="sub">${item.steps.length} 张讲解卡 · 原文定位 · 继续查证线索${item.pack ? ` · 完整讲稿约 ${packLength(item).total} 字，设计时长 ${packLength(item).minutes}` : ''}</p><div class="actions"><a class="reader-tool-btn primary" href="#/studio/${item.slug}">准备这场讲解</a><a class="link" href="${chapterLink(item)}">相关章节</a></div></article>`).join('')}</div>
@@ -192,9 +192,9 @@ export function studioPage(data, slug, query = {}, audience = false) {
   const session = sessionName(query.session);
   const saved = liveState(readSaved(`qing-live-${session}`));
   const state = liveState({ topic: slug, step: query.step ?? (saved?.topic === slug ? saved.step : 0), format: query.format || saved?.format });
-  if (audience) return `<section class="studio-screen" data-live-root="${topic.slug}" data-session="${session}" data-audience="true"><h1 class="visually-hidden">${esc(topic.title)} · 观众展示</h1><div class="studio-preview">${liveCard(state, data)}</div><div class="screen-controls"><button type="button" class="reader-tool-btn" data-live-fullscreen>全屏展示</button><a data-live-back href="#/studio/${topic.slug}?session=${session}">← 讲解台</a><span data-live-connection>正在连接讲解台…</span></div></section>`;
+  if (audience) return `<section class="studio-screen" data-live-root="${topic.slug}" data-session="${session}" data-audience="true"><h1 class="visually-hidden">${esc(topic.title)} · 观众展示</h1><div class="studio-preview">${liveCard(state, data)}</div><div class="screen-controls"><button type="button" class="reader-tool-btn" data-live-fullscreen>全屏展示</button><a class="link" data-live-back href="#/studio/${topic.slug}?session=${session}">← 讲解台</a><span data-live-connection>正在连接讲解台…</span></div></section>`;
   return `<section class="studio-host" data-live-root="${topic.slug}" data-session="${session}">
-    <header class="studio-heading"><div><p class="kicker"><a href="#/studio">讲解台</a> · ${esc(topic.era)}</p><h1>${esc(topic.title)}</h1>${topic.pack ? `<p class="studio-heading-q">${esc(topic.pack.question)}</p>` : ''}</div><div class="studio-open"><a class="reader-tool-btn primary" data-live-screen href="#/screen/${topic.slug}?session=${session}&step=${state.step}" target="qing-audience-${session}" rel="noopener">观众展示窗口 ↗</a><span data-live-connection>展示窗口尚未连接</span></div></header>
+    <header class="studio-heading"><div><p class="kicker"><a class="link" href="#/studio">讲解台</a> · ${esc(topic.era)}</p><h1>${esc(topic.title)}</h1>${topic.pack ? `<p class="studio-heading-q">${esc(topic.pack.question)}</p>` : ''}</div><div class="studio-open"><a class="reader-tool-btn primary" data-live-screen href="#/screen/${topic.slug}?session=${session}&step=${state.step}" target="qing-audience-${session}" rel="noopener">观众展示窗口 ↗</a><span data-live-connection>展示窗口尚未连接</span></div></header>
     <div class="studio-workspace">
       <nav class="studio-outline" aria-label="讲解段落"><h2>讲解进度</h2><ol>${topic.steps.map((step, index) => `<li><button type="button" data-live-step="${index}"><span>${index + 1} · ${esc(step.kind)}</span>${esc(step.title)}</button></li>`).join('')}</ol><a class="link" href="${chapterLink(topic)}">${topic.chapterFocus ? '← 相关选段' : '← 相关章节'}</a></nav>
       <div class="studio-stage"><div class="studio-stage-tools"><span>观众画面预览</span><label>画幅 <select data-live-format aria-label="展示画幅"><option value="landscape">横屏 16:9</option><option value="portrait">竖屏 9:16</option></select></label></div><div class="studio-preview">${liveCard(state, data)}</div><div class="studio-controls"><button class="reader-tool-btn" type="button" data-live-prev>上一段</button><span data-live-progress role="status"></span><button class="reader-tool-btn primary" type="button" data-live-next>下一段</button></div><p class="sub">也可用 ← → 翻段；在笔记中输入时不会触发翻页。</p></div>

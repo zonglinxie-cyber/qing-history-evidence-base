@@ -363,7 +363,7 @@ function eraPage(slug) {
   function personLink(id) {
     const href = personHref(id);
     const label = personName(id);
-    return href ? `<a href="${esc(href)}">${esc(label)}</a>` : esc(label || id);
+    return href ? `<a class="link" href="${esc(href)}">${esc(label)}</a>` : esc(label || id);
   }
 
   function objectDisplay(claim) {
@@ -439,7 +439,7 @@ function eraPage(slug) {
   function laneCard(row, opts = {}) {
     const title = opts.detail
       ? esc(row['标题'])
-      : `<a href="#/lane/${esc(row.lane_id)}">${esc(row['标题'])}</a>`;
+      : `<a class="link" href="#/lane/${esc(row.lane_id)}">${esc(row['标题'])}</a>`;
     const headingLevel = opts.headingLevel === 2 ? 2 : 3;
     const subheadingLevel = headingLevel + 1;
     const people = lanePeople(row);
@@ -561,8 +561,8 @@ function eraPage(slug) {
     const caption = img.getAttribute('data-lightbox') || img.alt || '';
     const base = img.getAttribute('data-src') || img.getAttribute('src') || img.currentSrc || img.src;
     // 本地缓存图优先试 1280px 同格式档（jpg/png/webp），404 时回退普通档。
-    const local = base.match(/^(media\/[^@]+)(\.(?:jpe?g|png|webp))$/i);
-    const localHi = local ? `${local[1]}@2x${local[2]}` : '';
+    const local = base.split('?')[0].match(/^(media\/[^@]+)(\.(?:jpe?g|png|webp))$/i);
+    const localHi = local ? `${local[1]}@2x${local[2]}${base.slice(local[0].length)}` : '';
     boxImg.onerror = localHi ? () => { boxImg.onerror = null; boxImg.src = base; } : null;
     boxImg.src = localHi || largestVariant(base);
     boxImg.alt = caption;
@@ -896,7 +896,7 @@ function eraPage(slug) {
 
   function materialCell(n, kind, era) {
     if (!n) return '<td class="mat-zero">—</td>';
-    return `<td><a href="#/${kind}?era=${encodeURIComponent(era)}">${n}</a></td>`;
+    return `<td><a class="link" href="#/${kind}?era=${encodeURIComponent(era)}">${n}</a></td>`;
   }
 
   function materialPage() {
@@ -929,7 +929,7 @@ function eraPage(slug) {
         <thead><tr><th>朝</th><th>文献</th><th>像与物</th><th>逐段读原典</th></tr></thead>
         <tbody>${rows.map((r) => `
           <tr>
-            <th scope="row"><a href="${esc(r.href)}">${esc(r.era)}<span>${esc(r.who)}</span></a></th>
+            <th scope="row"><a class="link" href="${esc(r.href)}">${esc(r.era)}<span>${esc(r.who)}</span></a></th>
             ${materialCell(r.works, 'works', r.era)}
             ${materialCell(r.visuals, 'hands', r.era)}
             ${materialCell(r.jiedu, 'jiedu', r.era)}
@@ -962,7 +962,7 @@ function eraPage(slug) {
     const inner = `<span class="era-group-name">${esc(label)}</span>`
       + (who ? `<span class="era-group-who">${esc(who)}</span>` : '')
       + (count ? `<span class="era-group-n">${count} ${esc(unit)}</span>` : '');
-    return `<h2 class="era-group"${id ? ` id="${esc(id)}"` : ''}>${href ? `<a href="${esc(href)}">${inner}</a>` : inner}</h2>`;
+    return `<h2 class="era-group"${id ? ` id="${esc(id)}"` : ''}>${href ? `<a class="era-link" href="${esc(href)}">${inner}</a>` : inner}</h2>`;
   }
   // 按在位顺序把带 era 的条目分组
   function groupByReign(rows, getEra) {
@@ -1487,7 +1487,7 @@ function eraPage(slug) {
 
   function sitePage(id) {
     const site = (DATA.sites || []).find((row) => row.site_id === id);
-    if (!site) return `<h1>未找到遗址今况 ${esc(id)}</h1><p><a href="#/">← 首页</a></p>`;
+    if (!site) return `<h1>未找到遗址今况 ${esc(id)}</h1><p><a class="link" href="#/">← 首页</a></p>`;
     const emperors = splitIds(site['相关皇帝ID']).map((emperorId) => emperorByLegacy.get(emperorId)).filter(Boolean);
     const others = relatedSites(site);
     const hook = site['卡片钩子'] || site['事件'];
@@ -1521,7 +1521,7 @@ function eraPage(slug) {
               <dt>坐标</dt><dd>${esc(site['经度'])}°E, ${esc(site['纬度'])}°N · WGS84</dd>
             </dl>` : ''}
             ${emperors.length ? `<dl class="kv">
-              <dt>相关</dt><dd>${emperors.map((emperor) => `<a href="${esc(emperor.eraSlug ? `#/${emperor.eraSlug}` : `#/person/${emperor.person_id}`)}">${esc(emperor['年号或通称'].split('；')[0])}</a>`).join(' · ')}</dd>
+              <dt>相关</dt><dd>${emperors.map((emperor) => `<a class="link" href="${esc(emperor.eraSlug ? `#/${emperor.eraSlug}` : `#/person/${emperor.person_id}`)}">${esc(emperor['年号或通称'].split('；')[0])}</a>`).join(' · ')}</dd>
             </dl>` : ''}
             <div class="actions">
               <a class="btn" href="#/sites">全部遗址今况</a>
@@ -1587,7 +1587,7 @@ function eraPage(slug) {
           <tbody>
             ${rows.map((row) => `
               <tr data-href="#/person/${esc(row.person_id)}">
-                <td><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</a></td>
+                <td><a class="link" href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</a></td>
                 <td>${esc(row['常用名或异名'])}</td>
                 <td>${esc(row['人物类型'])}</td>
               </tr>`).join('')}
@@ -2072,7 +2072,7 @@ function eraPage(slug) {
           <tbody>
             ${rows.map((row) => `
               <tr data-href="#/person/${esc(row.person_id)}">
-                <td><a href="#/person/${esc(row.person_id)}">${esc(row['表序'] || '—')}</a></td>
+                <td><a class="link" href="#/person/${esc(row.person_id)}">${esc(row['表序'] || '—')}</a></td>
                 <td>${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</td>
                 <td>${esc(row['世表用名'] || '本卷无行')}</td>
                 <td>${esc(row['收录状态'])}</td>
@@ -2184,7 +2184,7 @@ function eraPage(slug) {
           <tbody>
             ${rows.map((row) => `
               <tr data-href="#/person/${esc(row.person_id)}">
-                <td><a href="#/person/${esc(row.person_id)}">${esc(row['表序'] || '—')}</a></td>
+                <td><a class="link" href="#/person/${esc(row.person_id)}">${esc(row['表序'] || '—')}</a></td>
                 <td>${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}</td>
                 <td>${esc(row['收录状态'])}</td>
                 <td>${esc(row['生母候选名'] || (row['收录状态'] === '抚育附列' ? '表未记生母' : '未详'))}</td>
@@ -2461,7 +2461,7 @@ function eraPage(slug) {
       ${laneCard(row, { detail: true, headingLevel: 2 })}
       ${questions.length ? `<h2>这类问题</h2>${questions.map((item) => questionCard(item)).join('')}` : ''}
       <p class="actions"><a class="link" href="#/lanes">← 对照</a> ${laneHref(row['来源入口'])}</p>
-      ${related.length ? `<h2>同一栏其他条目</h2>${related.map((item) => `<p><a href="#/lane/${esc(item.lane_id)}">${esc(item['标题'])}</a></p>`).join('')}` : ''}
+      ${related.length ? `<h2>同一栏其他条目</h2>${related.map((item) => `<p><a class="link" href="#/lane/${esc(item.lane_id)}">${esc(item['标题'])}</a></p>`).join('')}` : ''}
     `;
   }
 
@@ -2663,8 +2663,8 @@ function eraPage(slug) {
 
   function chapterPage(slug) {
     const list = DATA.chapters || [];
-    const chapter = list.find((row) => row.slug === slug) || (slug ? null : list[0]);
-    if (!chapter) return `<h1>未找到章节 ${esc(slug || '')}</h1><p><a href="#/">← 十二帝</a></p>`;
+    const chapter = slug ? list.find((row) => row.slug === slug) : null;
+    if (!chapter) return `<h1>未找到章节 ${esc(slug || '')}</h1><p><a class="link" href="#/">← 十二帝</a></p>`;
     const unitIds = String(chapter.unit_ids || '').split(/[；;]/).map((item) => item.trim()).filter(Boolean);
     const units = unitIds.map((id) => DATA.units.find((unit) => unit.source_unit_id === id)).filter(Boolean);
     const claimCount = units.reduce((n, unit) => (
@@ -2700,7 +2700,7 @@ function eraPage(slug) {
         <p class="kicker">${esc(chapter.era)}${chapterGenre(chapter) === '资料' ? ' · 资料' : ''}</p>
         <h1>${esc(chapter.title)}</h1>
         <p class="lede">${noOrphan(chapter.lede)}</p>
-        <p class="reading-time">${chapter.readMinutes ? `约 ${chapter.readMinutes} 分钟阅读 · ` : ''}随时点角标，查看原文出处${lastSearch ? ` · <a href="${esc(lastSearch.href)}">返回「${esc(lastSearch.q)}」的搜索结果</a>` : ''}</p>
+        <p class="reading-time">${chapter.readMinutes ? `约 ${chapter.readMinutes} 分钟阅读 · ` : ''}随时点角标，查看原文出处${lastSearch ? ` · <a class="link" href="${esc(lastSearch.href)}">返回「${esc(lastSearch.q)}」的搜索结果</a>` : ''}</p>
         ${crumbs([
           { href: '#/', label: '十二帝' },
           { href: '#/read', label: '读故事' },
@@ -2802,7 +2802,7 @@ function eraPage(slug) {
     return `
       <article class="claim" id="${esc(row.question_id)}">
         <p class="sub">${esc(row.evidenceGap ? '现有材料不够' : '能对到日子')}</p>
-        <p class="sentence"><a href="#/question/${esc(row.question_id)}">${esc(row.question)}</a></p>
+        <p class="sentence"><a class="link" href="#/question/${esc(row.question_id)}">${esc(row.question)}</a></p>
         ${opts.hideBound ? '' : (row.evidenceGap
           ? `<p class="bound">${esc(row.explanation)}</p>`
           : `<p class="lede">${esc(row.answer)}</p>`)}
@@ -2848,7 +2848,7 @@ function eraPage(slug) {
 
   function questionPage(id) {
     const row = (DATA.questions || []).find((item) => item.question_id === id);
-    if (!row) return `<h1>未找到问题 ${esc(id)}</h1><p><a href="#/questions">← 这类问题</a></p>`;
+    if (!row) return `<h1>未找到问题 ${esc(id)}</h1><p><a class="link" href="#/questions">← 这类问题</a></p>`;
     return `
       <p class="kicker">${esc(row.evidenceGap ? '现有材料不够' : '能对到日子')}</p>
       <h1>${esc(row.question)}</h1>
@@ -3174,7 +3174,7 @@ function eraPage(slug) {
         <a class="link" href="${esc(row['资源网址'])}" target="_blank" rel="noopener">资源</a>
         <a class="link" href="${esc(row['权利或规则网址'])}" target="_blank" rel="noopener">权利规则</a>
       </p>
-      ${relatedUnits.length ? `<h2>可回查条目</h2>${relatedUnits.map((unit) => `<p><a href="#/claims?unit=${esc(unit.source_unit_id)}">${esc([unit['史料名'], unit['卷次']].filter(Boolean).join(' '))}</a> ${esc(unit['原纪年'])}</p>`).join('')}` : ''}
+      ${relatedUnits.length ? `<h2>可回查条目</h2>${relatedUnits.map((unit) => `<p><a class="link" href="#/claims?unit=${esc(unit.source_unit_id)}">${esc([unit['史料名'], unit['卷次']].filter(Boolean).join(' '))}</a> ${esc(unit['原纪年'])}</p>`).join('')}` : ''}
     `;
   }
 
@@ -3216,7 +3216,7 @@ function eraPage(slug) {
     // 摘句横跨小节起点时，「先说结论」这类的标签会悬在句中读不通；用户专找这四个字时保留。
     const kw = q.trim();
     const excerpt = kw && !'先说结论'.includes(kw) ? raw.replace(/先说结论/g, '') : raw;
-    return `<article class="search-story"><p class="pick-eyebrow">${esc(hit.extra || '')} · 文章</p><h3><a href="#/chapter/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a></h3><p>${highlightHtml(excerpt, q)}</p></article>`;
+    return `<article class="search-story"><p class="pick-eyebrow">${esc(hit.extra || '')} · 文章</p><h3><a class="link" href="#/chapter/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a></h3><p>${highlightHtml(excerpt, q)}</p></article>`;
   }
 
   function searchPage(q, query = {}) {
@@ -3277,34 +3277,34 @@ function eraPage(slug) {
       ${(showAll || activeCat === 'chapter') ? (chapterHits.length ? `<section class="search-stories"><h2>先读文章 <span class="muted">${chapterHits.length}</span></h2>${clipBlock(chapterHits, (hit) => chapterSearchResult(hit, q), 6)}</section>` : (activeCat === 'chapter' ? '<p class="empty">没有匹配的文章，可以切换到人物或原文依据。</p>' : '')) : ''}
       ${(showAll || activeCat === 'person') ? `
         ${peopleHits.length || activeCat === 'person' ? `<h2>人物 ${peopleHits.length}</h2>` : ''}
-        ${peopleHits.length ? `<ul class="search-people">${clipBlock(peopleHits, (hit) => `<li><a href="#/person/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`)}</ul>` : (activeCat === 'person' ? '<p class="empty">无人物命中。</p>' : '')}
+        ${peopleHits.length ? `<ul class="search-people">${clipBlock(peopleHits, (hit) => `<li><a class="link" href="#/person/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`)}</ul>` : (activeCat === 'person' ? '<p class="empty">无人物命中。</p>' : '')}
       ` : ''}
 
       ${(showAll || activeCat === 'claim') ? (claimHits.length ? `<h2>依据 ${claimHits.length}</h2>${clipBlock(claimHits, claimCard)}` : (activeCat === 'claim' ? '<p class="empty">无依据命中。</p>' : '')) : ''}
 
       ${(showAll || activeCat === 'empress') ? (empressHits.length ? `<h2>后妃 ${empressHits.length}</h2>${timelineList(empressHits)}` : (activeCat === 'empress' ? '<p class="empty">无后妃命中。</p>' : '')) : ''}
 
-      ${(showAll || activeCat === 'prince') ? (princeHits.length ? `<h2>皇子 ${princeHits.length}</h2><ul>${princeHits.map((row) => `<li><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : (activeCat === 'prince' ? '<p class="empty">无皇子命中。</p>' : '')) : ''}
+      ${(showAll || activeCat === 'prince') ? (princeHits.length ? `<h2>皇子 ${princeHits.length}</h2><ul>${princeHits.map((row) => `<li><a class="link" href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗·/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : (activeCat === 'prince' ? '<p class="empty">无皇子命中。</p>' : '')) : ''}
 
-      ${(showAll || activeCat === 'princess') ? (princessHits.length ? `<h2>皇女 ${princessHits.length}</h2><ul>${princessHits.map((row) => `<li><a href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : (activeCat === 'princess' ? '<p class="empty">无皇女命中。</p>' : '')) : ''}
+      ${(showAll || activeCat === 'princess') ? (princessHits.length ? `<h2>皇女 ${princessHits.length}</h2><ul>${princessHits.map((row) => `<li><a class="link" href="#/person/${esc(row.person_id)}">${esc(row['规范名'].replace(/^爱新觉罗氏/, ''))}</a> <span class="muted">${esc(row['表序标签'])}</span></li>`).join('')}</ul>` : (activeCat === 'princess' ? '<p class="empty">无皇女命中。</p>' : '')) : ''}
 
       ${(showAll || activeCat === 'heir') ? (heirHits.length ? `<h2>储位 ${heirHits.length}</h2>${heirList(heirHits)}` : (activeCat === 'heir' ? '<p class="empty">无储位命中。</p>' : '')) : ''}
 
       ${(showAll || activeCat === 'site') ? (siteHits.length ? `<h2>遗址今况 ${siteHits.length}</h2><div class="grid cards site-cards">${siteHits.map(siteCard).join('')}</div>` : (activeCat === 'site' ? '<p class="empty">无遗址今况命中。</p>' : '')) : ''}
 
 
-      ${(showAll || activeCat === 'question') ? (questionHits.length ? `<h2>这类问题 ${questionHits.length}</h2><ul>${questionHits.map((hit) => `<li><a href="#/question/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : (activeCat === 'question' ? '<p class="empty">无问题命中。</p>' : '')) : ''}
+      ${(showAll || activeCat === 'question') ? (questionHits.length ? `<h2>这类问题 ${questionHits.length}</h2><ul>${questionHits.map((hit) => `<li><a class="link" href="#/question/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`).join('')}</ul>` : (activeCat === 'question' ? '<p class="empty">无问题命中。</p>' : '')) : ''}
 
       ${(showAll || activeCat === 'lane') ? (laneHits.length ? `<h2>对照 ${laneHits.length}</h2>${laneHits.map(laneCard).join('')}` : (activeCat === 'lane' ? '<p class="empty">无对照命中。</p>' : '')) : ''}
 
-      ${(showAll || activeCat === 'ziguangge') ? (zggHits.length ? `<h2>紫光阁 ${zggHits.length}</h2><ul>${clipBlock(zggHits, (hit) => `<li><a href="#/ziguangge/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`)}</ul>` : (activeCat === 'ziguangge' ? '<p class="empty">无紫光阁命中。</p>' : '')) : ''}
+      ${(showAll || activeCat === 'ziguangge') ? (zggHits.length ? `<h2>紫光阁 ${zggHits.length}</h2><ul>${clipBlock(zggHits, (hit) => `<li><a class="link" href="#/ziguangge/${esc(hit.id)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`)}</ul>` : (activeCat === 'ziguangge' ? '<p class="empty">无紫光阁命中。</p>' : '')) : ''}
 
       ${(showAll || activeCat === 'work') ? `
-        ${sourceHits.length ? `<h2>来源 ${sourceHits.length}</h2><ul>${sourceHits.map((row) => `<li><a href="#/source/${esc(row.source_id)}">${esc(row.source_id)} ${esc(row['机构或资源'])}</a></li>`).join('')}</ul>` : ''}
+        ${sourceHits.length ? `<h2>来源 ${sourceHits.length}</h2><ul>${sourceHits.map((row) => `<li><a class="link" href="#/source/${esc(row.source_id)}">${esc(row.source_id)} ${esc(row['机构或资源'])}</a></li>`).join('')}</ul>` : ''}
         ${workHits.length ? `<h2>文献 ${workHits.length}</h2><ul>${workHits.map((hit) => {
           const work = (DATA.works || []).find((row) => row.work_id === hit.id);
           const href = work?.dedicated_chapter ? `#/chapter/${work.dedicated_chapter}` : '#/works';
-          return `<li><a href="${esc(href)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`;
+          return `<li><a class="link" href="${esc(href)}">${highlightHtml(hit.label, q)}</a> <span class="muted">${highlightHtml(hit.extra || '', q)}</span></li>`;
         }).join('')}</ul>` : ''}
         ${!sourceHits.length && !workHits.length && activeCat === 'work' ? '<p class="empty">无文献命中。</p>' : ''}
       ` : ''}
@@ -3468,7 +3468,7 @@ function eraPage(slug) {
       <article class="zgg-detail">
         <div class="zgg-detail-visual">
           ${zggImg(row, { width: 640, height: 860, eager: true, sizes: '(max-width: 720px) 90vw, 360px' })}
-          <p class="zgg-rights">${esc(row['权利状态'] || '')}${row['图像来源'] ? ` · <a href="${esc(row['图像来源'])}" rel="noopener">${esc(row['图像类型'] === '原图' ? '文件页' : '说明')}</a>` : ''}</p>
+          <p class="zgg-rights">${esc(row['权利状态'] || '')}${row['图像来源'] ? ` · ${safeUrl(row['图像来源']) ? `<a class="link" href="${esc(safeUrl(row['图像来源']))}" rel="noopener">${esc(row['图像类型'] === '原图' ? '文件页' : '说明')}</a>` : esc(row['图像来源'])}` : ''}</p>
           <p class="muted">${esc(row['图像说明'] || '')}</p>
           ${row.visual_brief ? `<p class="zgg-visual">${esc(row.visual_brief)}</p>` : ''}
         </div>
@@ -3490,8 +3490,8 @@ function eraPage(slug) {
         </div>
       </article>
       <nav class="zgg-pager" aria-label="相邻功臣">
-        ${prev ? `<a href="#/ziguangge/${esc(prev.slug)}">上一名 ${esc(prev['姓名'])}</a>` : '<span></span>'}
-        ${next ? `<a href="#/ziguangge/${esc(next.slug)}">下一名 ${esc(next['姓名'])}</a>` : '<span></span>'}
+        ${prev ? `<a class="link" href="#/ziguangge/${esc(prev.slug)}">上一名 ${esc(prev['姓名'])}</a>` : '<span></span>'}
+        ${next ? `<a class="link" href="#/ziguangge/${esc(next.slug)}">下一名 ${esc(next['姓名'])}</a>` : '<span></span>'}
       </nav>
     `;
   }
@@ -3690,7 +3690,7 @@ function eraPage(slug) {
     else if (view === 'exhibit') html = exhibitPage(parts[1]);
     else if (view === 'ziguangge') html = ziguanggePage(parts[1], query);
     else if (view === 'data') html = dataPage();
-    else html = `<h1>未找到该页面</h1><p><a href="#/">← 首页</a></p>`;
+    else html = `<h1>未找到该页面</h1><p><a class="link" href="#/">← 首页</a></p>`;
     // 版心分档：读栏给纯文字页，表栏给分栏/年表，满栏只给卡片网格。
     // 原先只有朝代页和逐解收窄，其余一律 70rem 硬撑，右半边是空的。
     const FULL_VIEWS = new Set(['sites', 'works', 'people', 'princes', 'princesses', 'empresses', 'data', 'hands', 'read', 'studio', 'screen', 'exhibits', 'ziguangge']);
@@ -3868,7 +3868,7 @@ function eraPage(slug) {
     const p = document.createElement('p');
     p.className = 'resume-reading';
     p.innerHTML = `<span class="resume-ribbon" aria-hidden="true"></span>`
-      + `<a href="#/chapter/${esc(last.slug)}">续读 · ${esc(last.era || '')}「${esc(last.title)}」</a>`
+      + `<a class="link" href="#/chapter/${esc(last.slug)}">续读 · ${esc(last.era || '')}「${esc(last.title)}」</a>`
       + (count ? `<span class="resume-meta">已读 ${count} 篇</span>` : '');
     intro.appendChild(p);
   }

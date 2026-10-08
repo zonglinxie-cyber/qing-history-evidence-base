@@ -385,6 +385,26 @@ try {
   await waitFor(routeReady['#/succession']);
   check('储位页导航落在十二帝', await evaluate(`document.querySelector('.nav a[aria-current]')?.getAttribute('href') === '#/'`));
 
+  // 回归：空 slug 的 #/chapter/ 必须落到「未找到」，不能空页。
+  await send('Page.navigate', { url: `${base}?probe=emptyslug#/chapter/` });
+  await waitFor(`document.querySelector('main h1')?.textContent.includes('未找到')`);
+  check('空 slug 章节路由优雅降级', await evaluate(`document.querySelector('main h1').textContent.includes('未找到')`));
+
+  // 回归：灯箱对本地图先试 @2x 高清档，且保留 ?v= 内容戳（曾因丢 query 串回旧图）。
+  await send('Page.navigate', { url: `${base}?probe=lightbox#/sites` });
+  await waitFor(`!!document.querySelector('main h1')`);
+  await evaluate(`location.hash='#/site/QH-ST-0014'`);
+  await waitFor(`!!document.querySelector('img[data-lightbox]')`);
+  await evaluate(`document.querySelector('img[data-lightbox]').click()`);
+  await waitFor(`document.getElementById('lightbox')?.open === true`);
+  check('灯箱优先取 @2x 且保留 ?v= 指纹', await evaluate(`(() => {
+    const src = document.getElementById('lightbox-img')?.src || '';
+    return /@2x\\.(?:jpe?g|png|webp)/i.test(src) && /[?&]v=/.test(src);
+  })()`));
+
+  // 回归：正文里所有链接都带链接样式（class），不再有裸 <a>。
+  check('正文链接全部带 class', await evaluate(`[...document.querySelectorAll('main a[href]')].every((a) => a.classList.length > 0)`));
+
   if (runtimeErrors.length) failures.push(`运行时异常：${runtimeErrors.join('；')}`);
   if (responseErrors.length) failures.push(`本地资源错误：${responseErrors.join('；')}`);
   if (failures.length) {

@@ -21,7 +21,7 @@
 
 ## 今地、图像与卷86
 
-今地见 [景陵](#/site/QH-ST-0021)。史迹卡用 Commons `Emperor Pavilion & Jing Tomb in Eastern Qing Tombs.jpg`（CC BY-SA 3.0，Zhangzhugang，2014）。文件题名带 Emperor Pavilion，拍的是维修后的殿座一带，不是雍正元年九月奉安原状。沈阳东陵是福陵，见 [福陵](#/site/QH-ST-0007)。
+今地见 [景陵](#/site/QH-ST-0021)。史迹卡配图用 Commons 实景照（CC BY-SA 3.0，Zhangzhugang，2014）。文件题名带 Emperor Pavilion，拍的是维修后的殿座一带，不是雍正元年九月奉安原状。沈阳东陵是福陵，见 [福陵](#/site/QH-ST-0007)。
 
 《清史稿》卷86：「雍正元年，定圣祖陵曰景陵。」陵名定在世宗朝；本纪二十年先写昌瑞山陵，后妃传再对到「孝东陵之东，即景陵也」。三名分层与上节同，不择一抹平。卷86又把孝陵、景陵以下写成东西陵一组：「东陵凤台山，封昌瑞山」。凤台山／昌瑞山是山名层，不是已经打开的风水勘舆档。
 

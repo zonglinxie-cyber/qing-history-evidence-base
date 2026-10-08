@@ -32,6 +32,9 @@ function readerMetadata(value) {
 
 function stripInternalComments(src) {
   return String(src || '')
+    // 「<!--internal--> … -->」是整节标记：先吃掉到下一个 --> 为止的全部内容，
+    // 再处理单行便笺 <!--internal 注 -->；顺序不能反，否则开标记自己先被吃掉、内容外漏。
+    .replace(/<!--internal-->[\s\S]*?-->/gi, '')
     .replace(/<!--internal[\s\S]*?-->/gi, '')
     .replace(/^## 编辑备注[\s\S]*?(?=^## )/gm, '')
     .replace(/^## 编辑备注[\s\S]*$/gm, '');

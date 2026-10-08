@@ -38,7 +38,7 @@ const dataDir = path.join(root, 'data');
 // 注意「即位年」≠「元年」：皇太极 1626 即位而天聪元年为 1627；顺治 1643 即位而顺治元年为 1644。
 const REIGN_ERAS = [
   { name: '天命', firstYear: 1616, years: 11 },
-  { name: '天聪', firstYear: 1627, years: 9 },
+  { name: '天聪', firstYear: 1627, years: 10 },
   { name: '崇德', firstYear: 1636, years: 8 },
   { name: '顺治', firstYear: 1644, years: 18 },
   { name: '康熙', firstYear: 1662, years: 61 },

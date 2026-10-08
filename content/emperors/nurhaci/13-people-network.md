@@ -50,14 +50,14 @@
 
 ## 跨朝人物
 
-多尔衮、多铎、阿济格在本章只登记生母与大妃殉同条。摄政、追尊、暴罪见 `#/chapter/shunzhi-01`。人物号：太祖子用 `QH-P-000210` 等；顺治卷提案另有 `QH-P-SZ-PROP-0001`，合并前不要双主键。
+多尔衮、多铎、阿济格在本章只登记生母与大妃殉同条。摄政、追尊、暴罪见 `#/chapter/shunzhi-01`。
 
 ## 边界
 
 - 五大臣列传（通行在卷225一带）未开，不写各人卒年、世职、图像赞。
 - 「五大臣」后世演义名单有时把扬古利算进去。本纪元年名单是上列五人；扬古利只在丁未出兵句出现，不升格为五大臣之一。
 - 扎尔固齐十人无名单。
-- 不生 AI 肖像冒充御容。制度分层示意图（空椅编号，**AI 示意，非历史原件**）见 [`../_cross-cutting-proposals/ai-schematics/ai-schematic-nurhaci-five-ministers.png`](../_cross-cutting-proposals/ai-schematics/ai-schematic-nurhaci-five-ministers.png)。图上汉字仅装饰，人名以本章表为准。台账 `SRC-147`。不得写入 `{{fig:QH-V-*}}`。
+- 不生 AI 肖像冒充御容。制度分层示意图为 AI 示意、非历史原件，图上汉字仅装饰，人名以本章表为准。
 
 ## 交叉引用
 

@@ -580,7 +580,7 @@ export function reignScroll(emperors) {
 
 export function readingCards(picks) {
   return `<div class="reading-picks">${picks.map((pick, index) => `<article class="reading-pick">
-    <a href="${esc(pick.href)}">
+    <a class="pick-link" href="${esc(pick.href)}">
       <p class="pick-eyebrow"><span>${esc(pick.era)} · ${esc(pick.label)}</span><span aria-hidden="true">${String(index + 1).padStart(2, '0')}</span></p>
       <h3>${esc(pick.title)}</h3>
       <p class="pick-description">${esc(pick.description)}</p>
@@ -598,7 +598,7 @@ export function homeHtml(dynasty, emperors, sites, opts = {}) {
         <p class="kicker">${esc(dynasty?.kicker || '')}</p>
         <h1>${esc(dynasty?.headline || '')}</h1>
         <p class="lede">${noOrphan(dynasty?.lede || '')}</p>
-        <p class="home-invitation"><a href="#/read">先挑一个具体的问题读进去</a> <span aria-hidden="true">·</span> 也可以沿十二帝一朝一朝读</p>
+        <p class="home-invitation"><a class="link" href="#/read">先挑一个具体的问题读进去</a> <span aria-hidden="true">·</span> 也可以沿十二帝一朝一朝读</p>
       </div>
 ${reignScroll(emperors)}
       <p class="home-more"><a class="link" href="#/jiedu">逐段读原典</a><span aria-hidden="true">·</span><a class="link" href="#/spine/money">看钱粮如何运转</a><span aria-hidden="true">·</span><a class="link" href="#/lanes">对读两种说法</a></p>

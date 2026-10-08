@@ -61,7 +61,7 @@
 
 ## 还可以看
 
-全表提案见 `_data-proposals/qianlong-princesses.csv`。儿子见 [皇子表](#/chapter/qianlong-04)。三后与生母见 [后妃表](#/chapter/qianlong-05)。不要把公主表读成玉牒。
+儿子见 [皇子表](#/chapter/qianlong-04)。三后与生母见 [后妃表](#/chapter/qianlong-05)。不要把公主表读成玉牒。
 
 ## 待用户抽查
 

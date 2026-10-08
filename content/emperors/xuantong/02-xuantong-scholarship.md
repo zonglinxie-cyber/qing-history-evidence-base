@@ -38,4 +38,4 @@
 
 `#/works` · `#/chapter/xuantong-01` · `#/chapter/xuantong-03`
 
-同目录续章：`04-accession-and-regency.md`（即位与监国）、`05-small-court-and-expulsion.md`（小朝廷与出宫）、`06-tombs-and-huiling.md`（陵寝）、`10-edicts-and-rescripts.md`（无典型朱批）、`11-wodeqianbansheng.md`（回忆录版本）、`12-historiography-and-disputes.md`（学术史）。新 slug 尚未写入共享 `chapters.csv`。
+同卷另章：`#/chapter/xuantong-04`（即位与监国）、`#/chapter/xuantong-05`（小朝廷与出宫）、`#/chapter/xuantong-06`（陵寝）、`#/chapter/xuantong-10`（无典型朱批）、`#/chapter/xuantong-11`（回忆录版本）、`#/chapter/xuantong-12`（学术史）。
