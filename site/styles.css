@@ -1901,11 +1901,13 @@ a.img-fallback.yellow,
   padding-left: 0;
   counter-reset: toc;
 }
-.chapter-toc li { counter-increment: toc; }
+.chapter-toc li {
+  counter-increment: toc;
+  display: grid;
+  grid-template-columns: 1.6em minmax(0, 1fr);
+}
 .chapter-toc li::before {
   content: counter(toc);
-  display: inline-block;
-  width: 1.6em;
   color: var(--placeholder);
   font-size: 0.8em;
 }
@@ -3617,10 +3619,12 @@ main[data-layout="table"] .mat-table thead th:not(:first-child) { text-align: ri
   color: var(--vermilion);
 }
 
-.era-tab-item.active, .era-tab-item:focus-visible {
+.era-tab-item.active, .era-tab-item:focus-visible,
+.filters .era-tab-item.on, .filters .era-tab-item.active {
   background: var(--vermilion);
   color: var(--paper);
   border-color: var(--vermilion);
+  box-shadow: none;
 }
 
 .era-tab-item.active i {

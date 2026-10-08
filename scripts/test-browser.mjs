@@ -349,6 +349,42 @@ try {
   check('存储不可用仍可阅读和调节字号', await evaluate(`document.documentElement.classList.contains('fs-l') && !!document.querySelector('.chapter-body')`));
   await screenshot('1440-dark-story');
   await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: injected.identifier });
+
+  // 回归：直开页面时人名已随 people 块解析，不再裸出 QH-P- ID（VIEW_CHUNKS 曾漏挂 people）。
+  // 等各自页面的标志元素出现再判：index.html 直出了首页 SSR，innerText 非空不代表路由渲染完成。
+  const routeReady = {
+    '#/succession': `document.querySelector('main h1')?.textContent.includes('储位')`,
+    '#/empresses': `!!document.querySelector('[data-empress-era]')`,
+    '#/princes': `!!document.querySelector('[data-prince-era]')`,
+  };
+  for (const route of ['#/succession', '#/empresses', '#/princes']) {
+    await send('Page.navigate', { url: `${base}?probe=ids-${route.slice(2)}${route}` });
+    await waitFor(routeReady[route]);
+    check(`直开 ${route} 不裸出人名ID`, await evaluate(`!/QH-P-\\d/.test(document.querySelector('main').innerText)`));
+  }
+  // 回归：朝代笺签选中态必须是朱底纸字，不被 .filters button.on 的朱字盖掉。
+  for (const route of ['#/empresses', '#/princes']) {
+    await send('Page.navigate', { url: `${base}?probe=tab-${route.slice(2)}${route}` });
+    await waitFor(`!!document.querySelector('.era-tab-item.active')`);
+    check(`${route} 选中签可辨（前景≠底色）`, await evaluate(`(() => {
+      const cs = getComputedStyle(document.querySelector('.era-tab-item.active'));
+      return cs.color !== cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)';
+    })()`));
+  }
+  // 回归：章内目录编号与题名同一行（li 改 grid 悬挂缩进）。
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+  await send('Page.navigate', { url: `${base}?probe=toc#/chapter/yongzheng-04c` });
+  await waitFor(`!!document.querySelector('.chapter-toc')`);
+  await evaluate(`(() => { const d = document.querySelector('.chapter-toc'); if (d?.tagName === 'DETAILS') d.open = true; })()`);
+  check('目录编号与题名同行', await evaluate(`[...document.querySelectorAll('.chapter-toc li')].every((li) => {
+    const btn = li.querySelector('button');
+    return btn && Math.abs(li.getBoundingClientRect().top - btn.getBoundingClientRect().top) <= 4;
+  })`));
+  // 回归：储位页归属「十二帝」导航，不再点亮「读故事」。
+  await send('Page.navigate', { url: `${base}?probe=nav#/succession` });
+  await waitFor(routeReady['#/succession']);
+  check('储位页导航落在十二帝', await evaluate(`document.querySelector('.nav a[aria-current]')?.getAttribute('href') === '#/'`));
+
   if (runtimeErrors.length) failures.push(`运行时异常：${runtimeErrors.join('；')}`);
   if (responseErrors.length) failures.push(`本地资源错误：${responseErrors.join('；')}`);
   if (failures.length) {

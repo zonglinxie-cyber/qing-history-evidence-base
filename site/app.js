@@ -120,27 +120,27 @@ const VIEW_CHUNKS = {
   screen: ['home', REIGN_CHUNK, 'people'],
   claims: ['home', REIGN_CHUNK, 'people'],
   claim: ['home', REIGN_CHUNK, 'people'],
-  succession: ['home', REIGN_CHUNK],
-  empresses: ['home', REIGN_CHUNK],
-  princes: ['home', REIGN_CHUNK],
-  princesses: ['home', REIGN_CHUNK],
+  succession: ['home', REIGN_CHUNK, 'people'],
+  empresses: ['home', REIGN_CHUNK, 'people'],
+  princes: ['home', REIGN_CHUNK, 'people'],
+  princesses: ['home', REIGN_CHUNK, 'people'],
   lanes: ['home', REIGN_CHUNK, 'people'],
   lane: ['home', REIGN_CHUNK, 'people'],
-  questions: ['home', REIGN_CHUNK],
-  question: ['home', REIGN_CHUNK],
+  questions: ['home', REIGN_CHUNK, 'people'],
+  question: ['home', REIGN_CHUNK, 'people'],
   sources: ['home', 'catalog'],
-  source: ['home', 'catalog', REIGN_CHUNK],
-  works: ['home', REIGN_CHUNK],
+  source: ['home', 'catalog', REIGN_CHUNK, 'people'],
+  works: ['home', REIGN_CHUNK, 'people'],
   how: ['home'],
   changelog: ['home', 'release'],
-  path: ['home', REIGN_CHUNK],
-  spine: ['home', REIGN_CHUNK],
-  chronicle: ['home', REIGN_CHUNK],
-  overview: ['home', REIGN_CHUNK],
+  path: ['home', REIGN_CHUNK, 'people'],
+  spine: ['home', REIGN_CHUNK, 'people'],
+  chronicle: ['home', REIGN_CHUNK, 'people'],
+  overview: ['home', REIGN_CHUNK, 'people'],
   exhibits: ['home', 'people', REIGN_CHUNK],
   exhibit: ['home', 'people', REIGN_CHUNK],
   search: ['home', 'people', REIGN_CHUNK, 'catalog', 'search'],
-  ziguangge: ['home', REIGN_CHUNK],
+  ziguangge: ['home', REIGN_CHUNK, 'people'],
 };
 
 async function loadChunk(name) {
@@ -482,14 +482,14 @@ function eraPage(slug) {
 
   function setNav(path) {
     const current = path.split('/').filter(Boolean)[0] || '';
-    const readViews = new Set(['read', 'chapter', 'overview', 'path', 'spine', 'chronicle', 'succession']);
+    const readViews = new Set(['read', 'chapter', 'overview', 'path', 'spine', 'chronicle']);
     const materialViews = new Set(['material', 'works', 'hands', 'jiedu', 'image', 'sources', 'source']);
     document.querySelectorAll('.nav a').forEach((link) => {
       const href = (link.getAttribute('href') || '#/').replace(/^#/, '') || '/';
       const key = href.split('/').filter(Boolean)[0] || '';
       let on = false;
       if (!key) on = !current || current === 'emperors' || Boolean(DYNASTY.eras[current])
-        || ['people', 'person', 'empresses', 'princes', 'princesses'].includes(current);
+        || ['people', 'person', 'empresses', 'princes', 'princesses', 'succession'].includes(current);
       else if (key === 'read') on = readViews.has(current);
       else if (key === 'material') on = materialViews.has(current);
       else if (key === 'sites') on = current === 'sites' || current === 'site';
@@ -1928,8 +1928,8 @@ function eraPage(slug) {
         ])}
       </div>
       <div class="filters era-tab-bar" aria-label="朝代切换">
-        <button type="button" data-empress-era="kangxi" class="era-tab-item ${yongzheng ? '' : 'active on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">圣祖朝</button>
-        <button type="button" data-empress-era="yongzheng" class="era-tab-item ${yongzheng ? 'active on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">世宗朝</button>
+        <button type="button" data-empress-era="kangxi" class="era-tab-item ${yongzheng ? '' : 'active on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">康熙朝</button>
+        <button type="button" data-empress-era="yongzheng" class="era-tab-item ${yongzheng ? 'active on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">雍正朝</button>
       </div>
       <div class="filters era-tab-bar" style="margin-top: -12px;" aria-label="后妃筛选">
         ${filters.map((item) => {
@@ -1988,7 +1988,7 @@ function eraPage(slug) {
     if (id === 'QH-P-000002') {
       return `<h2>皇子</h2>
         <p class="thread-lead">卷165缺第四子弘历。表序不是玉牒。</p>
-        <p class="actions"><a class="link" href="#/princes?era=yongzheng">世宗系表</a></p>`;
+        <p class="actions"><a class="link" href="#/princes?era=yongzheng">雍正皇子表</a></p>`;
     }
     const era = row['父亲ID'] === 'QH-P-000002' ? 'yongzheng' : 'kangxi';
     return `
@@ -2051,12 +2051,12 @@ function eraPage(slug) {
         ${crumbs([
           { href: '#/', label: '十二帝' },
           { href: yongzheng ? '#/yongzheng' : '#/kangxi', label: yongzheng ? '雍正朝' : '康熙朝' },
-          { label: yongzheng ? '世宗系皇子' : '圣祖系皇子' },
+          { label: yongzheng ? '雍正皇子' : '康熙皇子' },
         ])}
       </div>
       <div class="filters era-tab-bar" aria-label="朝代切换">
-        <button type="button" data-prince-era="kangxi" class="era-tab-item ${yongzheng ? '' : 'active on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">圣祖系</button>
-        <button type="button" data-prince-era="yongzheng" class="era-tab-item ${yongzheng ? 'active on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">世宗系</button>
+        <button type="button" data-prince-era="kangxi" class="era-tab-item ${yongzheng ? '' : 'active on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">康熙</button>
+        <button type="button" data-prince-era="yongzheng" class="era-tab-item ${yongzheng ? 'active on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">雍正</button>
       </div>
       <div class="filters era-tab-bar" style="margin-top: -12px;" aria-label="收录状态筛选">
         ${groups.map((item) => `<button type="button" data-prince="${esc(item)}" class="era-tab-item ${item === status ? 'active on' : ''}" aria-pressed="${item === status}">${esc(item)}</button>`).join('')}
@@ -2163,12 +2163,12 @@ function eraPage(slug) {
         ${crumbs([
           { href: '#/', label: '十二帝' },
           { href: yongzheng ? '#/yongzheng' : '#/kangxi', label: yongzheng ? '雍正朝' : '康熙朝' },
-          { label: yongzheng ? '世宗系皇女' : '圣祖系皇女' },
+          { label: yongzheng ? '雍正皇女' : '康熙皇女' },
         ])}
       </div>
       <div class="filters era-tab-bar" aria-label="朝代切换">
-        <button type="button" data-princess-era="kangxi" class="era-tab-item ${yongzheng ? '' : 'active on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">圣祖系</button>
-        <button type="button" data-princess-era="yongzheng" class="era-tab-item ${yongzheng ? 'active on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">世宗系</button>
+        <button type="button" data-princess-era="kangxi" class="era-tab-item ${yongzheng ? '' : 'active on'}" aria-pressed="${yongzheng ? 'false' : 'true'}">康熙</button>
+        <button type="button" data-princess-era="yongzheng" class="era-tab-item ${yongzheng ? 'active on' : ''}" aria-pressed="${yongzheng ? 'true' : 'false'}">雍正</button>
       </div>
       <div class="filters era-tab-bar" style="margin-top: -12px;" aria-label="收录状态筛选">
         ${groups.map((item) => `<button type="button" data-princess="${esc(item)}" class="era-tab-item ${item === status ? 'active on' : ''}" aria-pressed="${item === status}">${esc(item)}</button>`).join('')}
