@@ -5,8 +5,8 @@
 | 文件 | 行 |
 |---|---|
 | `historic-sites.csv` | 昭西陵 `QH-ST-0070`（有图，无测绘点） |
-| `source-units.csv` | 卷86 `QH-SU-HT-QSG-0086A` |
-| `source-claims.csv` | `QH-A-HT-0200`–`0201`（避开生成器 0008–00xx） |
+| `source-units.csv` | 卷86 `QH-SU-HT-QSG-0086AX` |
+| `source-claims.csv` | `QH-A-HT-0206`–`0201`（避开生成器 0008–00xx） |
 | `source-rights-ledger.csv` | `SRC-131` |
 
 合并时：昭西陵与沈阳昭陵 `QH-ST-0015` 不得并号。孝庄不自造人物号。

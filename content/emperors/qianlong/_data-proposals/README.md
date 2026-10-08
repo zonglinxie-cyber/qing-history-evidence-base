@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | `chapters.proposal.csv` | `data/chapters.csv` | 07–17。07/08 只登记并行章，不新造 FW/CU 主张 |
 | `source-units.proposal.csv` | `data/source-units.csv` | 本职 09–17 单元 |
-| `source-claims.proposal.csv` | `data/source-claims.csv` | 45 条，`QH-A-QL-0042` 起；空号见 NOTES |
+| `source-claims.proposal.csv` | `data/source-claims.csv` | 45 条，`QH-A-QL-0109` 起；空号见 NOTES |
 | `source-units.csv` / `source-claims.csv` | 同上 | 并行裕陵谒陵条：`QH-SU-QL-QSG-0086A`、`QH-A-QL-0100` |
 | `qianlong-princesses.csv` | `data/phase0-people.csv` 一类 | 11 行，`CAND-QL-*` |
 | `imperial-works.csv` | `data/imperial-works.csv` | `QH-W-090`–`093` |

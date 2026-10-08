@@ -293,9 +293,9 @@ check('和珅对照栏挂上拒答', heshen.includes('#/question/QH-GQ-0068') ||
 const nala = await go('#/lane/QH-L-0033');
 check('继皇后对照栏', nala.includes('那拉氏') && nala.includes('不择一'));
 const hands = await go('#/hands');
-check('像与物页 64 件全部有入口', hands.includes('图像与器物')
+check('像与物页 65 件全部有入口', hands.includes('图像与器物')
   && hands.includes('器物') && hands.includes('便服·行乐·戎装·化身') && hands.includes('历史照片')
-  && (hands.match(/#\/image\//g) || []).length === 64 && !hands.includes('黄金问题'));
+  && (hands.match(/#\/image\//g) || []).length === 65 && !hands.includes('黄金问题'));
 const qianlongVisuals = await go('#/hands?era=乾隆');
 check('乾隆像与物按组显示且不少于 11 件', (qianlongVisuals.match(/#\/image\//g) || []).length >= 11
   && qianlongVisuals.includes('visual-object') && qianlongVisuals.includes('visual-life'));

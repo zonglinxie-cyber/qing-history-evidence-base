@@ -416,14 +416,32 @@ function main() {
     if (!dayGroups.has(key)) dayGroups.set(key, []);
     dayGroups.get(key).push({ id: it.row['Assertion ID'], gz: it.p.dayGanzhi[0], day: it.lo });
   }
+  // 冲突组已登记的干支异文不再算「异常」：同一事件的两读已收进 conflict-sets.csv
+  // （如卷15戊申朔 vs 卷16戊辰朔同指 1796-02-09），异文是文档层结论而不是未诊断错误。
+  // 判定按干支值匹配，不要求组的「判断依据主张」枚举全部同日主张。
+  const claimItemById = new Map(items.map((it) => [it.row['Assertion ID'], it]));
+  const conflicts = loadCsv(path.join(dataDir, 'conflict-sets.csv'), { name: 'conflict-sets.csv' });
+  const conflictGanzhi = [];
+  for (const cs of conflicts) {
+    const members = String(cs['判断依据主张'] || '').split(/[；;]/).map((s) => s.trim()).filter(Boolean);
+    const gzs = new Set();
+    for (const mid of members) for (const gz of claimItemById.get(mid)?.p.dayGanzhi || []) gzs.add(gz);
+    if (gzs.size > 1) conflictGanzhi.push({ id: cs.conflict_set_id, gzs });
+  }
+  const registeredGanzhiConflict = (ga, gb) => conflictGanzhi.find((c) => c.gzs.has(ga) && c.gzs.has(gb))?.id || null;
   let c11Pairs = 0;
   let c11Bad = 0;
-  const touch = (id, note) => {
+  let c11Registered = 0;
+  const HARD_FLAG = /C1:|C4:|C10:/;
+  const touch = (id, note, csId) => {
     const row = rowById.get(id);
     if (!row) return;
-    row.标记 = [row.标记, note].filter(Boolean).join('；');
+    row.标记 = [row.标记, csId ? `${note}（${csId}）` : note].filter(Boolean).join('；');
     // C11 不依赖外部锚点，是确定性的内部矛盾，必须进入硬异常而非普通待核。
-    row.判定 = '异常';
+    // 例外：异文已登记冲突组的降为待核——它仍需对版本定谳，但不再是未诊断的硬错误；
+    // 若同一条已有 C1/C4/C10 硬标记则不降级。
+    if (csId && !HARD_FLAG.test(row.标记)) row.判定 = '待核';
+    else row.判定 = '异常';
   };
   for (const [key, list] of dayGroups) {
     for (let i = 0; i < list.length; i += 1) {
@@ -434,18 +452,22 @@ function main() {
         if (a.day === b.day) {
           if (ia === ib) continue; // 同一日、同一干支，正常
           c11Bad += 1;
-          flags.C11.push(`${key} 同一公历日 ${fromEpochDay(a.day)} 却有两说：${a.id} 作 ${a.gz}、${b.id} 作 ${b.gz}`);
-          touch(a.id, 'C11:同日干支两说');
-          touch(b.id, 'C11:同日干支两说');
+          const csId = registeredGanzhiConflict(a.gz, b.gz);
+          if (csId) c11Registered += 1;
+          flags.C11.push(`${key} 同一公历日 ${fromEpochDay(a.day)} 却有两说：${a.id} 作 ${a.gz}、${b.id} 作 ${b.gz}${csId ? `（${csId} 已登记）` : ''}`);
+          touch(a.id, 'C11:同日干支两说', csId);
+          touch(b.id, 'C11:同日干支两说', csId);
           continue;
         }
         let lo = a; let hi = b; let il = ia; let ih = ib;
         if (a.day > b.day) { lo = b; hi = a; il = ib; ih = ia; }
         if ((ih - il + 60) % 60 === (hi.day - lo.day) % 60) continue;
         c11Bad += 1;
-        flags.C11.push(`${key} ${lo.id} ${lo.gz} ${fromEpochDay(lo.day)} 与 ${hi.id} ${hi.gz} ${fromEpochDay(hi.day)}：差 ${hi.day - lo.day} 日却差 ${(ih - il + 60) % 60} 个干支`);
-        touch(lo.id, 'C11:月内干支序不符');
-        touch(hi.id, 'C11:月内干支序不符');
+        const csId = registeredGanzhiConflict(lo.gz, hi.gz);
+        if (csId) c11Registered += 1;
+        flags.C11.push(`${key} ${lo.id} ${lo.gz} ${fromEpochDay(lo.day)} 与 ${hi.id} ${hi.gz} ${fromEpochDay(hi.day)}：差 ${hi.day - lo.day} 日却差 ${(ih - il + 60) % 60} 个干支${csId ? `（${csId} 已登记）` : ''}`);
+        touch(lo.id, 'C11:月内干支序不符', csId);
+        touch(hi.id, 'C11:月内干支序不符', csId);
       }
     }
   }
@@ -530,7 +552,7 @@ function main() {
   console.log(`  本库拟合 offset  ${fit.offset}（仅作对照；用拟合锚点判本库样本属循环论证，故不用于判定）`);
   if (c6Drift) console.log(`  ⚠ 其中 ${c6Drift} 条被拟合锚点掩盖，只有外部锚点能看出（标 C6b）`);
   console.log('  ↑ 外部锚点已由清代史料明载干支反证；但仍不等于已与 CAL-001 书页逐条核对');
-  console.log(`C11 月内干支序：受检 ${c11Pairs} 对，矛盾 ${c11Bad} 对（此项不依赖任何锚点，命中即硬矛盾）`);
+  console.log(`C11 月内干支序：受检 ${c11Pairs} 对，矛盾 ${c11Bad} 对${c11Registered ? `（其中 ${c11Registered} 对已登记冲突组，降为待核）` : ''}（此项不依赖任何锚点，命中即硬矛盾）`);
   if (!anchorOk) {
     console.log('');
     console.error('⚠ 外部锚点反证未通过——上述 C6 结论不可用，须先修锚点。');

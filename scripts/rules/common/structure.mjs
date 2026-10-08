@@ -20,7 +20,7 @@ const REVIEW_TRANSCRIPT = new Set(['E1单源回查', 'S二手转述', 'C来源�
 const REVIEW_INDEX = new Set(['E1单源回查', 'S二手索引', 'C来源冲突', 'U待核', 'X目前不可证']);
 const EMPEROR_TIMELINE_STATES = new Set(['E1单源回查', 'S二手索引', 'C来源冲突', 'U待核', 'X目前不可证']);
 const CHAPTER_STATUS_MARKER = /(?:E1\s*单源回查|S\s*二手(?:索引|转述)|C\s*来源冲突|U\s*待核|X\s*目前不可证)/;
-const TIMELINE_TYPES = new Set(['册立', '册封', '晋封', '生育', '崩逝', '初谥', '改谥', '安葬', '尊封', '时态说明']);
+const TIMELINE_TYPES = new Set(['册立', '册封', '晋封', '生育', '崩逝', '初谥', '改谥', '安葬', '尊封', '追封', '时态说明']);
 const CTEXT_PLACEHOLDER_RES = new Set(['418273', '666666', '777777', '888888', '999999', '111111']);
 
 function splitIds(value) {
@@ -375,16 +375,20 @@ export function check(ctx) {
     if (!site['事件'] || !site['当时'] || !site['今日'] || !site['今地说明'] || !site['边界'] || !site['卡片钩子']) {
       errors.push(`${site.site_id} 缺少事件、当时、今日、说明、边界或钩子`);
     }
-    const lng = Number(site['经度']);
-    const lat = Number(site['纬度']);
-    if (Number.isNaN(lng) || lng < 70 || lng > 140) errors.push(`${site.site_id} 经度无效: ${site['经度']}`);
-    if (Number.isNaN(lat) || lat < 15 || lat > 56) errors.push(`${site.site_id} 纬度无效: ${site['纬度']}`);
+    const isStub = !site['经度'] && !site['纬度'] && !site['文件页'] && !site['预览文件']
+      && (site['证据状态'] === 'U待核' || site['证据状态'] === 'S二手索引');
+    if (!isStub) {
+      const lng = Number(site['经度']);
+      const lat = Number(site['纬度']);
+      if (Number.isNaN(lng) || lng < 70 || lng > 140) errors.push(`${site.site_id} 经度无效: ${site['经度']}`);
+      if (Number.isNaN(lat) || lat < 15 || lat > 56) errors.push(`${site.site_id} 纬度无效: ${site['纬度']}`);
+    }
     if (site['首页'] && !/^\d+$/.test(site['首页'])) {
       errors.push(`${site.site_id} 首页序号必须是正整数`);
     }
     if (!REVIEW_INDEX.has(site['证据状态'])) errors.push(`${site.site_id} 证据状态无效: ${site['证据状态']}`);
     if (!['绿', '黄'].includes(site['权利颜色'])) errors.push(`${site.site_id} 权利颜色无效: ${site['权利颜色']}`);
-    if (!httpsOk(site['文件页'])) errors.push(`${site.site_id} 文件页不是 HTTPS`);
+    if (!isStub && !httpsOk(site['文件页'])) errors.push(`${site.site_id} 文件页不是 HTTPS`);
     if (site['权利颜色'] === '绿') {
       if (!GREEN_LICENSES.has(site['文件页标示许可'])) errors.push(`${site.site_id} 绿色许可无效: ${site['文件页标示许可']}`);
       if (!site['预览文件'] || !httpsOk(site['预览文件'])) errors.push(`${site.site_id} 绿色资源缺少 HTTPS 预览文件`);

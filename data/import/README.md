@@ -1,5 +1,8 @@
 # CSV 导入规则
 
+> ⚠️ 本文档描述的是旧状态（2026-08-14 快照）。当前口径见 README / AGENTS.md。
+> **已废止**：本库不走 PostgreSQL——权威层就是 `data/*.csv` + `content/**`，`scripts/build-site.mjs` 直出 `site/data/*.json`（派生、不入库）；不再派生 SQLite（见根 README「原始表只在仓库里」与 CHANGELOG 0.6.0）。库表设计稿已归档至 `docs/archive/schema.sql` 与 `002-zero-budget-import-readiness.sql`，本文留作当时的合并纪律参考。
+
 本目录说明“研究用 CSV”如何进入 PostgreSQL。当前 CSV 是可读的采集层，不是可直接复制进所有权威表的数据库转储。
 
 ## 身份合并

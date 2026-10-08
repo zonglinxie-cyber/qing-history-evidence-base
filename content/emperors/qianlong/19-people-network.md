@@ -51,4 +51,4 @@
 
 ## 交叉引用
 
-`#/chapter/qianlong-06` · `#/chapter/qianlong-11` · `#/chapter/qianlong-12` · `#/chapter/qianlong-18` · `#/chapter/jiaqing-04` · `#/ziguangge`
+`#/chapter/qianlong-06` · `#/chapter/qianlong-11` · `#/chapter/qianlong-12` · `#/chapter/jiaqing-04` · `#/ziguangge`
