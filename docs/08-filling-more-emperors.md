@@ -74,7 +74,7 @@ person_id,表序,表序标签,收录状态,规范名,公主表用名,异名,父�
 剩余工作（扩乾隆及以后时再做，勿提前空改）：
 
 1. `scripts/build-site.mjs` 的 `loadDynasty()` 对三张深挖表仍按 `kind` 合并、不按 `reign` 分流——目前靠前端按 `父亲ID` 过滤才不会混显，数据层按 `reign` 分流更稳；
-2. `site/qing-content.mjs` 的 `EMPRESS_IDS` 及前端 `empresses/princes/princesses` 三页入口仍以康熙为中心——须按帝路由渲染。
+2. `site/qing-content.js` 的 `EMPRESS_IDS` 及前端 `empresses/princes/princesses` 三页入口仍以康熙为中心——须按帝路由渲染。
 
 ## 5. 文风与发布红线
 

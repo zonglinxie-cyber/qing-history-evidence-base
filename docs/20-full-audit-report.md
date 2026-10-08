@@ -1,5 +1,8 @@
 # 20 · 全面体检报告（语法 / 排版 / AI 自说自话 / AI 自述错位）
 
+> ⚠️ 本文档描述的是旧状态（2026-08-25 快照）。当前口径见 README / AGENTS.md。
+> 报告所列多数问题已在当日及之后修复（README 过时功能段、`deploy.yml` 手动化等已对齐）；未逐条核销前请勿把下表当现存问题清单。
+
 > 生成日期：2026-08-25。范围：全部 65 篇 `content/emperors/**`、`docs/**`、根目录 README/STATUS/CHANGELOG/CONTRIBUTING。
 > 方法：7 路分片逐篇通读 + 人工复核高严重项。文言引文（实录/上谕/朱批/口供原文）按原样保留，不计入。
 > 对照红线：`docs/04-editorial-and-review-manual.md` §13、`docs/09-voice-and-register.md`、`docs/01` 决策原则 1。
