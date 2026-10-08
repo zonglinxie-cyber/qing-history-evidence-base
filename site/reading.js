@@ -32,6 +32,10 @@ export function calendarDate(record) {
 }
 
 export function chapterGenre(chapter) {
+  // chapters.csv 的「体裁」列是显式判断：章＝叙事正文，资料＝年表/世表/索引类查阅章。
+  // 读不到列值时才退回 slug/题名规则（旧数据、未过构建的半成品行）。
+  const explicit = String(chapter?.['体裁'] || '').trim();
+  if (explicit === '章' || explicit === '资料') return explicit;
   const slug = String(chapter?.slug || '');
   const title = String(chapter?.title || '');
   if (/reign-timeline|年表/.test(`${slug} ${title}`)) return '资料';

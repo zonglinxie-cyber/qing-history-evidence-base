@@ -151,6 +151,9 @@ const materialOut = await go('#/material');
 check('材料页收齐三种材料', ['#/works', '#/hands', '#/jiedu']
   .every((h) => materialOut.includes(h)) && !materialOut.includes('href="#/images"'));
 check('材料页按朝可下钻', materialOut.includes('#/works?era=') && materialOut.includes('#/jiedu?era='));
+check('材料页收进资料章', materialOut.includes('资料章')
+  && materialOut.includes('#/chapter/kangxi-09')
+  && materialOut.includes('#/chapter/yongzheng-04c'));
 check('首页不叠六期评传入口', !homeHtmlOut.includes('由浅入深读全朝') && !homeHtmlOut.includes('#/overview/periods'));
 check('首页不写结构化证据仪表', !homeHtmlOut.includes('尚无结构化证据'));
 check('研究稿声明已移除', !homeHtmlOut.includes('AI 辅助个人研究库') && !html.includes('并非专家审定本'));
@@ -176,8 +179,11 @@ check('首页不主推改诏与吕四娘', !homeHtmlOut.includes('#/lane/QH-L-00
 const readOut = await go('#/read');
 check('读故事总目录按朝列出章节', readOut.includes('按朝读故事')
   && readOut.includes('#/chapter/kangxi-01')
-  && readOut.includes('资料')
+  && readOut.includes('读史料')
   && readOut.includes('crumb'));
+check('读故事不再混排资料章', !readOut.includes('#/chapter/kangxi-09')
+  && !readOut.includes('#/chapter/yongzheng-04c')
+  && !readOut.includes('tag-data'));
 check(`精选七问并入读故事首屏（实际 ${(readOut.match(/class="reading-pick"/g) || []).length}）`, (readOut.match(/class="reading-pick"/g) || []).length === 7
   && readOut.indexOf('read-features') < readOut.indexOf('era-jump')
   && readOut.includes('#/chapter/jiaqing-04'));
@@ -311,6 +317,11 @@ check('样板章行内主张', chapter.includes('data-claim="QH-A-KX-0124"') || 
 check('样板章目录', chapter.includes('chapter-toc') && chapter.includes('data-scroll'));
 check('样板章上下篇', chapter.includes('chapter-nav') && chapter.includes('上一篇') && chapter.includes('下一篇'));
 check('样板章依据摘要不倾倒主张卡', chapter.includes('本章可回查的卷') && !chapter.includes('thread-block'));
+check('叙事章面包屑回读故事', chapter.includes('href="#/read"') && chapter.includes('tag-story'));
+const dataChapterOut = await go('#/chapter/yongzheng-04c');
+check('资料章渲染且面包屑回读史料', dataChapterOut.includes('chapter-shell')
+  && dataChapterOut.includes('href="#/material"')
+  && dataChapterOut.includes('读史料') && dataChapterOut.includes('tag-data'));
 // 取样改用明确的短章：qianlong-03 放行被吞句子后正文 2031 字，刚好越过 2000 分界，属边界效应。
 const shortChapter = await go('#/chapter/xuantong-03');
 check('短章使用 reading 单栏且元信息收成一行', el('main').dataset.layout === 'reading'
@@ -737,6 +748,11 @@ check('全朝专题有站内入口', pathOut.includes('href="#/overview"') || ma
 
 // 存疑标注系统已移除，不该再有残留
 check('无存疑标注残留', !html.includes('标存疑') && !html.includes('note-dialog') && !html.includes('#/review'));
+
+// OpenSeadragon 深缩略图只是 CDN 桩，已拆除：页面、脚本与样式都不应再引用。
+const appJsSrc = fs.readFileSync(path.join(siteDir, 'app.js'), 'utf8');
+const stylesSrc = fs.readFileSync(path.join(siteDir, 'styles.css'), 'utf8');
+check('前端不再引用 OpenSeadragon 与 CDN 深缩略图', !/openseadragon|osd-|cdn\.jsdelivr/i.test(`${html}\n${appJsSrc}\n${stylesSrc}`));
 
 check('不再派生 SQLite', !fs.existsSync(path.join(siteDir, 'data', 'qing.sqlite'))
   && !fs.existsSync(path.join(siteDir, 'data', 'raw.json')));

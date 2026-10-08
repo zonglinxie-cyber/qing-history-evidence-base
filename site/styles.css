@@ -824,8 +824,6 @@ tr[data-href] { cursor: pointer; }
 
 .image-regions { position: relative; }
 .image-regions > img { display: block; }
-.osd-viewer { position: relative; height: 560px; background: #1a1a1a; border-radius: 4px; overflow: hidden; }
-.osd-viewer > noscript img { display: block; max-width: 100%; }
 .region-overlay {
   position: absolute;
   border: 2px solid var(--vermilion);
@@ -3013,7 +3011,24 @@ h2.lane-group {
 .mat-table td a:hover { color: var(--vermilion); text-decoration: underline; }
 .mat-zero { color: var(--placeholder); }
 
+/* 资料章索引：一朝一行，朝名在左、条目平铺，比三种材料卡轻一档 */
+.mat-chapters { max-width: var(--wide); margin: 0 0 40px; }
+.mat-chapter-row {
+  display: grid;
+  grid-template-columns: 3.5em minmax(0, 1fr);
+  gap: 16px;
+  margin: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
+  line-height: 1.9;
+}
+.mat-chapter-era { font-family: var(--serif); color: var(--muted); }
+.mat-chapter-links .link { white-space: nowrap; }
+
 @media (max-width: 600px) {
+  .mat-chapter-row { grid-template-columns: 1fr; gap: 2px; }
+  .mat-kinds { grid-template-columns: 1fr; }
   .mat-kinds { grid-template-columns: 1fr; }
   .mat-table td { width: 4em; }
 }

@@ -196,6 +196,7 @@ try {
           return !!features && features.getBoundingClientRect().top + window.scrollY <= ${width === 390 ? 1688 : 1800};
         })()`));
         check(`${width}px 读故事页精选不少于六项`, await evaluate(`document.querySelectorAll('.read-features .reading-pick').length >= 6`));
+        check(`${width}px 读故事页不混排资料章`, await evaluate(`!document.querySelector('main a[href="#/chapter/kangxi-09"]') && !document.querySelector('main a[href="#/chapter/yongzheng-04c"]')`));
         if (screenshotDir) {
           await evaluate(`document.querySelector('.read-features').scrollIntoView({ behavior: 'instant', block: 'start' })`);
           await sleep(200);
@@ -380,6 +381,14 @@ try {
     const btn = li.querySelector('button');
     return btn && Math.abs(li.getBoundingClientRect().top - btn.getBoundingClientRect().top) <= 4;
   })`));
+  // 资料章直达链接不变，但面包屑与导航应归入「读史料」而不是「读故事」。
+  check('资料章面包屑回读史料', await evaluate(`!!document.querySelector('.chapter-crumb a[href="#/material"]')
+    && !document.querySelector('.chapter-crumb a[href="#/read"]')
+    && document.querySelector('.nav a[aria-current]')?.getAttribute('href') === '#/material'`));
+  await send('Page.navigate', { url: `${base}?probe=mat#/material` });
+  await waitFor(`!!document.querySelector('.mat-chapters')`);
+  check('读史料页收进资料章', await evaluate(`!!document.querySelector('main a[href="#/chapter/kangxi-09"]') && !!document.querySelector('main a[href="#/chapter/yongzheng-04c"]')`));
+  check('页面不再请求深缩略图 CDN', !requests.some((url) => /openseadragon|jsdelivr/i.test(url)));
   // 回归：储位页归属「十二帝」导航，不再点亮「读故事」。
   await send('Page.navigate', { url: `${base}?probe=nav#/succession` });
   await waitFor(routeReady['#/succession']);

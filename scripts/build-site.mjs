@@ -357,7 +357,7 @@ function buildDynasty({ dynasty, data }) {
     const sourceCount = String(row.unit_ids || '').split(/[；;]/).map((id) => id.trim()).filter((id) => unitById.has(id)).length;
     const closed = isChapterEvidenceClosed(row.status, sourceCount);
     return {
-      ...pick(row, ['chapter_id', 'slug', 'person_id', 'era', 'title', 'unit_ids', 'related', 'sort']),
+      ...pick(row, ['chapter_id', 'slug', 'person_id', 'era', 'title', 'unit_ids', 'related', 'sort', '体裁']),
       lede: readerCopy(row.lede),
       bodyHtml: row.bodyHtml,
       quote: firstQuote(row.bodyHtml),
@@ -643,6 +643,7 @@ function buildDynasty({ dynasty, data }) {
       title: row.title,
       lede: row.lede,
       era: row.era,
+      '体裁': row['体裁'],
       person_id: row.person_id,
       unit_ids: row.unit_ids,
       related: row.related,

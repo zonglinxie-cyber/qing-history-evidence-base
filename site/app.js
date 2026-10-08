@@ -202,7 +202,6 @@ function eraPage(slug) {
   let portraitById = new Map();
   let regionsByVisual = new Map();
   let regionsByAssertion = new Map();
-  let iiifByVisual = new Map();
   function reindex() {
     peopleById = new Map((DATA.people || []).map((row) => [row.person_id, row]));
     emperorByPerson = new Map((DATA.emperors || []).map((row) => [row.person_id, row]));
@@ -227,72 +226,10 @@ function eraPage(slug) {
       alist.push(row);
       regionsByAssertion.set(row.assertion_id, alist);
     }
-    iiifByVisual = new Map((DATA.iiif || []).map((row) => [row.visual_id, row.iiif_manifest]));
   }
   function primaryPortrait(emperorId) {
     const list = portraitsByEmperor.get(emperorId) || [];
     return list.find((row) => row['展示角色'] === '默认朝服像') || list[0] || null;
-  }
-
-  // C2: OpenSeadragon deep-zoom viewer (CDN, zero npm dependency)
-  let osdPromise = null;
-  let osdInstances = [];
-  function loadOsd() {
-    if (osdPromise) return osdPromise;
-    osdPromise = new Promise((resolve, reject) => {
-      if (window.OpenSeadragon) return resolve(window.OpenSeadragon);
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/openseadragon@4.1.1/build/openseadragon/openseadragon.min.js';
-      s.integrity = 'sha384-SslUh5K0qRJYyxhoVK+XxSxjS0BNDdgc3cLvY4+nMEmnLtgdEK3UaBTDaHOk8T9S';
-      s.crossOrigin = 'anonymous';
-      s.referrerPolicy = 'no-referrer';
-      s.onload = () => resolve(window.OpenSeadragon);
-      s.onerror = () => { osdPromise = null; reject(new Error('OSD CDN load failed')); };
-      document.head.appendChild(s);
-    });
-    return osdPromise;
-  }
-  function destroyOsdViewers() {
-    for (const v of osdInstances) { try { v.destroy(); } catch {} }
-    osdInstances = [];
-  }
-  function osdFallback(el) {
-    const fallback = el.dataset.fallback || '';
-    const alt = el.dataset.alt || '';
-    el.className = 'image-regions';
-    el.innerHTML = `<img src="${esc(fallback)}" alt="${esc(alt)}">`;
-  }
-  function initOsdViewers() {
-    const els = main.querySelectorAll('.osd-viewer[data-manifest]');
-    if (!els.length) return;
-    loadOsd().then((OSD) => {
-      for (const el of els) {
-        if (el.dataset.osdReady) continue;
-        el.dataset.osdReady = '1';
-        const manifest = el.dataset.manifest;
-        if (!manifest) continue;
-        const isIIIF = manifest.includes('info.json') || manifest.endsWith('.json');
-        const tileSources = isIIIF ? manifest : { type: 'image', url: manifest };
-        try {
-          const viewer = OSD({
-            element: el,
-            tileSources,
-            prefixUrl: 'https://cdn.jsdelivr.net/npm/openseadragon@4.1.1/build/openseadragon/images/',
-            showNavigator: true,
-            navigatorPosition: 'BOTTOM_RIGHT',
-            constrainDuringPan: true,
-            visibilityRatio: 1,
-            minZoomImageRatio: 0.5,
-            maxZoomPixelRatio: 2,
-          });
-          osdInstances.push(viewer);
-        } catch {
-          osdFallback(el);
-        }
-      }
-    }).catch(() => {
-      els.forEach(osdFallback);
-    });
   }
 
   function mediaImg(src, alt, lightbox = '') {
@@ -791,16 +728,20 @@ function eraPage(slug) {
   }
 
   function readCatalogPage() {
-    const list = (DATA.chapters || []).slice().sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
+    // 「读故事」只收叙事章：年表、世表、人物网与文献/图像索引统一去「读史料」，
+    // 目录不再混排两种阅读方式。
+    const list = (DATA.chapters || []).filter((row) => chapterGenre(row) === '章')
+      .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
     const groups = groupByReign(list, (row) => row.era);
-    const narrative = list.filter((row) => chapterGenre(row) === '章').length;
+    const dataCount = (DATA.chapters || []).length - list.length;
     return `
       <div class="reading page-intro">
         <p class="kicker">读故事</p>
         <h1>按朝读故事</h1>
-        <p class="lede">十二帝排成一条线。正文是章，年表和世表标成资料，不打断阅读。</p>
+        <p class="lede">十二帝排成一条线。这里只收叙事正文，按朝排定，不打断阅读。</p>
         ${crumbs([{ href: '#/', label: '十二帝' }, { label: '读故事' }])}
-        <p class="muted">全站收录 ${list.length} 篇，其中 ${narrative} 篇为主线正文。</p>
+        <p class="muted">共 ${list.length} 章主线正文。</p>
+        <p class="muted">年表、世表、文献入门与索引等 ${dataCount} 篇资料章移至「<a class="link" href="#/material">读史料</a>」。</p>
       </div>
       ${DATA.featuredReads?.length ? `<section class="read-features" aria-labelledby="read-picks">
         <div class="reading-section-head"><div><p class="kicker">先挑一篇</p><h2 id="read-picks">每个精选都从一个具体问题开始</h2></div></div>
@@ -811,21 +752,17 @@ function eraPage(slug) {
       ${groups.map(([era, items]) => `
         <section class="read-era-section" id="read-${era}">
           ${reignHead(era, items.length, '篇')}
-          <div class="grid cards read-chapter-grid">${items.map((row) => {
-            const genre = chapterGenre(row);
-            const isData = genre === '资料';
-            return `
-              <article class="card chapter-item-card${isData ? ' is-data' : ''}">
-                <a class="chapter-item-link" href="#/chapter/${esc(row.slug)}">
-                  <div class="chapter-item-meta">
-                    <span class="chapter-genre-tag ${isData ? 'tag-data' : 'tag-story'}">${esc(genre)}</span>
-                    <span class="chapter-era-name">${esc(row.era)}</span>
-                  </div>
-                  <h3 class="chapter-item-title">${esc(row.title)}</h3>
-                  <p class="chapter-item-lede">${esc(row.lede || '')}</p>
-                </a>
-              </article>`;
-          }).join('')}</div>
+          <div class="grid cards read-chapter-grid">${items.map((row) => `
+            <article class="card chapter-item-card">
+              <a class="chapter-item-link" href="#/chapter/${esc(row.slug)}">
+                <div class="chapter-item-meta">
+                  <span class="chapter-genre-tag tag-story">章</span>
+                  <span class="chapter-era-name">${esc(row.era)}</span>
+                </div>
+                <h3 class="chapter-item-title">${esc(row.title)}</h3>
+                <p class="chapter-item-lede">${esc(row.lede || '')}</p>
+              </a>
+            </article>`).join('')}</div>
         </section>`).join('')}
     `;
   }
@@ -917,6 +854,10 @@ function eraPage(slug) {
     const total = rows.reduce((a, r) => ({ works: a.works + r.works, visuals: a.visuals + r.visuals, jiedu: a.jiedu + r.jiedu }),
       { works: 0, visuals: 0, jiedu: 0 });
     const count = { works: total.works, visuals: total.visuals, jiedu: total.jiedu };
+    // 查阅型章节（体裁=资料）不进「读故事」目录，在这里按朝排成一行行的入口。
+    const dataChapters = (DATA.chapters || []).filter((row) => chapterGenre(row) === '资料')
+      .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
+    const dataGroups = groupByReign(dataChapters, (row) => row.era);
     return `
       <div class="reading">
         <p class="kicker">材料</p>
@@ -948,6 +889,12 @@ function eraPage(slug) {
             ${materialCell(r.jiedu, 'jiedu', r.era)}
           </tr>`).join('')}</tbody>
       </table></div>
+      ${dataGroups.length ? `<h2 class="mat-head">资料章</h2>
+      <p class="muted mat-note">年表、世表、人物、著述与图像目录类章节收在这里；读连续叙事请去「<a class="link" href="#/read">读故事</a>」。</p>
+      <div class="mat-chapters">${dataGroups.map(([era, items]) => `
+        <p class="mat-chapter-row"><span class="mat-chapter-era">${esc(era)}</span><span class="mat-chapter-links">${items
+          .map((row) => `<a class="link" href="#/chapter/${esc(row.slug)}">${esc(row.title)}</a>`).join(' · ')}</span></p>`).join('')}
+      </div>` : ''}
       <p class="actions"><a class="link" href="#/overview">全朝通览</a> · <a class="link" href="#/path">276 年转轴</a> · <a class="link" href="#/sites">遗址今况</a> · <a class="link" href="#/sources">所据材料</a> · <a class="link" href="#/how">怎么读</a></p>
     `;
   }
@@ -2773,21 +2720,23 @@ function eraPage(slug) {
     const further = [...relatedChapters.map((row) => readingPick(row)), ...selectReadingPicks(list, { exclude: chapter.slug })]
       .filter((row, index, all) => all.findIndex((item) => item.slug === row.slug) === index).slice(0, 2);
     // 版心卷次：同朝诸篇按序排「卷」，资料篇作「附」
+    const genre = chapterGenre(chapter);
+    const isDataChapter = genre === '资料';
     const eraList = list.filter((row) => row.era === chapter.era && chapterGenre(row) !== '资料');
     const juanIdx = eraList.findIndex((row) => row.slug === chapter.slug);
-    const juanLabel = chapterGenre(chapter) === '资料' || juanIdx < 0
+    const juanLabel = isDataChapter || juanIdx < 0
       ? `${chapter.era}朝 · 附`
       : `${chapter.era}朝 · 卷${numCn(juanIdx + 1)}`;
     // 首屏留给正文：crumb 与 kicker 合成一行，工具/目录/选题全部收进一个抽屉，
-    // 桌面宽屏默认展开，手机上不占第一屏。
+    // 桌面宽屏默认展开，手机上不占第一屏。资料章回「读史料」，叙事章回「读故事」。
     const metaOpen = window.matchMedia('(min-width: 1100px)').matches ? ' open' : '';
-    const kickerText = `${chapter.era}${chapterGenre(chapter) === '资料' ? ' · 资料' : ''}`;
     const headCrumbs = [
       { href: '#/', label: '十二帝' },
-      { href: '#/read', label: '读故事' },
+      isDataChapter ? { href: '#/material', label: '读史料' } : { href: '#/read', label: '读故事' },
       eraHome ? { href: eraHome, label: chapter.era } : null,
     ].filter((item) => item && item.label);
-    const chapterCrumb = `<p class="crumb chapter-crumb">${headCrumbs.map((item) => `<a class="link" href="${esc(item.href)}">${esc(item.label)}</a>`).join(' <span class="crumb-sep" aria-hidden="true">›</span> ')}<span class="crumb-sep" aria-hidden="true">·</span><span class="chapter-crumb-kicker">${esc(kickerText)}</span></p>`;
+    const genreChip = `<span class="chapter-genre-tag ${isDataChapter ? 'tag-data' : 'tag-story'}">${esc(genre)}</span>`;
+    const chapterCrumb = `<p class="crumb chapter-crumb">${headCrumbs.map((item) => `<a class="link" href="${esc(item.href)}">${esc(item.label)}</a>`).join(' <span class="crumb-sep" aria-hidden="true">›</span> ')}<span class="crumb-sep" aria-hidden="true">·</span><span class="chapter-crumb-kicker">${genreChip} ${esc(chapter.era)}</span></p>`;
     const chapterMeta = `<details class="chapter-meta"${metaOpen}>
         <summary>本章工具与目录</summary>
         ${toc.length ? `<div class="chapter-toc">
@@ -3058,7 +3007,6 @@ function eraPage(slug) {
       portrait['图像性质'] ? `<dt>性质</dt><dd>${esc(portrait['图像性质'])}</dd>` : '',
     ].filter(Boolean).join('');
     const regions = regionsByVisual.get(id) || [];
-    const manifest = iiifByVisual.get(id);
     const overlayHtml = regions.map((r) => {
       const rx = Number(r.x) * 100, ry = Number(r.y) * 100, rw = Number(r.w) * 100, rh = Number(r.h) * 100;
       const style = `left:${rx}%;top:${ry}%;width:${rw}%;height:${rh}%`;
@@ -3095,10 +3043,10 @@ function eraPage(slug) {
         ${hasImage ? `
           <div class="dossier image-dossier">
             <figure class="portrait large${scriptish ? ' script' : ''}">
-              ${manifest ? `<div class="osd-viewer" data-manifest="${esc(manifest)}" data-fallback="${esc(portrait['预览文件'])}" data-alt="${esc(portrait['对象标题'])}"><noscript><img src="${esc(portrait['预览文件'])}" alt="${esc(portrait['对象标题'])}"></noscript></div>` : `<div class="image-regions">
+              <div class="image-regions">
                 ${mediaImg(portrait['预览文件'], portrait['对象标题'], portrait['对象标题'])}
                 ${overlayHtml}
-              </div>`}
+              </div>
               <figcaption class="portrait-caption">
                 <p class="muted">${esc(portrait['作者或摄影者'] || '')}${portrait['制作年代或摄影日期'] ? ` · ${esc(portrait['制作年代或摄影日期'])}` : ''} · ${esc(portrait['文件页标示许可'] || '')}</p>
               </figcaption>
@@ -3870,6 +3818,9 @@ function eraPage(slug) {
       await loadChapterBody(parts[1]);
       if (gen !== renderGen) return;
       html = chapterPage(parts[1]);
+      // 资料章在导航上属「读史料」；setNav 在数据块加载前已跑过，这里按体裁补一次。
+      const current = (DATA.chapters || []).find((row) => row.slug === parts[1]);
+      if (current && chapterGenre(current) === '资料') setNav('/material');
     }
     else if (view === 'questions') html = questionsPage(query);
     else if (view === 'question') html = questionPage(parts[1]);
@@ -3918,7 +3869,6 @@ function eraPage(slug) {
       : isEmperorRoute ? 'era'
       : view === 'lanes' || view === 'lane' ? 'compare'
       : (TABLE_VIEWS.has(view) ? 'table' : 'reading');
-    destroyOsdViewers();
     main.innerHTML = html;
     const pageTitle = titleFromHtml(html);
     document.title = pageTitle ? `${pageTitle} · 清史读本` : '清史读本';
@@ -3936,7 +3886,6 @@ function eraPage(slug) {
     const restoreY = view === 'search' ? searchPositions.get(routeKey) || 0 : 0;
     if (!skipTop) window.scrollTo(0, restoreY);
     main.focus({ preventScroll: true });
-    initOsdViewers();
     highlightToc();
     mountReaderChrome(view, parts);
     if (view === 'studio' || view === 'screen') cleanupStudio = studio.mountStudio(main, DATA, parts[1], query, view === 'screen');
