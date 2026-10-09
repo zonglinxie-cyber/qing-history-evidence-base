@@ -159,7 +159,7 @@ export function check(ctx) {
   // 来源台账
   for (const source of sources) {
     if (!RIGHTS.has(source['权利颜色'])) errors.push(`${source.source_id} 权利颜色无效`);
-    if (!httpsOk(source['资源网址'])) warnings.push(`${source.source_id} 资源网址需人工确认`);
+    if (!httpsOk(source['资源网址']) && !(source['机构或资源'] || '').startsWith('本库自制')) warnings.push(`${source.source_id} 资源网址需人工确认`);
   }
 
   // 来源单元与主张：引用、定位、必填字段与枚举
